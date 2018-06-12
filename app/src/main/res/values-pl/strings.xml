@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="poland">Polska</string>
+    <string name="title_add_station">Dodaj stację</string>
+    <string name="title_find_station">Znajdź stację</string>
+    <string name="title_sort_by_distance">Sortuj według odległości</string>
+    <string name="title_show_location">Pokaż lokalizację</string>
+    <string name="title_remove_station">Usuń stację</string>
+    <string name="text_station_by">Stacja</string>
+    <string name="source_gios">GIOŚ</string>
+    <string name="title_location_permission_request">Prośba o dostęp do usługi lokalizacji</string>
+    <string name="message_location_permission_request">Szanujemy Twoją prywatność. Prosimy o zaakceptowanie dostępu do usług lokalizacji dla lepszego wykorzystania aplikacji. Informacje o lokalizacji będą tylko i wyłącznie używane do zaprezentowania spersonalizowanych danych i nie będą wykorzystywane na zewnątrz aplikacji.</string>
+
+</resources>
