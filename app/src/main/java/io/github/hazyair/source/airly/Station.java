@@ -1,6 +1,6 @@
 package io.github.hazyair.source.airly;
 
-public class Station {
+class Station {
     public int id;
     public String name;
     public String vendor;

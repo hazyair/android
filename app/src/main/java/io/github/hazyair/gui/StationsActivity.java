@@ -51,7 +51,7 @@ import io.github.hazyair.data.HazyairProvider;
 import io.github.hazyair.source.iface.StationsCallback;
 import io.github.hazyair.source.Source;
 import io.github.hazyair.source.Station;
-import io.github.hazyair.sync.DatabaseService;
+import android.support.v4.app.DatabaseService;
 import io.github.hazyair.util.Network;
 
 import static android.support.v7.widget.helper.ItemTouchHelper.ACTION_STATE_SWIPE;
@@ -64,29 +64,25 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
     @Override
     public void onLocationChanged(Location location) {
         mAdapter.setLocation(location);
-        return;
     }
 
     @Override
     public void onStatusChanged(String provider, int status, Bundle extras) {
-        return;
     }
 
     @Override
     public void onProviderEnabled(String provider) {
         mAdapter.setDistance(true);
-        return;
     }
 
     @Override
     public void onProviderDisabled(String provider) {
         mAdapter.setDistance(false);
-        return;
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
+    class ViewHolder extends RecyclerView.ViewHolder {
 
-        public int viewType;
+        final int viewType;
 
         @Nullable @BindView(R.id.place)
         TextView place;
@@ -100,7 +96,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
         @Nullable @BindView(R.id.distance)
         TextView distance;
 
-        public int _id;
+        int _id;
 
         ViewHolder(View itemView, int viewType) {
             super(itemView);
@@ -109,9 +105,9 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
         }
     }
 
-    public class Adapter extends RecyclerView.Adapter {
+    class Adapter extends RecyclerView.Adapter {
 
-        public static final int VIEW_TYPE_SELECTED = 0;
+        static final int VIEW_TYPE_SELECTED = 0;
         static final int VIEW_TYPE_DIVIDER = 1;
         static final int VIEW_TYPE_ALL = 2;
 
@@ -122,7 +118,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
         private Location mLocation;
 
 
-        public Adapter(boolean distance) {
+        Adapter(boolean distance) {
             super();
             mDistance = distance;
         }
@@ -181,32 +177,44 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
         public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
             ViewHolder viewHolder = (ViewHolder) holder;
             int viewType = viewHolder.viewType;
-            Context context = viewHolder.itemView.getContext();
+            //Context context = viewHolder.itemView.getContext();
             switch (viewType) {
                 case VIEW_TYPE_SELECTED: {
                     if (mCursor == null) break;
                     mCursor.moveToPosition(viewHolder.getAdapterPosition());
-                    Bundle bundle = Station.loadBundleFromCursor(mCursor);
+                    Bundle station = Station.toBundleFromCursor(mCursor);
                     if (viewHolder.place == null) break;
                     viewHolder.place.setText(String.format("%s %s",
-                            bundle.getString(StationsContract.COLUMN_COUNTRY),
-                            bundle.getString(StationsContract.COLUMN_LOCALITY)));
+                            station.getString(StationsContract.COLUMN_COUNTRY),
+                            station.getString(StationsContract.COLUMN_LOCALITY)));
                     if (viewHolder.address == null) break;
-                    viewHolder.address.setText(bundle.getString(StationsContract.COLUMN_ADDRESS));
+                    viewHolder.address.setText(station.getString(StationsContract.COLUMN_ADDRESS));
                     if (viewHolder.station == null) break;
                     viewHolder.station.setText(String.format("%s %s",
-                            context.getString(R.string.text_station_by),
-                            bundle.getString(StationsContract.COLUMN_SOURCE)));
+                            getString(R.string.text_station_by),
+                            station.getString(StationsContract.COLUMN_SOURCE)));
                     if (viewHolder.distance == null) break;
                     viewHolder.distance.setVisibility(mDistance ? View.VISIBLE : View.GONE);
-                    Location location = new Location(bundle.getString(StationsContract.COLUMN_SOURCE));
-                    location.setLongitude(bundle.getDouble(StationsContract.COLUMN_LONGITUDE));
-                    location.setLatitude(bundle.getDouble(StationsContract.COLUMN_LATITUDE));
+                    Location location =
+                            new Location(station.getString(StationsContract.COLUMN_SOURCE));
+                    location.setLongitude(station.getDouble(StationsContract.COLUMN_LONGITUDE));
+                    location.setLatitude(station.getDouble(StationsContract.COLUMN_LATITUDE));
                     if (mDistance && mLocation != null)
                         viewHolder.distance.setText(String.format("%s %s",
                                 String.valueOf((int) (location.distanceTo(mLocation) / 1000)),
-                                context.getString(R.string.text_km)));
-                    viewHolder._id = bundle.getInt(StationsContract.COLUMN__ID);
+                                getString(R.string.text_km)));
+                    viewHolder._id = station.getInt(StationsContract.COLUMN__ID);
+                    viewHolder.itemView.setBackgroundColor(getColor(R.color.accent));
+                    viewHolder.place.setTextColor(getColor(R.color.textLighter));
+                    viewHolder.address.setTextColor(getColor(R.color.textLight));
+                    viewHolder.station.setTextColor(getColor(R.color.textLight));
+                    viewHolder.distance.setTextColor(getColor(R.color.textLight));
+                    viewHolder.itemView.setOnClickListener((v) -> {
+                        Intent intent = new Intent(StationsActivity.this,
+                                MainActivity.class);
+                        intent.putExtra(MainActivity.PARAM_STATION, station);
+                        NavUtils.navigateUpTo(StationsActivity.this, intent);
+                    });
 
                 }
                 break;
@@ -219,7 +227,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                     if (viewHolder.address != null) viewHolder.address.setText(station.address);
                     if (viewHolder.station != null)
                         viewHolder.station.setText(String.format("%s %s",
-                                context.getString(R.string.text_station_by), station.source));
+                                getString(R.string.text_station_by), station.source));
                     if (viewHolder.distance == null) break;
                     viewHolder.distance.setVisibility(mDistance ? View.VISIBLE : View.GONE);
                     Location location = new Location(station.source);
@@ -228,42 +236,44 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                     if (mDistance && mLocation != null)
                         viewHolder.distance.setText(String.format("%s %s",
                                 String.valueOf((int) (location.distanceTo(mLocation) / 1000)),
-                                context.getString(R.string.text_km)));
+                                getString(R.string.text_km)));
                     if (station._status) {
-                        viewHolder.itemView.setBackgroundColor(context.getColor(R.color.accent));
-                        viewHolder.place.setTextColor(context.getColor(R.color.textLighter));
-                        viewHolder.address.setTextColor(context.getColor(R.color.textLight));
-                        viewHolder.station.setTextColor(context.getColor(R.color.textLight));
-                        viewHolder.distance.setTextColor(context.getColor(R.color.textLight));
+                        viewHolder.itemView.setBackgroundColor(getColor(R.color.accent));
+                        viewHolder.place.setTextColor(getColor(R.color.textLighter));
+                        viewHolder.address.setTextColor(getColor(R.color.textLight));
+                        viewHolder.station.setTextColor(getColor(R.color.textLight));
+                        viewHolder.distance.setTextColor(getColor(R.color.textLight));
                     } else {
-                        if (HazyairProvider.Stations.selected(context, station)) {
-                            viewHolder.itemView.setBackgroundColor(context.getColor(R.color.primaryLight));
-                            viewHolder.place.setTextColor(context.getColor(R.color.textLighter));
-                            viewHolder.address.setTextColor(context.getColor(R.color.textLight));
-                            viewHolder.station.setTextColor(context.getColor(R.color.textLight));
-                            viewHolder.distance.setTextColor(context.getColor(R.color.textLight));
-                            //viewHolder.source.setTextColor(context.getColor(R.color.textLight));
+                        if (HazyairProvider.Stations.selected(StationsActivity.this, station)) {
+                            viewHolder.itemView.setBackgroundColor(getColor(R.color.primaryLight));
+                            viewHolder.place.setTextColor(getColor(R.color.textLighter));
+                            viewHolder.address.setTextColor(getColor(R.color.textLight));
+                            viewHolder.station.setTextColor(getColor(R.color.textLight));
+                            viewHolder.distance.setTextColor(getColor(R.color.textLight));
                         } else {
-                            viewHolder.itemView.setBackgroundColor(context.getColor(android.R.color.white));
-                            viewHolder.place.setTextColor(context.getColor(R.color.textDarker));
-                            viewHolder.address.setTextColor(context.getColor(R.color.textDark));
-                            viewHolder.station.setTextColor(context.getColor(R.color.textDark));
-                            viewHolder.distance.setTextColor(context.getColor(R.color.textDark));
-                            //viewHolder.source.setTextColor(context.getColor(R.color.textDark));
+                            viewHolder.itemView.setBackgroundColor(getColor(android.R.color.white));
+                            viewHolder.place.setTextColor(getColor(R.color.textDarker));
+                            viewHolder.address.setTextColor(getColor(R.color.textDark));
+                            viewHolder.station.setTextColor(getColor(R.color.textDark));
+                            viewHolder.distance.setTextColor(getColor(R.color.textDark));
                         }
                         viewHolder.itemView.setOnClickListener((v) -> {
                             mSwipeRefreshLayout.setRefreshing(true);
                             setEnabled(false);
                             station._status = true;
-                            v.setBackgroundColor(context.getColor(R.color.accent));
-                            viewHolder.place.setTextColor(context.getColor(R.color.textLighter));
-                            viewHolder.address.setTextColor(context.getColor(R.color.textLight));
-                            viewHolder.station.setTextColor(context.getColor(R.color.textLight));
-                            viewHolder.distance.setTextColor(context.getColor(R.color.textLight));
-                            startService(new Intent(context, DatabaseService.class)
+                            v.setBackgroundColor(getColor(R.color.accent));
+                            viewHolder.place.setTextColor(getColor(R.color.textLighter));
+                            viewHolder.address.setTextColor(getColor(R.color.textLight));
+                            viewHolder.station.setTextColor(getColor(R.color.textLight));
+                            viewHolder.distance.setTextColor(getColor(R.color.textLight));
+                            //startService(new Intent(context, DatabaseService.class)
+                            /*DatabaseService.enqueueWork(StationsActivity.this,
+                                    new Intent(StationsActivity.this, DatabaseService.class)
                                     .setAction(DatabaseService.ACTION_INSERT_OR_DELETE)
                                     .putExtra(DatabaseService.PARAM_POSITION, adapterPosition)
-                                    .putExtra(DatabaseService.PARAM_STATION, station));
+                                    .putExtra(DatabaseService.PARAM_STATION, station));*/
+                            DatabaseService.updateOrDelete(StationsActivity.this,
+                                    adapterPosition, station);
                         });
                     }
                 }
@@ -279,7 +289,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
     }
 
 
-    public class SwipeController extends ItemTouchHelper.Callback {
+    class SwipeController extends ItemTouchHelper.Callback {
 
         @Override
         public int getMovementFlags(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
@@ -293,16 +303,8 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
 
         @Override
         public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-            // TODO: Move to AsyncTask or IntentService
             ViewHolder holder = (ViewHolder) viewHolder;
-            Context context = holder.itemView.getContext();
-            /*HazyairProvider.Stations.delete(context, holder._id);
-            HazyairProvider.Sensors.delete(context, holder._id);*/
-            //HazyairProvider.delete(context, holder._id);
-            startService(new Intent(context, DatabaseService.class)
-                    .setAction(DatabaseService.ACTION_DELETE)
-                    .putExtra(DatabaseService.PARAM__ID, holder._id));
-
+            DatabaseService.delete(StationsActivity.this, holder._id);
         }
 
         private boolean mSwipeBack;
@@ -344,13 +346,13 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
 
     private Adapter mAdapter;
 
-    private ActionBar mActionBar;
-
     private SearchView mSearchView;
 
+    @SuppressWarnings("WeakerAccess")
     @BindView(R.id.swipe)
     SwipeRefreshLayout mSwipeRefreshLayout;
 
+    @SuppressWarnings("WeakerAccess")
     @BindView(R.id.stations)
     RecyclerView mStations;
 
@@ -364,13 +366,13 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
 
         mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
-        mActionBar = getSupportActionBar();
-        if (mActionBar != null) {
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
             // Show the Up button in the action bar.
-            mActionBar.setDisplayHomeAsUpEnabled(true);
-            mActionBar.setTitle(R.string.title_add_station);
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setTitle(R.string.title_add_station);
         }
-        mSwipeRefreshLayout.setOnRefreshListener(() -> {
+        mSwipeRefreshLayout.setOnRefreshListener(() ->
             Source.with(this).load(Source.Type.GIOS).into(new StationsCallback() {
                 @Override
                 public void onSuccess(List<Station> stations) {
@@ -382,8 +384,8 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                 public void onError() {
                     mSwipeRefreshLayout.setRefreshing(false);
                 }
-            });
-        });
+            })
+        );
 
         mAdapter = new Adapter(io.github.hazyair.util.Location.checkPermission(this));
         mStations.setAdapter(mAdapter);
@@ -420,7 +422,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                 //if (mSearchView != null && !mSearchView.isIconified()) {
                 //    mSearchView.setIconified(true);
                 //} else {
-                    NavUtils.navigateUpFromSameTask(this);
+                NavUtils.navigateUpFromSameTask(this);
                 //}
                 return true;
             default:
@@ -496,13 +498,17 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
             String action = intent.getAction();
             if (action == null) return;
             switch (action) {
-                case DatabaseService.ACTION_DATA_UPDATED:
+                case DatabaseService.ACTION_UPDATED:
                     int position = intent.getIntExtra(DatabaseService.PARAM_POSITION, -1);
-                    if (position == -1) return;
-                    mAdapter.getStations().get(position)._status = false;
-                    setEnabled(true);
-                    mSwipeRefreshLayout.setRefreshing(false);
-                    mAdapter.notifyDataSetChanged();
+                    if (position == -1) {
+                        mAdapter.notifyDataSetChanged();
+                    } else {
+                        List<Station> stations = mAdapter.getStations();
+                        if (stations != null) stations.get(position)._status = false;
+                        setEnabled(true);
+                        mSwipeRefreshLayout.setRefreshing(false);
+                        mAdapter.notifyDataSetChanged();
+                    }
                     break;
                 case ConnectivityManager.CONNECTIVITY_ACTION:
                     if (!Network.isAvailable(StationsActivity.this)) break;
@@ -528,7 +534,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
     protected void onStart() {
         super.onStart();
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(DatabaseService.ACTION_DATA_UPDATED);
+        intentFilter.addAction(DatabaseService.ACTION_UPDATED);
         intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         registerReceiver(mBroadcastReceiver, intentFilter);
     }
@@ -566,7 +572,6 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                     mAdapter.setDistance(false);
 
                 }
-                return;
             }
 
         }

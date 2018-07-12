@@ -1,21 +1,19 @@
 package io.github.hazyair.gui;
 
-import android.Manifest;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
+import android.content.IntentFilter;
 import android.database.Cursor;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.LoaderManager;
-import android.support.v4.content.ContextCompat;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 
 import android.support.v4.app.Fragment;
@@ -24,7 +22,8 @@ import android.support.v4.view.ViewPager;
 import android.os.Bundle;
 import android.util.SparseArray;
 import android.view.Menu;
-import android.view.MenuItem;
+import android.view.MenuItem;;
+import android.widget.Toast;
 
 import com.facebook.stetho.Stetho;
 
@@ -34,21 +33,25 @@ import io.github.hazyair.R;
 import io.github.hazyair.data.StationsContract;
 import io.github.hazyair.data.StationsLoader;
 import io.github.hazyair.source.Station;
-import io.github.hazyair.sync.DatabaseService;
+import android.support.v4.app.DatabaseService;
+import io.github.hazyair.sync.DatabaseSyncService;
 
 import static android.view.MenuItem.SHOW_AS_ACTION_IF_ROOM;
-import static io.github.hazyair.util.Location.PERMISSION_REQUEST_FINE_LOCATION;
 
 public class MainActivity extends AppCompatActivity implements
-        LoaderManager.LoaderCallbacks<Cursor>, LocationListener {
+        LoaderManager.LoaderCallbacks<Cursor> {
+
+    public static final String PARAM_STATION = "io.github.hazyair.PARAM_STATION";
 
     public class StationsPagerAdapter extends FragmentStatePagerAdapter {
 
         private Cursor mCursor;
-        private SparseArray<Fragment> fragments = new SparseArray<>();
+        private final SparseArray<Fragment> mFragments = new SparseArray<>();
+        private final FragmentManager mFragmentManager;
 
-        public StationsPagerAdapter(FragmentManager fm) {
+        StationsPagerAdapter(FragmentManager fm) {
             super(fm);
+            mFragmentManager = fm;
         }
 
         public void setCursor(Cursor cursor) {
@@ -66,12 +69,13 @@ public class MainActivity extends AppCompatActivity implements
             // Return a StationFragment (defined as a static inner class below).
             mCursor.moveToPosition(position);
             Fragment fragment;
-            if (fragments.indexOfKey(position) < 0) {
-                fragment = StationFragment.newInstance(mCursor);
-                fragments.put(position, fragment);
-            } else {
-                fragment = fragments.get(position);
-            }
+            //if (mFragments.size() <= position) {
+            fragment = StationFragment.newInstance(mCursor);
+            mFragments.put(position, fragment);
+            //mFragments.add(fragment);
+            //} else {
+            //fragment = mFragments.get(position);
+            //}
             return fragment;
         }
 
@@ -80,12 +84,52 @@ public class MainActivity extends AppCompatActivity implements
             return mCursor == null ? 0 : mCursor.getCount();
         }
 
-        public void removePage(int position) {
-            Fragment fragment = fragments.get(position);
+        void removePage(int position) {
+            //Fragment fragment = mFragments.get(position);
+            Fragment fragment = mFragments.get(position);
             if (fragment == null) return;
             destroyItem(null, position, fragment);
-            fragments.remove(position);
-            mViewPager.setCurrentItem(position - 1, false);
+            mFragments.remove(position);
+        }
+
+        @Override
+        public Parcelable saveState() {
+            Bundle state = (Bundle) super.saveState();
+            for (int i=0; i<mFragments.size(); i++) {
+                Fragment fragment = mFragments.get(i);
+                if (fragment != null && fragment.isAdded()) {
+                    if (state == null) {
+                        state = new Bundle();
+                    }
+                    String key = StationFragment.class.getName() + i;
+                    mFragmentManager.putFragment(state, key, fragment);
+                }
+            }
+            return state;
+        }
+
+        @Override
+        public void restoreState(Parcelable state, ClassLoader loader) {
+            super.restoreState(state, loader);
+            if (state == null) return;
+            Bundle bundle = (Bundle)state;
+            Iterable<String> keys = bundle.keySet();
+            if (keys == null) return;
+            for (String key: keys) {
+                if (key.startsWith(StationFragment.class.getName())) {
+                    int index = Integer.parseInt(key.substring(
+                            StationFragment.class.getName().length()));
+                    Fragment fragment = mFragmentManager.getFragment(bundle, key);
+                    if (fragment != null) {
+                        //while (mFragments.size() <= index) {
+                        //    mFragments.add(null);
+                        //}
+                        fragment.setMenuVisibility(false);
+                        //mFragments.set(index, fragment);
+                        mFragments.put(index, fragment);
+                    }
+                }
+            }
         }
 
         @Override
@@ -97,18 +141,15 @@ public class MainActivity extends AppCompatActivity implements
 
     private StationsPagerAdapter mStationsPagerAdapter;
 
-    private LocationManager mLocationManager;
-
     @BindView(R.id.toolbar)
     Toolbar mToolbar;
 
+    @Nullable
     @BindView(R.id.container)
     ViewPager mViewPager;
 
     @BindView(R.id.fab_add_station)
     FloatingActionButton mFloatingActionButton;
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,80 +158,81 @@ public class MainActivity extends AppCompatActivity implements
         ButterKnife.bind(this);
         Stetho.initializeWithDefaults(this);
 
-        mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
         setSupportActionBar(mToolbar);
 
-        mStationsPagerAdapter = new StationsPagerAdapter(getSupportFragmentManager());
+        mSelectedStation = getIntent().getBundleExtra(PARAM_STATION);
+        if (mSelectedStation == null) {
+            mSelectedStation = DatabaseService.selectedStation(this);
+        } else {
+            DatabaseService.selectStation(this, mSelectedStation);
+        }
 
-        getSupportLoaderManager().initLoader(0, null, this);
+        getSupportLoaderManager().initLoader(0, mSelectedStation, this);
 
-        mViewPager.setAdapter(mStationsPagerAdapter);
-        //mViewPager.setOffscreenPageLimit(2);
-        mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-            @Override
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+        if (mViewPager != null) {
 
-            }
+            mStationsPagerAdapter = new StationsPagerAdapter(getSupportFragmentManager());
+            mViewPager.setAdapter(mStationsPagerAdapter);
+            mViewPager.setOffscreenPageLimit(4);
+            mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+                @Override
+                public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
 
-            @Override
-            public void onPageSelected(int position) {
-                mStationsPagerAdapter.mCursor.moveToPosition(position);
-                Bundle bundle = Station.loadBundleFromCursor(mStationsPagerAdapter.mCursor);
-                mToolbar.setTitle(String.format("%s - %s",
-                        bundle.getString(StationsContract.COLUMN_LOCALITY),
-                        bundle.getString(StationsContract.COLUMN_ADDRESS)));
+                }
 
-            }
+                @Override
+                public void onPageSelected(int position) {
+                    mStationsPagerAdapter.mCursor.moveToPosition(position);
+                    mSelectedStation = Station.toBundleFromCursor(mStationsPagerAdapter.mCursor);
+                    DatabaseService.selectStation(MainActivity.this, mSelectedStation);
 
-            @Override
-            public void onPageScrollStateChanged(int state) {
 
-            }
-        });
+                }
 
-        mFloatingActionButton.setOnClickListener((view) -> {
-            startActivity(new Intent(MainActivity.this, StationsActivity.class));
-        });
+                @Override
+                public void onPageScrollStateChanged(int state) {
+
+                }
+            });
+
+        } else {
+            // TODO
+        }
+        mFloatingActionButton.setOnClickListener((view) ->
+            startActivity(new Intent(MainActivity.this, StationsActivity.class))
+        );
+        DatabaseSyncService.schedule(this);
 
     }
+
 
     private Menu mMenu;
 
     private static final int ACTION_REMOVE_STATION = 0xDEADBEEF;
-    private static final int ACTION_SHOW_LOCATION = 0xFEEDBEEF;
 
-    private void addLocationButton() {
-        mMenu.add(Menu.NONE, ACTION_SHOW_LOCATION, Menu.NONE,
-                getString(R.string.title_show_location))
-                .setIcon(R.drawable.ic_location_on_white_24dp)
-                .setShowAsAction(SHOW_AS_ACTION_IF_ROOM);
-    }
-
-
-    private void addRemoveButton() {
+    private void addRemoveStationButton() {
+        if (mMenu == null || mMenu.findItem(ACTION_REMOVE_STATION) != null) return;
         mMenu.add(Menu.NONE, ACTION_REMOVE_STATION, Menu.NONE,
                 getString(R.string.title_remove_station))
                 .setIcon(R.drawable.ic_remove_circle_outline_white_24dp)
                 .setShowAsAction(SHOW_AS_ACTION_IF_ROOM);
     }
 
+    private void removeRemoveStationButton() {
+        if (mMenu == null) return;
+        mMenu.removeItem(ACTION_REMOVE_STATION);
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         mMenu = menu;
         getMenuInflater().inflate(R.menu.menu_main, menu);
-        if (mStationsPagerAdapter == null) return true;
-        Cursor cursor = mStationsPagerAdapter.getCursor();
-        if (cursor == null) return true;
-        if (mStationsPagerAdapter.getCursor().getCount() > 0) {
-            //if (io.github.hazyair.util.Location.checkPermission(this)) {
-            addLocationButton();
-            //}
-            addRemoveButton();
+        if (mStationsPagerAdapter != null && mStationsPagerAdapter.getCount() > 0) {
+            addRemoveStationButton();
         }
-        return true;
+        return super.onCreateOptionsMenu(menu);
     }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -207,80 +249,16 @@ public class MainActivity extends AppCompatActivity implements
                 int position = mViewPager.getCurrentItem();
                 stationsPagerAdapter.removePage(position);
                 cursor.moveToPosition(position);
-                int id = Station.loadBundleFromCursor(cursor)
+                int id = Station.toBundleFromCursor(cursor)
                         .getInt(StationsContract.COLUMN__ID);
-                startService(new Intent(this, DatabaseService.class)
-                        .setAction(DatabaseService.ACTION_DELETE)
-                        .putExtra(DatabaseService.PARAM__ID, id));
+                DatabaseService.delete(this, id);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        io.github.hazyair.util.Location.requestUpdates(this, mLocationManager,
-                this);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        io.github.hazyair.util.Location.removeUpdates(this, mLocationManager,
-                this);
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        //super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        switch (requestCode) {
-            case PERMISSION_REQUEST_FINE_LOCATION: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0 &&
-                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                    io.github.hazyair.util.Location.requestUpdates(this,
-                            mLocationManager, this);
-                    //addLocationButton();
-
-                }/* else {
-
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
-
-                }*/
-                return;
-            }
-
-        }
-    }
-
-    // LocationListener
-
-    @Override
-    public void onLocationChanged(Location location) {
-
-    }
-
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
-
-    }
-
-    @Override
-    public void onProviderDisabled(String provider) {
-
-    }
-
-    // LoaderManager.LoaderCallbacks<Cursor>
+    private Bundle mSelectedStation;
 
     @NonNull
     @Override
@@ -288,28 +266,74 @@ public class MainActivity extends AppCompatActivity implements
         return StationsLoader.newInstanceForAllStations(MainActivity.this);
     }
 
+
     @Override
     public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
         if (data == null) return;
-        if (data.getCount() == 0) {
-            mToolbar.setTitle(R.string.app_name);
-            if (mMenu != null) {
-                mMenu.removeItem(ACTION_REMOVE_STATION);
-                mMenu.removeItem(ACTION_SHOW_LOCATION);
-            }
+
+        if (mStationsPagerAdapter != null) {
+            mStationsPagerAdapter.setCursor(data);
         } else {
-            data.moveToPosition(mViewPager.getCurrentItem());
-            Bundle bundle = Station.loadBundleFromCursor(data);
-            mToolbar.setTitle(String.format("%s - %s",
-                    bundle.getString(StationsContract.COLUMN_LOCALITY),
-                    bundle.getString(StationsContract.COLUMN_ADDRESS)));
+            //TODO
         }
-        mStationsPagerAdapter.setCursor(data);
+
+        int count = data.getCount();
+        if (count == 0) {
+            removeRemoveStationButton();
+            DatabaseService.selectStation(this, null);
+        } else {
+            addRemoveStationButton();
+            if (mSelectedStation == null) {
+                data.moveToFirst();
+                DatabaseService.selectStation(this, Station.toBundleFromCursor(data));
+            } else {
+                for (int i = 0; i < count; i++) {
+                    data.moveToPosition(i);
+                    if (Station.equals(Station.toBundleFromCursor(data), mSelectedStation)) {
+                        if (mViewPager != null) {
+                            mViewPager.setCurrentItem(i, false);
+                        } else {
+                            //TODO
+                        }
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     @Override
     public void onLoaderReset(@NonNull Loader<Cursor> loader) {
         mViewPager.setAdapter(null);
+    }
+
+    private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action == null) return;
+            switch (action) {
+                case DatabaseService.ACTION_UPDATED:
+                    // TODO Add refresh layout
+                    Toast.makeText(MainActivity.this, "Updated",
+                            Toast.LENGTH_LONG).show();
+                    break;
+            }
+        }
+    };
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(DatabaseService.ACTION_UPDATED);
+        registerReceiver(mBroadcastReceiver, intentFilter);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        unregisterReceiver(mBroadcastReceiver);
     }
 
 }

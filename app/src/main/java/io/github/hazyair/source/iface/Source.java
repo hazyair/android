@@ -1,7 +1,5 @@
 package io.github.hazyair.source.iface;
 
-import android.content.Context;
-
 import java.util.List;
 
 import io.github.hazyair.source.Data;

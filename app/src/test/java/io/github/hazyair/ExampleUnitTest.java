@@ -1,4 +1,4 @@
-package com.sielski.marcin.hazyair;
+package io.github.hazyair;
 
 import org.junit.Test;
 

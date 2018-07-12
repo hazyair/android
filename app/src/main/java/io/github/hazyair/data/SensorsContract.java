@@ -19,7 +19,7 @@ public class SensorsContract {
     public static final String COLUMN_ID = "id";
 
     @DataType(DataType.Type.TEXT)
-    public static final String COLUMN_SENSOR = "station";
+    public static final String COLUMN_STATION_ID = "station_id";
 
     @DataType(DataType.Type.TEXT)
     public static final String COLUMN_PARAMETER = "parameter";

@@ -1,0 +1,40 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/appwidget"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/appwidget"
+    android:orientation="vertical"
+    android:padding="@dimen/padding">
+
+    <TextView
+        android:id="@+id/place"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#00000000"
+        android:contentDescription="@string/contentDescription_place"
+        android:textSize="16sp"
+        android:textColor="@android:color/white"
+        android:textStyle="bold"
+        android:text="@string/app_name" />
+
+    <TextView
+        android:id="@+id/address"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#00000000"
+        android:contentDescription="@string/contentDescription_address"
+        android:textSize="16sp"
+        android:textColor="@android:color/white"
+        android:text="@string/text_no_station_selected"
+        android:paddingBottom="@dimen/padding"/>
+
+    <ListView
+        android:id="@+id/sensors"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:dividerHeight="0dp"
+        android:divider="@color/primaryLightTransparent"
+        android:layout_weight="3"
+        android:listSelector="@android:color/transparent" />
+
+</LinearLayout>

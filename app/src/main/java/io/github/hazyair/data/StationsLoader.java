@@ -8,8 +8,9 @@ import io.github.hazyair.source.Station;
 
 public class StationsLoader extends CursorLoader {
 
-    public StationsLoader(Context context, Uri uri) {
-        super(context, uri, new Station().keys(), null, null,
+    @SuppressWarnings("SameParameterValue")
+    private StationsLoader(Context context, Uri uri) {
+        super(context, uri, Station.keys(), null, null,
                 HazyairProvider.Stations.DEFAULT_SORT);
     }
 

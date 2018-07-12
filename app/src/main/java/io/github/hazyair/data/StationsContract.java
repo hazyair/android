@@ -22,11 +22,11 @@ public class StationsContract {
     @NotNull
     public static final String COLUMN_NAME = "name";
 
-    @DataType(DataType.Type.TEXT)
+    @DataType(DataType.Type.REAL)
     @NotNull
     public static final String COLUMN_LATITUDE = "latitude";
 
-    @DataType(DataType.Type.TEXT)
+    @DataType(DataType.Type.REAL)
     @NotNull
     public static final String COLUMN_LONGITUDE = "longitude";
 

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.widget.CardView xmlns:tools="http://schemas.android.com/tools"
+<android.support.v7.widget.CardView
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:android="http://schemas.android.com/apk/res/android"
@@ -21,17 +21,6 @@
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-
-        <!--<TextView
-            android:id="@+id/locality"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/textDarker"
-            android:textStyle="bold"
-            app:layout_anchor="@id/country"
-            app:layout_anchorGravity="end"
-            app:layout_constraintStart_toEndOf="@+id/country"
-            app:layout_constraintTop_toTopOf="parent" />-->
 
         <TextView
             android:id="@+id/address"

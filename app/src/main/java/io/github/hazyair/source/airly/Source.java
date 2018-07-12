@@ -20,9 +20,9 @@ public class Source implements io.github.hazyair.source.iface.Source {
     private final static String STATIONS = "current";
 
     private static  io.github.hazyair.source.iface.Source mInstance;
-    private Context mContext;
+    private final Context mContext;
 
-    public Source(Context context) {
+    private Source(Context context) {
         mContext = context;
     }
 
@@ -56,7 +56,7 @@ public class Source implements io.github.hazyair.source.iface.Source {
                     station.location.latitude, station.location.longitude,
                     station.address.country, station.address.locality,
                     station.address.route + " " + station.address.streetNumber,
-                    mContext.getString(R.string.source_airly)));
+                    mContext.getString(R.string.data_source_airly)));
         }
         return result;
     }

@@ -62,7 +62,7 @@ public final class Location {
             return;
         // TODO Change criteria setup time and distance
         locationManager.requestLocationUpdates(locationManager.getBestProvider(new Criteria(),
-                false), 400, 1, locationListener);
+                false), 1000*60, 1000, locationListener);
     }
 
     public static void removeUpdates(Context context, LocationManager locationManager,

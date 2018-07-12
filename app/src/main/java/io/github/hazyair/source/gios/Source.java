@@ -42,7 +42,7 @@ public class Source implements io.github.hazyair.source.iface.Source {
     private static final String ug_m3 = "µg/m³";
 
     private static io.github.hazyair.source.iface.Source mInstance;
-    private Context mContext;
+    private final Context mContext;
 
     private Source(Context context) {
         mContext = context;
@@ -79,8 +79,8 @@ public class Source implements io.github.hazyair.source.iface.Source {
         for(Station station : stations) {
             result.add(new io.github.hazyair.source.Station(String.valueOf(station.id),
                     station.stationName, Double.valueOf(station.gegrLat),
-                    Double.valueOf(station.gegrLon), mContext.getString(R.string.poland), station.city.name,
-                    station.addressStreet, mContext.getString(R.string.source_gios)));
+                    Double.valueOf(station.gegrLon), mContext.getString(R.string.data_poland), station.city.name,
+                    station.addressStreet, mContext.getString(R.string.data_source_gios)));
         }
         return result;
     }

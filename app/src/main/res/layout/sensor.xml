@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.v7.widget.CardView
-    android:id="@+id/sensor"
+    android:id="@+id/cardview"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_margin="@dimen/padding"
+    android:layout_marginTop="@dimen/padding"
+    android:layout_marginStart="@dimen/padding"
+    android:layout_marginEnd="@dimen/padding"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <android.support.constraint.ConstraintLayout
@@ -19,7 +21,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            android:paddingTop="4dp"
+            android:textSize="16sp"/>
 
         <TextView
             android:id="@+id/result"
@@ -27,7 +31,9 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/padding"
             app:layout_constraintStart_toEndOf="@id/parameter"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            android:paddingTop="4dp"
+            android:textSize="16sp"/>
         <Button
             android:id="@+id/expand_collapse"
             android:layout_width="24dp"

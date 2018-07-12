@@ -1,24 +1,25 @@
 <resources>
-    <string name="poland">Poland</string>
+    <string name="app_name" translatable="false">hazyair</string>
+    <string name="button_positive_location_permission_request" translatable="false">OK</string>
+    <string name="contentDescription_address">Address</string>
+    <string name="contentDescription_place">Place</string>
+    <string name="contentDescription_sensor_data">Sensor data</string>
+    <string name="data_poland">Poland</string>
+    <string name="data_source_airly" translatable="false">AIRLY</string>
+    <string name="data_source_gios">CIEP</string>
+    <string name="data_source_smoksmog" translatable="false">SMOKSMOG</string>
+    <string name="message_location_permission_request">We respect your privacy. For the best user experience please allow this application to access location services. The location information will be solely used to present personalized data and will not be sent outside of the application.</string>
+    <string name="text_km" translatable="false">km</string>
+    <string name="text_no_station_selected">No station selected yet.</string>
+    <string name="text_station_by">Station by</string>
     <string name="title_add_station">Add station</string>
     <string name="title_find_station">Find station</string>
-    <string name="title_sort_by_distance">Sort by distance</string>
-    <string name="title_show_location">Show location</string>
-    <string name="title_remove_station">Remove station</string>
-    <string name="source_airly">AIRLY</string>
-    <string name="source_gios">CIEP</string>
-    <string name="source_smoksmog">SMOKSMOG</string>
-    <string name="text_station_by">Station by</string>
-    <string name="text_km">km</string>
     <string name="title_location_permission_request">Location permission request</string>
-    <string name="message_location_permission_request">We respect your privacy. For the best user experience please allow this application to access location services. The location information will be solely used to present personalized data and will not be sent outside of the application.</string>
-    <string name="button_positive_location_permission_request">OK</string>
-    <string name="content_authority">io.github.hazyair.provider</string>
+    <string name="title_remove_station">Remove station</string>
+    <string name="title_settings">Settings</string>
+    <string name="title_sort_by_distance">Sort by distance</string>
 
-    <string name="app_name">hazyair</string>
-    <string name="action_settings">Settings</string>
-    <string name="section_format">Hello World from section: %1$d</string>
-    <string name="title_activity_settings">Settings</string>
+
 
     <!-- Strings related to Settings -->
 

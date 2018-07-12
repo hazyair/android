@@ -33,7 +33,7 @@ dependencies {
     implementation "com.android.support:support-v4:$androidSupportVersion"
     implementation 'com.github.PhilJay:MPAndroidChart:v3.0.3'
     implementation 'com.firebase:firebase-jobdispatcher:0.8.5'
-    implementation 'com.android.support.constraint:constraint-layout:1.1.1'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.2'
     implementation 'com.google.code.gson:gson:2.8.2'
     implementation 'com.jakewharton.timber:timber:4.7.0'
     implementation 'com.github.florent37:shapeofview:1.0.7'

@@ -1,7 +1,6 @@
 package io.github.hazyair.source;
 
 import android.database.Cursor;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -11,15 +10,19 @@ public class Station extends Base implements Parcelable {
     public int _id;
     public String id;
     public String name;
-    public Double latitude;
-    public Double longitude;
+    public double latitude;
+    public double longitude;
     public String country;
     public String locality;
     public String address;
     public String source;
 
-    public static Bundle loadBundleFromCursor(Cursor cursor) {
-        return new Station()._loadBundleFromCursor(cursor);
+    public static Bundle toBundleFromCursor(Cursor cursor) {
+        return new Station()._toBundleFromCursor(cursor);
+    }
+
+    public static String[] keys() {
+        return new Station()._keys();
     }
 
     public Station() {
@@ -40,7 +43,15 @@ public class Station extends Base implements Parcelable {
         this.source = (source == null ? "" : source);
     }
 
-    protected Station(Parcel in) {
+    public Station(Bundle bundle) {
+        super(bundle);
+    }
+
+    public Station(Cursor cursor) {
+        super(cursor);
+    }
+
+    Station(Parcel in) {
         _id = in.readInt();
         id = in.readString();
         name = in.readString();

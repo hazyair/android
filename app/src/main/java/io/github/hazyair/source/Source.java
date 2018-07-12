@@ -15,7 +15,7 @@ import io.github.hazyair.source.iface.DataCallback;
 import io.github.hazyair.source.iface.SensorsCallback;
 import io.github.hazyair.source.iface.StationsCallback;
 
-public class Source<T> {
+public class Source {
 
     public enum Type {
         GIOS,
@@ -23,7 +23,7 @@ public class Source<T> {
         SMOKSMOG
     }
 
-    private Map<Type, io.github.hazyair.source.iface.Source> mSources;
+    private final Map<Type, io.github.hazyair.source.iface.Source> mSources;
     private static RequestQueue mRequestQueue;
     private Type mType;
     private Station mStation;
@@ -51,9 +51,8 @@ public class Source<T> {
         if (callback == null) return;
         io.github.hazyair.source.iface.Source source = mSources.get(mType);
         mRequestQueue.add(new StringRequest(Request.Method.GET, source.stationsUrl(),
-                (response) -> {
-            callback.onSuccess(source.stations(response));
-        }, (error -> callback.onError())));
+                (response) -> callback.onSuccess(source.stations(response)),
+                (error -> callback.onError())));
     }
 
     public Source from(Station station) {

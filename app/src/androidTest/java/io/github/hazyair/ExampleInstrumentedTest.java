@@ -1,4 +1,4 @@
-package com.sielski.marcin.hazyair;
+package io.github.hazyair;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("com.sielski.marcin.hazyair", appContext.getPackageName());
+        assertEquals("io.github.hazyair", appContext.getPackageName());
     }
 }

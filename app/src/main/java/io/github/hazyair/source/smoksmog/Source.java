@@ -21,7 +21,7 @@ public class Source implements io.github.hazyair.source.iface.Source {
     private final static String STATIONS = "stations";
 
     private static io.github.hazyair.source.iface.Source mInstance;
-    private Context mContext;
+    private final Context mContext;
 
     private Source(Context context) {
         mContext = context;
@@ -60,8 +60,8 @@ public class Source implements io.github.hazyair.source.iface.Source {
             if (string.length > 1) address = string[1];
             result.add(new io.github.hazyair.source.Station(String.valueOf(station.id), station.name,
                     Double.valueOf(station.latitude), Double.valueOf(station.longitude),
-                    mContext.getString(R.string.poland), locality, address,
-                    mContext.getString(R.string.source_smoksmog)));
+                    mContext.getString(R.string.data_poland), locality, address,
+                    mContext.getString(R.string.data_source_smoksmog)));
 
         }
         return result;
