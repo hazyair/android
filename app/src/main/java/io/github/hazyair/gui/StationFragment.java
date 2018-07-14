@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Rect;
 import android.location.Location;
@@ -20,6 +21,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
+import android.text.Layout;
 import android.util.LongSparseArray;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
@@ -97,7 +99,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
 
     @Override
     public void onLoaderReset(@NonNull Loader<Cursor> loader) {
-        mRecyclerView.setAdapter(null);
+        mSensorsAdapter.setCursor(null);
     }
 
     @Override
@@ -144,6 +146,9 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
 
         @Nullable @BindView(R.id.distance)
         TextView distance;
+
+        @Nullable @BindView(R.id.map)
+        FrameLayout frameLayout;
 
         private final Bundle mStation;
         private final SupportMapFragment mSupportMapFragment;
@@ -486,12 +491,13 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                 int fab = 0;
                 Activity activity = getActivity();
                 if (activity != null)
-                    fab = getActivity().findViewById(R.id.fab_add_station).getHeight();
+                    fab = activity.findViewById(R.id.fab_add_station).getMeasuredHeight();
 
+                Resources resources = getResources();
                 if (itemCount > 0 && itemPosition == itemCount - 1) {
-                    outRect.set(0, 0, 0, 26 *
-                            (int)view.getContext().getResources().getDisplayMetrics().density +
-                            fab);
+                    outRect.set(0, 0, 0,
+                            resources.getDimensionPixelSize(R.dimen.padding) +
+                                    resources.getDimensionPixelSize(R.dimen.fab_margin) + fab);
                 }
             }
         });

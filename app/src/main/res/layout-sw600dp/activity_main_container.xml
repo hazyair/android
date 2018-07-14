@@ -8,9 +8,17 @@
         android:layout_width="300dp"
         android:layout_height="wrap_content"
         app:layoutManager="android.support.v7.widget.LinearLayoutManager"/>
+    <View
+        android:id="@+id/divider"
+        android:layout_height="match_parent"
+        android:layout_width="1dp"
+        android:background="@android:color/darker_gray"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        app:layout_constraintStart_toEndOf="@id/stations"/>
     <FrameLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
-        <include layout="@layout/fragment_main"/>
-    </FrameLayout>
+        android:id="@+id/container"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toEndOf="@id/divider"
+        app:layout_constraintEnd_toEndOf="parent" />
 </android.support.constraint.ConstraintLayout>

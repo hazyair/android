@@ -5,14 +5,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.graphics.Rect;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 
@@ -21,8 +24,14 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.view.ViewPager;
 import android.os.Bundle;
 import android.util.SparseArray;
+import android.view.LayoutInflater;
 import android.view.Menu;
-import android.view.MenuItem;;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.widget.FrameLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.stetho.Stetho;
@@ -43,13 +52,13 @@ public class MainActivity extends AppCompatActivity implements
 
     public static final String PARAM_STATION = "io.github.hazyair.PARAM_STATION";
 
-    public class StationsPagerAdapter extends FragmentStatePagerAdapter {
+    public class StationPagerAdapter extends FragmentStatePagerAdapter {
 
         private Cursor mCursor;
         private final SparseArray<Fragment> mFragments = new SparseArray<>();
         private final FragmentManager mFragmentManager;
 
-        StationsPagerAdapter(FragmentManager fm) {
+        StationPagerAdapter(FragmentManager fm) {
             super(fm);
             mFragmentManager = fm;
         }
@@ -139,18 +148,185 @@ public class MainActivity extends AppCompatActivity implements
 
     }
 
-    private StationsPagerAdapter mStationsPagerAdapter;
+    class ViewHolder extends RecyclerView.ViewHolder {
+
+        final int viewType;
+
+        @Nullable @BindView(R.id.cardview)
+        CardView card;
+
+        @Nullable @BindView(R.id.place)
+        TextView place;
+
+        @Nullable @BindView(R.id.address)
+        TextView address;
+
+        @Nullable @BindView(R.id.station)
+        TextView station;
+
+        int _id;
+
+        ViewHolder(View itemView, int viewType) {
+            super(itemView);
+            ButterKnife.bind(this, itemView);
+            this.viewType = viewType;
+        }
+    }
+
+    public class StationListAdapter extends RecyclerView.Adapter<ViewHolder> {
+
+        private Cursor mCursor;
+        private int mCurrentItem = 0;
+        private ViewHolder mViewHolder;
+
+        public void setCursor(Cursor cursor) {
+            mCursor = cursor;
+            notifyDataSetChanged();
+        }
+
+        void setCurrentItem(int currentItem) {
+            mCurrentItem = currentItem;
+            notifyDataSetChanged();
+        }
+
+        int getCurrentItem() {
+            return mCurrentItem;
+        }
+
+        public Cursor getCursor() {
+            return mCursor;
+        }
+
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            return new ViewHolder(LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.station, parent, false), viewType);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            int adapterPosition = holder.getAdapterPosition();
+            if (mCursor == null || !mCursor.moveToPosition(adapterPosition)) return;
+            Bundle station = Station.toBundleFromCursor(mCursor);
+            if (holder.place == null) return;
+            holder.place.setText(String.format("%s %s",
+                    station.getString(StationsContract.COLUMN_COUNTRY),
+                    station.getString(StationsContract.COLUMN_LOCALITY)));
+            if (holder.address == null) return;
+            holder.address.setText(station.getString(StationsContract.COLUMN_ADDRESS));
+            if (holder.station == null) return;
+            holder.station.setText(String.format("%s %s",
+                    getString(R.string.text_station_by),
+                    station.getString(StationsContract.COLUMN_SOURCE)));
+            holder._id = station.getInt(StationsContract.COLUMN__ID);
+            if (holder.card == null) return;
+            if (adapterPosition == mCurrentItem) {
+                selectStation(holder, adapterPosition);
+                mViewHolder = holder;
+            } else {
+                holder.itemView.setOnClickListener((v) -> {
+                    holder.itemView.setOnClickListener(null);
+                    deselectCurrentStation();
+                    mStationFragment = null;
+                    selectStation(holder, adapterPosition);
+                    mViewHolder = holder;
+                    mCurrentItem = adapterPosition;
+                });
+            }
+
+
+        }
+
+        @Override
+        public int getItemCount() {
+            return mCursor == null ? 0 : mCursor.getCount();
+        }
+
+        private void selectStation(ViewHolder holder, int position) {
+            if (holder.card == null) return;
+            holder.card.setCardBackgroundColor(getColor(R.color.primaryLight));
+            if (holder.place == null) return;
+            holder.place.setTextColor(getColor(R.color.textLighter));
+            if (holder.address == null) return;
+            holder.address.setTextColor(getColor(R.color.textLight));
+            if (holder.station == null) return;
+            holder.station.setTextColor(getColor(R.color.textLight));
+            if (mContainer == null) return;
+            ConstraintLayout.LayoutParams layoutParams =
+                    (ConstraintLayout.LayoutParams) mContainer.getLayoutParams();
+            int width = mContainer.getMeasuredWidth();
+            if (width > 0) {
+                layoutParams.width = width;
+                mContainer.setLayoutParams(layoutParams);
+                mCursor.moveToPosition(position);
+                if (mStationFragment == null)
+                    mStationFragment = StationFragment.newInstance(mCursor);
+                getSupportFragmentManager().beginTransaction().replace(R.id.container,
+                        mStationFragment).commit();
+                DatabaseService.selectStation(holder.itemView.getContext(),
+                        Station.toBundleFromCursor(mCursor));
+            } else {
+                ViewTreeObserver vto = mContainer.getViewTreeObserver();
+                vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                    @Override
+                    public void onGlobalLayout() {
+                        mContainer.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                        ConstraintLayout.LayoutParams layoutParams =
+                                (ConstraintLayout.LayoutParams) mContainer.getLayoutParams();
+                        layoutParams.width = mContainer.getMeasuredWidth();
+                        mContainer.setLayoutParams(layoutParams);
+                        mCursor.moveToPosition(position);
+                        if (mStationFragment == null)
+                            mStationFragment = StationFragment.newInstance(mCursor);
+                        getSupportFragmentManager().beginTransaction().replace(R.id.container,
+                                mStationFragment).commit();
+                        DatabaseService.selectStation(holder.itemView.getContext(),
+                                Station.toBundleFromCursor(mCursor));
+                    }
+                });
+            }
+        }
+
+        void deselectCurrentStation() {
+            if (mViewHolder == null) return;
+            if (mViewHolder.card == null) return;
+            mViewHolder.card.setCardBackgroundColor(getColor(android.R.color.white));
+            if (mViewHolder.place == null) return;
+            mViewHolder.place.setTextColor(getColor(R.color.textDarker));
+            if (mViewHolder.address == null) return;
+            mViewHolder.address.setTextColor(getColor(R.color.textDark));
+            if (mViewHolder.station == null) return;
+            mViewHolder.station.setTextColor(getColor(R.color.textDark));
+        }
+
+    }
+
+    private StationPagerAdapter mStationPagerAdapter;
+
+    private StationListAdapter mStationListAdapter;
 
     @BindView(R.id.toolbar)
     Toolbar mToolbar;
 
     @Nullable
-    @BindView(R.id.container)
+    @BindView(R.id.view_pager)
     ViewPager mViewPager;
 
     @BindView(R.id.fab_add_station)
     FloatingActionButton mFloatingActionButton;
 
+    @Nullable
+    @BindView(R.id.stations)
+    RecyclerView mRecyclerView;
+
+    @Nullable @BindView(R.id.container)
+    FrameLayout mContainer;
+
+    @Nullable @BindView(R.id.divider)
+    View mDivider;
+
+    private boolean mTwoPane;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -167,36 +343,66 @@ public class MainActivity extends AppCompatActivity implements
             DatabaseService.selectStation(this, mSelectedStation);
         }
 
+        if (savedInstanceState != null) {
+            mStationFragment =
+                    (StationFragment) getSupportFragmentManager().getFragment(savedInstanceState,
+                    StationFragment.class.getName());
+        }
+
         getSupportLoaderManager().initLoader(0, mSelectedStation, this);
 
-        if (mViewPager != null) {
+        mTwoPane = getResources().getBoolean(R.bool.two_pane);
+        if (mTwoPane) {
+            if (mRecyclerView != null) {
+                mStationListAdapter = new StationListAdapter();
+                mRecyclerView.setAdapter(mStationListAdapter);
+                mRecyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
+                    @Override
+                    public void getItemOffsets(Rect outRect, View view, RecyclerView parent,
+                                               RecyclerView.State state) {
+                        super.getItemOffsets(outRect, view, parent, state);
+                        int itemCount = state.getItemCount();
 
-            mStationsPagerAdapter = new StationsPagerAdapter(getSupportFragmentManager());
-            mViewPager.setAdapter(mStationsPagerAdapter);
-            mViewPager.setOffscreenPageLimit(4);
-            mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-                @Override
-                public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+                        final int itemPosition = parent.getChildAdapterPosition(view);
 
-                }
+                        if (itemPosition == RecyclerView.NO_POSITION) {
+                            return;
+                        }
 
-                @Override
-                public void onPageSelected(int position) {
-                    mStationsPagerAdapter.mCursor.moveToPosition(position);
-                    mSelectedStation = Station.toBundleFromCursor(mStationsPagerAdapter.mCursor);
-                    DatabaseService.selectStation(MainActivity.this, mSelectedStation);
-
-
-                }
-
-                @Override
-                public void onPageScrollStateChanged(int state) {
-
-                }
-            });
-
+                        if (itemCount > 0 && itemPosition == itemCount - 1) {
+                            outRect.set(0, 0, 0,
+                                    getResources().getDimensionPixelSize(R.dimen.padding));
+                        }
+                    }
+                });
+            }
         } else {
-            // TODO
+            if (mViewPager != null) {
+
+                mStationPagerAdapter = new StationPagerAdapter(getSupportFragmentManager());
+                mViewPager.setAdapter(mStationPagerAdapter);
+                mViewPager.setOffscreenPageLimit(4);
+                mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+                    @Override
+                    public void onPageScrolled(int position, float positionOffset,
+                                               int positionOffsetPixels) {
+
+                    }
+
+                    @Override
+                    public void onPageSelected(int position) {
+                        Cursor cursor = mStationPagerAdapter.getCursor();
+                        cursor.moveToPosition(position);
+                        mSelectedStation = Station.toBundleFromCursor(cursor);
+                        DatabaseService.selectStation(MainActivity.this, mSelectedStation);
+                    }
+
+                    @Override
+                    public void onPageScrollStateChanged(int state) {
+
+                    }
+                });
+            }
         }
         mFloatingActionButton.setOnClickListener((view) ->
             startActivity(new Intent(MainActivity.this, StationsActivity.class))
@@ -210,7 +416,7 @@ public class MainActivity extends AppCompatActivity implements
 
     private static final int ACTION_REMOVE_STATION = 0xDEADBEEF;
 
-    private void addRemoveStationButton() {
+    public void addRemoveStationButton() {
         if (mMenu == null || mMenu.findItem(ACTION_REMOVE_STATION) != null) return;
         mMenu.add(Menu.NONE, ACTION_REMOVE_STATION, Menu.NONE,
                 getString(R.string.title_remove_station))
@@ -218,7 +424,7 @@ public class MainActivity extends AppCompatActivity implements
                 .setShowAsAction(SHOW_AS_ACTION_IF_ROOM);
     }
 
-    private void removeRemoveStationButton() {
+    public void removeRemoveStationButton() {
         if (mMenu == null) return;
         mMenu.removeItem(ACTION_REMOVE_STATION);
     }
@@ -227,8 +433,14 @@ public class MainActivity extends AppCompatActivity implements
     public boolean onCreateOptionsMenu(Menu menu) {
         mMenu = menu;
         getMenuInflater().inflate(R.menu.menu_main, menu);
-        if (mStationsPagerAdapter != null && mStationsPagerAdapter.getCount() > 0) {
-            addRemoveStationButton();
+        if (mTwoPane) {
+            if (mStationListAdapter != null && mStationListAdapter.getItemCount() > 0) {
+                addRemoveStationButton();
+            }
+        } else {
+            if (mStationPagerAdapter != null && mStationPagerAdapter.getCount() > 0) {
+                addRemoveStationButton();
+            }
         }
         return super.onCreateOptionsMenu(menu);
     }
@@ -241,17 +453,34 @@ public class MainActivity extends AppCompatActivity implements
                 startActivity(new Intent(this, SettingsActivity.class));
                 return true;
             case ACTION_REMOVE_STATION:
-                StationsPagerAdapter stationsPagerAdapter =
-                        (StationsPagerAdapter) mViewPager.getAdapter();
-                if (stationsPagerAdapter == null) return true;
-                Cursor cursor = stationsPagerAdapter.getCursor();
-                if (cursor == null || cursor.getCount() == 0) return true;
-                int position = mViewPager.getCurrentItem();
-                stationsPagerAdapter.removePage(position);
+                int position;
+                Cursor cursor;
+                if (mTwoPane) {
+                    if (mStationListAdapter == null) return true;
+                    cursor = mStationListAdapter.getCursor();
+                    if (cursor == null || cursor.getCount() == 0) return true;
+                    removeRemoveStationButton();
+                    mStationListAdapter.deselectCurrentStation();
+                    position = mStationListAdapter.getCurrentItem();
+                    if (position + 1 < mStationListAdapter.getItemCount()) {
+                        cursor.moveToPosition(position + 1);
+                    } else if (position > 0) {
+                        cursor.moveToPosition(position - 1);
+                    } else cursor.moveToFirst();
+                    mSelectedStation = Station.toBundleFromCursor(cursor);
+                } else {
+                    if (mViewPager == null || mStationPagerAdapter == null) return true;
+                    cursor = mStationPagerAdapter.getCursor();
+                    if (cursor == null || cursor.getCount() == 0) return true;
+                    position = mViewPager.getCurrentItem();
+                    mStationPagerAdapter.removePage(position);
+                    cursor.moveToPosition(position);
+                    DatabaseService.delete(this, Station.toBundleFromCursor(cursor)
+                            .getInt(StationsContract.COLUMN__ID));
+                }
                 cursor.moveToPosition(position);
-                int id = Station.toBundleFromCursor(cursor)
-                        .getInt(StationsContract.COLUMN__ID);
-                DatabaseService.delete(this, id);
+                DatabaseService.delete(this, Station.toBundleFromCursor(cursor)
+                        .getInt(StationsContract.COLUMN__ID));
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -271,10 +500,17 @@ public class MainActivity extends AppCompatActivity implements
     public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
         if (data == null) return;
 
-        if (mStationsPagerAdapter != null) {
-            mStationsPagerAdapter.setCursor(data);
+        if (mTwoPane) {
+            if (data.getCount() == 0) {
+                getSupportFragmentManager().beginTransaction().replace(R.id.container,
+                        new Fragment()).commit();
+                if (mDivider != null) mDivider.setVisibility(View.GONE);
+            } else {
+                if (mDivider != null) mDivider.setVisibility(View.VISIBLE);
+            }
+            mStationListAdapter.setCursor(data);
         } else {
-            //TODO
+            mStationPagerAdapter.setCursor(data);
         }
 
         int count = data.getCount();
@@ -290,10 +526,11 @@ public class MainActivity extends AppCompatActivity implements
                 for (int i = 0; i < count; i++) {
                     data.moveToPosition(i);
                     if (Station.equals(Station.toBundleFromCursor(data), mSelectedStation)) {
-                        if (mViewPager != null) {
-                            mViewPager.setCurrentItem(i, false);
+                        if (mTwoPane) {
+                            if (mStationListAdapter != null) mStationListAdapter.setCurrentItem(i);
+                            if (mRecyclerView != null) mRecyclerView.scrollToPosition(i);
                         } else {
-                            //TODO
+                            if (mViewPager != null) mViewPager.setCurrentItem(i, false);
                         }
                         break;
                     }
@@ -304,7 +541,11 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onLoaderReset(@NonNull Loader<Cursor> loader) {
-        mViewPager.setAdapter(null);
+        if (mTwoPane) {
+            mStationListAdapter.setCursor(null);
+        } else {
+            mStationPagerAdapter.setCursor(null);
+        }
     }
 
     private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
@@ -336,4 +577,20 @@ public class MainActivity extends AppCompatActivity implements
         unregisterReceiver(mBroadcastReceiver);
     }
 
+    private StationFragment mStationFragment;
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (mTwoPane && mStationFragment != null) {
+            getSupportFragmentManager().putFragment(outState, StationFragment.class.getName(),
+                    mStationFragment);
+
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mStationFragment = null;
+    }
 }
