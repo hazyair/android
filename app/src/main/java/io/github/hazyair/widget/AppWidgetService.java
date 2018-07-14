@@ -47,6 +47,10 @@ public class AppWidgetService extends RemoteViewsService {
             public RemoteViews getViewAt(int position) {
                 RemoteViews remoteViews = new RemoteViews(getPackageName(),
                         R.layout.appwidget_sensor);
+                int sensorSize = mInfo.sensors.size();
+                int dataSize = mInfo.data.size();
+                if (position >= sensorSize || position >= dataSize || sensorSize != dataSize)
+                    return remoteViews;
                 Sensor sensor = mInfo.sensors.get(position);
                 Data data = mInfo.data.get(position);
                 int percent = Quality.normalize(sensor.parameter, data.value);

@@ -21,7 +21,6 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
-import android.text.Layout;
 import android.util.LongSparseArray;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
@@ -164,7 +163,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                         mStation.getString(StationsContract.COLUMN_ADDRESS)));
             mSupportMapFragment = StationMapFragment.newInstance();
             getChildFragmentManager().beginTransaction()
-                    .replace(R.id.map, mSupportMapFragment).commit();
+                    .replace(R.id.map, mSupportMapFragment).commitAllowingStateLoss();
             mSupportMapFragment.getMapAsync(this);
 
         }
@@ -218,12 +217,12 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
 
         private final Bundle mStation;
 
-        private Bundle mSelected;
+        private Bundle mSelectedItem;
 
-        SensorsAdapter(Bundle station, Bundle selected, boolean distance) {
+        SensorsAdapter(Bundle station, Bundle selectedItem, boolean distance) {
             super();
             mStation = station;
-            mSelected = selected;
+            mSelectedItem = selectedItem;
             mDistance = distance;
         }
 
@@ -303,7 +302,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                     Context context = getContext();
                     if (context == null) return;
                     MapViewHolder mapViewHolder = (MapViewHolder) holder;
-                    if (Base.equals(mSelected, mStation)) expand(context, mapViewHolder, mStation);
+                    if (Base.equals(mSelectedItem, mStation)) expand(context, mapViewHolder, mStation);
                     else collapse(context, mapViewHolder);
                     if (mapViewHolder.cardView != null)
                         mapViewHolder.cardView.setOnClickListener((v) ->
@@ -338,13 +337,23 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                         sensorViewHolder.parameter.setText(
                                 sensor.getString(SensorsContract.COLUMN_PARAMETER));
                     Bundle data = mData.get(sensor.getInt(SensorsContract.COLUMN__ID));
-                    if (data != null) {
+                    if (data == null) {
+                        if (sensorViewHolder.cardView != null)
+                            sensorViewHolder.cardView
+                                    .setCardBackgroundColor(context.getColor(R.color.textLight));
+                        //sensorViewHolder.itemView.setVisibility(View.GONE);
+                    } else {
+                        if (sensorViewHolder.cardView != null)
+                            sensorViewHolder.cardView
+                                    .setCardBackgroundColor(context.getColor(android.R.color.white));
+                        //sensorViewHolder.itemView.setVisibility(View.VISIBLE);
                         if (sensorViewHolder.result != null)
                             sensorViewHolder.result.setText(String.format("%s %s",
                                     String.valueOf(data.getDouble(DataContract.COLUMN_VALUE)),
                                     sensor.getString(SensorsContract.COLUMN_UNIT)));
                     }
-                    LongSparseArray<Double> chart = mChart.get(sensor.getInt(SensorsContract.COLUMN__ID));
+                    LongSparseArray<Double> chart =
+                            mChart.get(sensor.getInt(SensorsContract.COLUMN__ID));
                     if (chart != null && sensorViewHolder.chart != null) {
                         ArrayList<Entry> values = new ArrayList<>();
                         for (int i = 0; i < chart.size(); i++) {
@@ -367,12 +376,13 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                         sensorViewHolder.chart.setDescription(description);
                         sensorViewHolder.chart.setData(new LineData(lineDataSet));
                     }
-                    if (Base.equals(mSelected, sensor)) expand(context, sensorViewHolder, sensor);
+                    if (Base.equals(mSelectedItem, sensor))
+                        expand(context, sensorViewHolder, sensor);
                     else collapse(context, sensorViewHolder);
-                    if (sensorViewHolder.expandCollapse != null)
+                    if (sensorViewHolder.expandCollapse != null && data != null)
                         sensorViewHolder.expandCollapse.setOnClickListener((v) ->
                                 OnClickListener(context, sensorViewHolder, sensor));
-                    if (sensorViewHolder.cardView != null)
+                    if (sensorViewHolder.cardView != null && data != null)
                         sensorViewHolder.cardView.setOnClickListener((v) ->
                                 OnClickListener(context, sensorViewHolder, sensor));
             }
@@ -399,13 +409,13 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                         context.getDrawable(R.drawable.ic_keyboard_arrow_up_black_24dp));
             if (viewHolder instanceof MapViewHolder && viewHolder.frameLayout != null) {
                 viewHolder.frameLayout.setVisibility(View.VISIBLE);
-                mSelected = bundle;
+                mSelectedItem = bundle;
             }
             if (viewHolder instanceof  SensorViewHolder) {
                 SensorViewHolder sensorViewHolder = (SensorViewHolder) viewHolder;
                 if (sensorViewHolder.chart != null) {
                     sensorViewHolder.chart.setVisibility(View.VISIBLE);
-                    mSelected = bundle;
+                    mSelectedItem = bundle;
                 }
             }
 
@@ -482,7 +492,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                 super.getItemOffsets(outRect, view, parent, state);
                 int itemCount = state.getItemCount();
 
-                final int itemPosition = parent.getChildAdapterPosition(view);
+                final int itemPosition = parent.getChildLayoutPosition(view);
 
                 if (itemPosition == RecyclerView.NO_POSITION) {
                     return;
@@ -510,7 +520,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        if (mSensorsAdapter != null)  outState.putParcelable(SELECTED, mSensorsAdapter.mSelected);
+        if (mSensorsAdapter != null)  outState.putParcelable(SELECTED, mSensorsAdapter.mSelectedItem);
     }
 
     private LocationManager mLocationManager;

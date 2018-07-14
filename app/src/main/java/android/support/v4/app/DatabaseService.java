@@ -36,8 +36,9 @@ public class DatabaseService extends JobIntentService {
     public final static String ACTION_UPDATED =
             "io.github.hazyair.ACTION_UPDATED";
 
+
     private final static String PARAM__ID = "io.github.hazyair.PARAM__ID";
-    private final static String PARAM_STATION = "io.github.hazyair.PARAM_STATION";
+    public final static String PARAM_STATION = "io.github.hazyair.PARAM_STATION";
     public final static String PARAM_POSITION = "io.github.hazyair.POSITION";
     public final static String PARAM_RESCHEDULE = "io.github.hazyair.PARAM_RESCHEDULE";
 
@@ -55,6 +56,7 @@ public class DatabaseService extends JobIntentService {
                 int _id = intent.getIntExtra(PARAM__ID, 0);
                 if (_id == 0) return;
                 HazyairProvider.delete(this, _id);
+                sendConfirmation(-1);
                 break;
             }
             case ACTION_INSERT_OR_DELETE: {
@@ -170,12 +172,14 @@ public class DatabaseService extends JobIntentService {
             sensors.add(new Sensor(cursor));
         }
         List<Data> data = new ArrayList<>();
+        List<Sensor> sensorList = new ArrayList<>();
         for (Sensor sensor: sensors) {
             cursor = HazyairProvider.Data.selectLast(this, sensor._id);
             if (cursor == null || cursor.getCount() <= 0 || !cursor.moveToFirst()) continue;
+            sensorList.add(sensor);
             data.add(new Data(cursor));
         }
-        Preference.saveInfo(this, new Info(new Station(stationCursor), sensors,
+        Preference.saveInfo(this, new Info(new Station(stationCursor), sensorList,
                 data));
         AppWidget.update(this);
     }

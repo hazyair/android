@@ -177,7 +177,7 @@ public class MainActivity extends AppCompatActivity implements
 
         private Cursor mCursor;
         private int mCurrentItem = 0;
-        private ViewHolder mViewHolder;
+        private ViewHolder mCurrentViewHolder;
 
         public void setCursor(Cursor cursor) {
             mCursor = cursor;
@@ -206,8 +206,8 @@ public class MainActivity extends AppCompatActivity implements
 
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            int adapterPosition = holder.getAdapterPosition();
-            if (mCursor == null || !mCursor.moveToPosition(adapterPosition)) return;
+            int layoutPosition = holder.getLayoutPosition();
+            if (mCursor == null || !mCursor.moveToPosition(layoutPosition)) return;
             Bundle station = Station.toBundleFromCursor(mCursor);
             if (holder.place == null) return;
             holder.place.setText(String.format("%s %s",
@@ -221,21 +221,20 @@ public class MainActivity extends AppCompatActivity implements
                     station.getString(StationsContract.COLUMN_SOURCE)));
             holder._id = station.getInt(StationsContract.COLUMN__ID);
             if (holder.card == null) return;
-            if (adapterPosition == mCurrentItem) {
-                selectStation(holder, adapterPosition);
-                mViewHolder = holder;
+            if (layoutPosition == mCurrentItem) {
+                selectStation(holder, layoutPosition);
+                mCurrentViewHolder = holder;
             } else {
-                holder.itemView.setOnClickListener((v) -> {
-                    holder.itemView.setOnClickListener(null);
-                    deselectCurrentStation();
-                    mStationFragment = null;
-                    selectStation(holder, adapterPosition);
-                    mViewHolder = holder;
-                    mCurrentItem = adapterPosition;
-                });
+                deselectStation(holder);
             }
-
-
+            holder.itemView.setOnClickListener((v) -> {
+                if (layoutPosition == mCurrentItem) return;
+                deselectCurrentStation();
+                mStationFragment = null;
+                selectStation(holder, layoutPosition);
+                mCurrentViewHolder = holder;
+                mCurrentItem = layoutPosition;
+            });
         }
 
         @Override
@@ -288,16 +287,21 @@ public class MainActivity extends AppCompatActivity implements
             }
         }
 
+        void deselectStation(ViewHolder viewHolder) {
+            if (viewHolder == null) return;
+            if (viewHolder.card == null) return;
+            viewHolder.card.setCardBackgroundColor(getColor(android.R.color.white));
+            if (viewHolder.place == null) return;
+            viewHolder.place.setTextColor(getColor(R.color.textDarker));
+            if (viewHolder.address == null) return;
+            viewHolder.address.setTextColor(getColor(R.color.textDark));
+            if (viewHolder.station == null) return;
+            viewHolder.station.setTextColor(getColor(R.color.textDark));
+
+        }
+
         void deselectCurrentStation() {
-            if (mViewHolder == null) return;
-            if (mViewHolder.card == null) return;
-            mViewHolder.card.setCardBackgroundColor(getColor(android.R.color.white));
-            if (mViewHolder.place == null) return;
-            mViewHolder.place.setTextColor(getColor(R.color.textDarker));
-            if (mViewHolder.address == null) return;
-            mViewHolder.address.setTextColor(getColor(R.color.textDark));
-            if (mViewHolder.station == null) return;
-            mViewHolder.station.setTextColor(getColor(R.color.textDark));
+            deselectStation(mCurrentViewHolder);
         }
 
     }
@@ -363,15 +367,22 @@ public class MainActivity extends AppCompatActivity implements
                         super.getItemOffsets(outRect, view, parent, state);
                         int itemCount = state.getItemCount();
 
-                        final int itemPosition = parent.getChildAdapterPosition(view);
+                        final int itemPosition = parent.getChildLayoutPosition(view);
 
                         if (itemPosition == RecyclerView.NO_POSITION) {
                             return;
                         }
 
-                        if (itemCount > 0 && itemPosition == itemCount - 1) {
-                            outRect.set(0, 0, 0,
-                                    getResources().getDimensionPixelSize(R.dimen.padding));
+                        if (itemCount > 0) {
+                            if (itemPosition == itemCount - 1) {
+                                outRect.set(0, 0,
+                                        getResources().getDimensionPixelSize(R.dimen.padding),
+                                        getResources().getDimensionPixelSize(R.dimen.padding));
+                            } else {
+                                outRect.set(0, 0,
+                                        getResources().getDimensionPixelSize(R.dimen.padding),
+                                        0);
+                            }
                         }
                     }
                 });
@@ -404,13 +415,19 @@ public class MainActivity extends AppCompatActivity implements
                 });
             }
         }
-        mFloatingActionButton.setOnClickListener((view) ->
-            startActivity(new Intent(MainActivity.this, StationsActivity.class))
-        );
+
         DatabaseSyncService.schedule(this);
 
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mFloatingActionButton.setOnClickListener((view) -> {
+            mFloatingActionButton.setOnClickListener(null);
+            startActivity(new Intent(MainActivity.this, StationsActivity.class));
+        });
+    }
 
     private Menu mMenu;
 
