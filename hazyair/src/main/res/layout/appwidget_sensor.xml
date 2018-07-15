@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="16dp"
+    android:id="@+id/sensor"
+    android:contentDescription="@string/contentDescription_sensor_data"
+    android:textSize="@dimen/text_size"
+    android:textColor="@android:color/white"
+    android:layout_marginTop="4dp"
+    android:layout_marginBottom="4dp"
+    android:layout_marginStart="@dimen/edge"
+    android:layout_marginEnd="@dimen/edge"
+    />
