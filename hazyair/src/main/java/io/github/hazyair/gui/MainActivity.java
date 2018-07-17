@@ -6,6 +6,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
 import android.graphics.Rect;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -14,6 +17,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
@@ -32,26 +36,33 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import com.crashlytics.android.Crashlytics;
 import com.facebook.stetho.Stetho;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import io.fabric.sdk.android.Fabric;
+import io.github.hazyair.BuildConfig;
 import io.github.hazyair.R;
 import io.github.hazyair.data.StationsContract;
 import io.github.hazyair.data.StationsLoader;
+import io.github.hazyair.notifications.NotificationService;
 import io.github.hazyair.source.Station;
 import android.support.v4.app.DatabaseService;
 import io.github.hazyair.sync.DatabaseSyncService;
+import io.github.hazyair.util.Preference;
 
 import static android.view.MenuItem.SHOW_AS_ACTION_IF_ROOM;
 
 public class MainActivity extends AppCompatActivity implements
-        LoaderManager.LoaderCallbacks<Cursor> {
+        LoaderManager.LoaderCallbacks<Cursor>, LocationListener {
 
+    // Final definitions
     public static final String PARAM_STATION = "io.github.hazyair.PARAM_STATION";
+    private static final int ACTION_REMOVE_STATION = 0xDEADBEEF;
 
+    // Nested classes definitions
     class StationPagerAdapter extends FragmentStatePagerAdapter {
 
         private Cursor mCursor;
@@ -72,19 +83,19 @@ public class MainActivity extends AppCompatActivity implements
             return mCursor;
         }
 
+        void removePage(int position) {
+            Fragment fragment = mFragments.get(position);
+            if (fragment == null) return;
+            destroyItem(null, position, fragment);
+            mFragments.remove(position);
+        }
+
         @Override
         public Fragment getItem(int position) {
-            // getItem is called to instantiate the fragment for the given page.
-            // Return a StationFragment (defined as a static inner class below).
             mCursor.moveToPosition(position);
             Fragment fragment;
-            //if (mFragments.size() <= position) {
             fragment = StationFragment.newInstance(mCursor);
             mFragments.put(position, fragment);
-            //mFragments.add(fragment);
-            //} else {
-            //fragment = mFragments.get(position);
-            //}
             return fragment;
         }
 
@@ -93,12 +104,9 @@ public class MainActivity extends AppCompatActivity implements
             return mCursor == null ? 0 : mCursor.getCount();
         }
 
-        void removePage(int position) {
-            //Fragment fragment = mFragments.get(position);
-            Fragment fragment = mFragments.get(position);
-            if (fragment == null) return;
-            destroyItem(null, position, fragment);
-            mFragments.remove(position);
+        @Override
+        public int getItemPosition(@NonNull Object object) {
+            return POSITION_NONE;
         }
 
         @Override
@@ -130,37 +138,35 @@ public class MainActivity extends AppCompatActivity implements
                             StationFragment.class.getName().length()));
                     Fragment fragment = mFragmentManager.getFragment(bundle, key);
                     if (fragment != null) {
-                        //while (mFragments.size() <= index) {
-                        //    mFragments.add(null);
-                        //}
                         fragment.setMenuVisibility(false);
-                        //mFragments.set(index, fragment);
                         mFragments.put(index, fragment);
                     }
                 }
             }
         }
-
-        @Override
-        public int getItemPosition(@NonNull Object object) {
-            return POSITION_NONE;
-        }
-
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
 
-        @Nullable @BindView(R.id.cardview)
+        @Nullable
+        @BindView(R.id.cardview)
         CardView card;
 
-        @Nullable @BindView(R.id.place)
+        @Nullable
+        @BindView(R.id.place)
         TextView place;
 
-        @Nullable @BindView(R.id.address)
+        @Nullable
+        @BindView(R.id.address)
         TextView address;
 
-        @Nullable @BindView(R.id.station)
+        @Nullable
+        @BindView(R.id.station)
         TextView station;
+
+        @Nullable
+        @BindView(R.id.distance)
+        TextView distance;
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -173,9 +179,29 @@ public class MainActivity extends AppCompatActivity implements
         private Cursor mCursor;
         private int mCurrentItem = 0;
         private ViewHolder mCurrentViewHolder;
+        private Location mLocation;
+        private boolean mDistance;
+
+        StationListAdapter(boolean distance) {
+            mDistance = distance;
+        }
 
         void setCursor(Cursor cursor) {
             mCursor = cursor;
+            notifyDataSetChanged();
+        }
+
+        Cursor getCursor() {
+            return mCursor;
+        }
+
+        void setLocation(Location location) {
+            mLocation = location;
+            notifyDataSetChanged();
+        }
+
+        void setDistance(boolean distance) {
+            mDistance = distance;
             notifyDataSetChanged();
         }
 
@@ -188,54 +214,6 @@ public class MainActivity extends AppCompatActivity implements
             return mCurrentItem;
         }
 
-        Cursor getCursor() {
-            return mCursor;
-        }
-
-        @NonNull
-        @Override
-        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new ViewHolder(LayoutInflater.from(parent.getContext())
-                    .inflate(R.layout.station, parent, false));
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            int layoutPosition = holder.getLayoutPosition();
-            if (mCursor == null || !mCursor.moveToPosition(layoutPosition)) return;
-            Bundle station = Station.toBundleFromCursor(mCursor);
-            if (holder.place == null) return;
-            holder.place.setText(String.format("%s %s",
-                    station.getString(StationsContract.COLUMN_COUNTRY),
-                    station.getString(StationsContract.COLUMN_LOCALITY)));
-            if (holder.address == null) return;
-            holder.address.setText(station.getString(StationsContract.COLUMN_ADDRESS));
-            if (holder.station == null) return;
-            holder.station.setText(String.format("%s %s",
-                    getString(R.string.text_station_by),
-                    station.getString(StationsContract.COLUMN_SOURCE)));
-            if (holder.card == null) return;
-            if (layoutPosition == mCurrentItem) {
-                selectStation(holder, layoutPosition);
-                mCurrentViewHolder = holder;
-            } else {
-                deselectStation(holder);
-            }
-            holder.itemView.setOnClickListener((v) -> {
-                if (layoutPosition == mCurrentItem) return;
-                deselectCurrentStation();
-                mStationFragment = null;
-                selectStation(holder, layoutPosition);
-                mCurrentViewHolder = holder;
-                mCurrentItem = layoutPosition;
-            });
-        }
-
-        @Override
-        public int getItemCount() {
-            return mCursor == null ? 0 : mCursor.getCount();
-        }
-
         private void selectStation(ViewHolder holder, int position) {
             if (holder.card == null) return;
             holder.card.setCardBackgroundColor(getColor(R.color.primaryLight));
@@ -245,6 +223,8 @@ public class MainActivity extends AppCompatActivity implements
             holder.address.setTextColor(getColor(R.color.textLight));
             if (holder.station == null) return;
             holder.station.setTextColor(getColor(R.color.textLight));
+            if (holder.distance == null) return;
+            holder.distance.setTextColor(getColor(R.color.textLight));
             if (mContainer == null) return;
             ConstraintLayout.LayoutParams layoutParams =
                     (ConstraintLayout.LayoutParams) mContainer.getLayoutParams();
@@ -291,19 +271,105 @@ public class MainActivity extends AppCompatActivity implements
             viewHolder.address.setTextColor(getColor(R.color.textDark));
             if (viewHolder.station == null) return;
             viewHolder.station.setTextColor(getColor(R.color.textDark));
-
+            if (viewHolder.distance == null) return;
+            viewHolder.distance.setTextColor(getColor(R.color.textDark));
         }
 
         void deselectCurrentStation() {
             deselectStation(mCurrentViewHolder);
         }
 
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            return new ViewHolder(LayoutInflater.from(parent.getContext())
+                    .inflate(R.layout.station, parent, false));
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            int layoutPosition = holder.getLayoutPosition();
+            if (mCursor == null || !mCursor.moveToPosition(layoutPosition)) return;
+            Bundle station = Station.toBundleFromCursor(mCursor);
+            if (holder.place == null) return;
+            holder.place.setText(String.format("%s %s",
+                    station.getString(StationsContract.COLUMN_COUNTRY),
+                    station.getString(StationsContract.COLUMN_LOCALITY)));
+            if (holder.address == null) return;
+            holder.address.setText(station.getString(StationsContract.COLUMN_ADDRESS));
+            if (holder.station == null) return;
+            holder.station.setText(String.format("%s %s",
+                    getString(R.string.text_station_by),
+                    station.getString(StationsContract.COLUMN_SOURCE)));
+            if (holder.distance != null) {
+                holder.distance.setVisibility(mDistance ? View.VISIBLE : View.GONE);
+                if (mDistance && mLocation != null) {
+                    Location location = new Location(
+                            station.getString(StationsContract.COLUMN_SOURCE));
+                    location.setLongitude(
+                            station.getDouble(StationsContract.COLUMN_LONGITUDE));
+                    location.setLatitude(
+                            station.getDouble(StationsContract.COLUMN_LATITUDE));
+                    holder.distance.setText(String.format("%s %s",
+                            String.valueOf((int) (location.distanceTo(mLocation) / 1000)),
+                            getString(R.string.text_km)));
+                }
+            }
+            //if (holder.card == null) return;
+            if (layoutPosition == mCurrentItem) {
+                selectStation(holder, layoutPosition);
+                mCurrentViewHolder = holder;
+            } else {
+                deselectStation(holder);
+            }
+            holder.itemView.setOnClickListener((v) -> {
+                if (layoutPosition == mCurrentItem) return;
+                deselectCurrentStation();
+                mStationFragment = null;
+                selectStation(holder, layoutPosition);
+                mCurrentViewHolder = holder;
+                mCurrentItem = layoutPosition;
+            });
+        }
+
+        @Override
+        public int getItemCount() {
+            return mCursor == null ? 0 : mCursor.getCount();
+        }
     }
+
+    // Class members
+    private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action == null) return;
+            switch (action) {
+                case DatabaseService.ACTION_UPDATING:
+                    mSwipeRefreshLayout.setRefreshing(true);
+                    break;
+                case DatabaseService.ACTION_UPDATED:
+                    mSwipeRefreshLayout.setRefreshing(false);
+                    break;
+            }
+        }
+    };
 
     private StationPagerAdapter mStationPagerAdapter;
 
     private StationListAdapter mStationListAdapter;
 
+    private boolean mTwoPane;
+
+    private Menu mMenu;
+
+    private Bundle mSelectedStation;
+
+    private StationFragment mStationFragment;
+
+    private LocationManager mLocationManager;
+
+    // ButterKnife
     @SuppressWarnings("WeakerAccess")
     @BindView(R.id.toolbar)
     Toolbar mToolbar;
@@ -332,13 +398,25 @@ public class MainActivity extends AppCompatActivity implements
     @BindView(R.id.divider)
     View mDivider;
 
-    private boolean mTwoPane;
+    @SuppressWarnings("WeakerAccess")
+    @BindView(R.id.swipe)
+    SwipeRefreshLayout mSwipeRefreshLayout;
+
+
+    // Activity lifecycle
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Preference.initialize(this);
+        if (Preference.isCrashlyticsEnabled(this)) {
+            Fabric.with(this, new Crashlytics());
+        }
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-        Stetho.initializeWithDefaults(this);
+
+        if (BuildConfig.DEBUG) {
+            Stetho.initializeWithDefaults(this);
+        }
 
         setSupportActionBar(mToolbar);
 
@@ -360,7 +438,8 @@ public class MainActivity extends AppCompatActivity implements
         mTwoPane = getResources().getBoolean(R.bool.two_pane);
         if (mTwoPane) {
             if (mRecyclerView != null) {
-                mStationListAdapter = new StationListAdapter();
+                mStationListAdapter = new StationListAdapter(
+                        io.github.hazyair.util.Location.checkPermission(this));
                 mRecyclerView.setAdapter(mStationListAdapter);
                 mRecyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
                     @Override
@@ -394,7 +473,7 @@ public class MainActivity extends AppCompatActivity implements
 
                 mStationPagerAdapter = new StationPagerAdapter(getSupportFragmentManager());
                 mViewPager.setAdapter(mStationPagerAdapter);
-                mViewPager.setOffscreenPageLimit(4);
+                mViewPager.setOffscreenPageLimit(2);
                 mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
                     @Override
                     public void onPageScrolled(int position, float positionOffset,
@@ -417,23 +496,14 @@ public class MainActivity extends AppCompatActivity implements
                 });
             }
         }
-
-        DatabaseSyncService.schedule(this);
-
+        mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        mFloatingActionButton.setOnClickListener((view) -> {
-            mFloatingActionButton.setOnClickListener(null);
-            startActivity(new Intent(MainActivity.this, StationsActivity.class));
-        });
+    protected void onDestroy() {
+        super.onDestroy();
+        mStationFragment = null;
     }
-
-    private Menu mMenu;
-
-    private static final int ACTION_REMOVE_STATION = 0xDEADBEEF;
 
     private void addRemoveStationButton() {
         if (mMenu == null || mMenu.findItem(ACTION_REMOVE_STATION) != null) return;
@@ -506,14 +576,61 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    private Bundle mSelectedStation;
+    @Override
+    public void onStart() {
+        super.onStart();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(DatabaseService.ACTION_UPDATED);
+        intentFilter.addAction(DatabaseService.ACTION_UPDATING);
+        registerReceiver(mBroadcastReceiver, intentFilter);
+    }
 
+    @Override
+    public void onStop() {
+        super.onStop();
+        unregisterReceiver(mBroadcastReceiver);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mFloatingActionButton.setOnClickListener((view) -> {
+            mFloatingActionButton.setOnClickListener(null);
+            startActivity(new Intent(MainActivity.this, StationsActivity.class));
+        });
+        mSwipeRefreshLayout.setOnRefreshListener(() -> DatabaseService.update(this));
+        DatabaseSyncService.schedule(this);
+        NotificationService.schedule(this);
+        if (mTwoPane) {
+            io.github.hazyair.util.Location.requestUpdates(this, mLocationManager,
+                    this);
+        }
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        io.github.hazyair.util.Location.removeUpdates(this, mLocationManager,
+                this);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (mTwoPane && mStationFragment != null && mStationFragment.isAdded()) {
+            getSupportFragmentManager().putFragment(outState, StationFragment.class.getName(),
+                    mStationFragment);
+
+        }
+    }
+
+    // Loader handlers
     @NonNull
     @Override
     public Loader<Cursor> onCreateLoader(int id, @Nullable Bundle args) {
         return StationsLoader.newInstanceForAllStations(MainActivity.this);
     }
-
 
     @Override
     public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
@@ -567,51 +684,24 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (action == null) return;
-            switch (action) {
-                case DatabaseService.ACTION_UPDATED:
-                    // TODO Add refresh layout
-                    Toast.makeText(MainActivity.this, "Updated",
-                            Toast.LENGTH_LONG).show();
-                    break;
-            }
-        }
-    };
-
     @Override
-    public void onStart() {
-        super.onStart();
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(DatabaseService.ACTION_UPDATED);
-        registerReceiver(mBroadcastReceiver, intentFilter);
+    public void onLocationChanged(Location location) {
+        if (mTwoPane && mStationListAdapter != null) mStationListAdapter.setLocation(location);
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
-        unregisterReceiver(mBroadcastReceiver);
-    }
+    public void onStatusChanged(String provider, int status, Bundle extras) {
 
-    private StationFragment mStationFragment;
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        if (mTwoPane && mStationFragment != null && mStationFragment.isAdded()) {
-            getSupportFragmentManager().putFragment(outState, StationFragment.class.getName(),
-                    mStationFragment);
-
-        }
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        mStationFragment = null;
+    public void onProviderEnabled(String provider) {
+        if (mTwoPane && mStationListAdapter != null) mStationListAdapter.setDistance(true);
     }
 
-    //TODO Add location
+    @Override
+    public void onProviderDisabled(String provider) {
+        if (mTwoPane && mStationListAdapter != null) mStationListAdapter.setDistance(false);
+    }
+
 }

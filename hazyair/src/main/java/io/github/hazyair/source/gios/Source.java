@@ -3,6 +3,7 @@ package io.github.hazyair.source.gios;
 import android.content.Context;
 import android.net.Uri;
 
+import com.crashlytics.android.Crashlytics;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -18,7 +19,6 @@ import java.util.Locale;
 import java.util.Map;
 
 import io.github.hazyair.R;
-import timber.log.Timber;
 
 public class Source implements io.github.hazyair.source.iface.Source {
     private final static String URL = "http://api.gios.gov.pl/pjp-api/rest";
@@ -108,7 +108,7 @@ public class Source implements io.github.hazyair.source.iface.Source {
             try {
                 timestamp = format.parse(value.date).getTime();
             } catch (ParseException e) {
-                Timber.e(e);
+                Crashlytics.logException(e);
             }
             result.add(new io.github.hazyair.source.Data(timestamp,
                     new BigDecimal(value.value).setScale(2,

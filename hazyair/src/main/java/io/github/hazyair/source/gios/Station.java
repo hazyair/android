@@ -1,7 +1,7 @@
 package io.github.hazyair.source.gios;
 
 @SuppressWarnings("unused")
-public class Station {
+class Station {
     public int id;
     public String stationName;
     public String gegrLat;

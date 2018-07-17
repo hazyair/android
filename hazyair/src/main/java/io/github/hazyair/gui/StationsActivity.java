@@ -56,6 +56,7 @@ import io.github.hazyair.source.iface.StationsCallback;
 import io.github.hazyair.source.Source;
 import io.github.hazyair.source.Station;
 import android.support.v4.app.DatabaseService;
+
 import io.github.hazyair.util.Network;
 
 import static android.support.v7.widget.helper.ItemTouchHelper.ACTION_STATE_SWIPE;
@@ -65,34 +66,13 @@ import static io.github.hazyair.util.Location.PERMISSION_REQUEST_FINE_LOCATION;
 
 public class StationsActivity extends AppCompatActivity implements LocationListener {
 
-    @Override
-    public void onLocationChanged(Location location) {
-        if (mTwoPane) {
-            mAdapter.setLocation(location);
-        }
-        mStationListAdapter.setLocation(location);
-    }
+    // Final definitions
+    private final static String PARAM_ALL_STATIONS_POSITION =
+            "io.github.hazyair.PARAM_ALL_STATIONS_POSITION";
+    private final static String PARAM_STATION_LIST_POSITION =
+            "io.github.hazyair.PARAM_STATION_LIST_POSITION";
 
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
-        if (mTwoPane) {
-            mAdapter.setDistance(true);
-        }
-        mStationListAdapter.setDistance(true);
-    }
-
-    @Override
-    public void onProviderDisabled(String provider) {
-        if (mTwoPane) {
-            mAdapter.setDistance(false);
-        }
-        mStationListAdapter.setDistance(false);
-    }
-
+    // Nested classes definitions
     class ViewHolder extends RecyclerView.ViewHolder {
 
         final int viewType;
@@ -290,16 +270,20 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                             holder.distance.setTextColor(getColor(R.color.textDark));
                         }
                         holder.itemView.setOnClickListener((v) -> {
-                            mSwipeRefreshLayout.setRefreshing(true);
-                            setEnabled(false);
-                            station._status = true;
-                            holder.card.setCardBackgroundColor(getColor(R.color.accent));
-                            holder.place.setTextColor(getColor(R.color.textLighter));
-                            holder.address.setTextColor(getColor(R.color.textLight));
-                            holder.station.setTextColor(getColor(R.color.textLight));
-                            holder.distance.setTextColor(getColor(R.color.textLight));
-                            DatabaseService.updateOrDelete(StationsActivity.this,
-                                    layoutPosition, station);
+                            if (Network.isAvailable(v.getContext())) {
+                                mSwipeRefreshLayout.setRefreshing(true);
+                                setEnabled(false);
+                                station._status = true;
+                                holder.card.setCardBackgroundColor(getColor(R.color.accent));
+                                holder.place.setTextColor(getColor(R.color.textLighter));
+                                holder.address.setTextColor(getColor(R.color.textLight));
+                                holder.station.setTextColor(getColor(R.color.textLight));
+                                holder.distance.setTextColor(getColor(R.color.textLight));
+                                DatabaseService.insertOrDelete(StationsActivity.this,
+                                        layoutPosition, station);
+                            } else {
+                                Network.displayWarning(v.getContext());
+                            }
                         });
                     }
                 }
@@ -322,7 +306,8 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
         }
 
         @Override
-        public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+        public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder,
+                              RecyclerView.ViewHolder target) {
             return false;
         }
 
@@ -369,28 +354,6 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
         }
     }
 
-    private StationListAdapter mStationListAdapter;
-    private StationListAdapter mAdapter;
-
-    private SearchView mSearchView;
-
-    @SuppressWarnings("WeakerAccess")
-    @BindView(R.id.swipe)
-    SwipeRefreshLayout mSwipeRefreshLayout;
-
-    @SuppressWarnings("WeakerAccess")
-    @BindView(R.id.stations)
-    RecyclerView mStationList;
-
-    @SuppressWarnings("WeakerAccess")
-    @Nullable
-    @BindView(R.id.all_stations)
-    RecyclerView mAllStations;
-
-    private LocationManager mLocationManager;
-
-    private boolean mTwoPane;
-
     private class StationListItemDecoration extends RecyclerView.ItemDecoration {
         @Override
         public void getItemOffsets(Rect outRect, View view, RecyclerView parent,
@@ -419,6 +382,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
         }
 
     }
+
     private class AllStationsItemDecoration extends RecyclerView.ItemDecoration {
         @Override
         public void getItemOffsets(Rect outRect, View view, RecyclerView parent,
@@ -438,13 +402,134 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                     if (mAdapter.getStations() != null && (itemPosition + 1) % spanCount == 0) {
                         outRect.set(0, 0, padding, 0);
                     }
-                    if (mAdapter.getStations() != null && itemPosition + 1 > itemCount - spanCount) {
+                    if (mAdapter.getStations() != null &&
+                            itemPosition + 1 > itemCount - spanCount) {
                         outRect.set(0, 0, 0, padding);
                     }
                 }
             }
 
         }
+    }
+
+    // Class members
+    private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action == null) return;
+            switch (action) {
+                case DatabaseService.ACTION_UPDATED:
+                    int position = intent.getIntExtra(DatabaseService.PARAM_POSITION,
+                            -1);
+                    if (mTwoPane) {
+                        if (position != -1) {
+                            List<Station> stations = mAdapter.getStations();
+                            if (stations != null) stations.get(position)._status = false;
+                            setEnabled(true);
+                            mSwipeRefreshLayout.setRefreshing(false);
+                        }
+                        mAdapter.notifyDataSetChanged();
+                    } else {
+                        if (position != -1) {
+                            List<Station> stations = mStationListAdapter.getStations();
+                            if (stations != null) stations.get(position)._status = false;
+                            setEnabled(true);
+                            mSwipeRefreshLayout.setRefreshing(false);
+                        }
+                        mStationListAdapter.notifyDataSetChanged();
+                    }
+                    break;
+                case ConnectivityManager.CONNECTIVITY_ACTION:
+                    if (Network.isAvailable(StationsActivity.this)) {
+                        mSwipeRefreshLayout.setRefreshing(true);
+                        getStations(true);
+                    } else {
+                        Network.displayWarning(StationsActivity.this);
+                    }
+                    break;
+            }
+        }
+    };
+
+    private StationListAdapter mStationListAdapter;
+
+    private StationListAdapter mAdapter;
+
+    private SearchView mSearchView;
+
+    private LocationManager mLocationManager;
+
+    private boolean mTwoPane;
+
+    private int mAllStationsPosition;
+
+    private int mStationListPosition;
+
+    // ButterKnife
+    @SuppressWarnings("WeakerAccess")
+    @BindView(R.id.swipe)
+    SwipeRefreshLayout mSwipeRefreshLayout;
+
+    @SuppressWarnings("WeakerAccess")
+    @BindView(R.id.stations)
+    RecyclerView mStationList;
+
+    @SuppressWarnings("WeakerAccess")
+    @Nullable
+    @BindView(R.id.all_stations)
+    RecyclerView mAllStations;
+
+    // Activity lifecycle
+    private void setEnabled(boolean enabled) {
+        if (mTwoPane && mAllStations != null) {
+            for (int i = 0; i < mAllStations.getChildCount(); i++) {
+                View child = mAllStations.getChildAt(i);
+                child.setEnabled(enabled);
+            }
+
+        }
+        for (int i = 0; i < mStationList.getChildCount(); i++) {
+            View child = mStationList.getChildAt(i);
+            child.setEnabled(enabled);
+        }
+    }
+
+    private void getStations(boolean scroll) {
+        Source.with(StationsActivity.this).load(Source.Type.GIOS).into(new StationsCallback() {
+            @Override
+            public void onSuccess(List<Station> stations) {
+                if (mTwoPane) {
+                    mAdapter.setStations(stations);
+                    if (scroll && mAllStations != null) {
+                        RecyclerView.LayoutManager layoutManager
+                                = mAllStations.getLayoutManager();
+                        if (layoutManager instanceof GridLayoutManager) {
+                            ((GridLayoutManager) layoutManager)
+                                    .scrollToPositionWithOffset(mAllStationsPosition,
+                                            0);
+                        }
+                    }
+                } else {
+                    mStationListAdapter.setStations(stations);
+                }
+                if (scroll && mStationList != null) {
+                    RecyclerView.LayoutManager layoutManager
+                            = mStationList.getLayoutManager();
+                    if (layoutManager instanceof LinearLayoutManager) {
+                        ((LinearLayoutManager) layoutManager)
+                                .scrollToPositionWithOffset(mStationListPosition,
+                                        0);
+                    }
+                }
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+
+            @Override
+            public void onError() {
+                mSwipeRefreshLayout.setRefreshing(false);
+            }
+        });
     }
 
     @Override
@@ -488,7 +573,14 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
         mStationListAdapter = new StationListAdapter(
                 io.github.hazyair.util.Location.checkPermission(this));
 
-        mSwipeRefreshLayout.setOnRefreshListener(() -> getStations(false));
+        mSwipeRefreshLayout.setOnRefreshListener(() -> {
+            if (Network.isAvailable(StationsActivity.this)) {
+                getStations(false);
+            } else {
+                mSwipeRefreshLayout.setRefreshing(false);
+                Network.displayWarning(StationsActivity.this);
+            }
+        });
 
         mStationList.setAdapter(mStationListAdapter);
         mStationList.addItemDecoration(new StationListItemDecoration());
@@ -519,30 +611,6 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                //if (mSearchView != null && !mSearchView.isIconified()) {
-                //    mSearchView.setIconified(true);
-                //} else {
-                NavUtils.navigateUpFromSameTask(this);
-                //}
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (mSearchView != null && !mSearchView.isIconified()) {
-            mSearchView.setIconified(true);
-        } else {
-            super.onBackPressed();
-        }
-    }
-
-    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_stations, menu);
         MenuItem search = menu.findItem(R.id.search);
@@ -554,13 +622,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
             windowManager.getDefaultDisplay().getMetrics(dm);
             mSearchView.setMaxWidth(dm.widthPixels / 2);
         }
-        mSearchView.setOnSearchClickListener((v) -> {
-            //mActionBar.setDisplayHomeAsUpEnabled(false);
-        });
-        mSearchView.setOnCloseListener(() -> {
-            //mActionBar.setDisplayHomeAsUpEnabled(true);
-            return false;
-        });
+
         mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             List<Station> mStations;
 
@@ -574,7 +636,6 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
 
             @Override
             public boolean onQueryTextSubmit(String query) {
-                //mActionBar.setDisplayHomeAsUpEnabled(true);
                 return false;
             }
 
@@ -604,40 +665,25 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
         return super.onCreateOptionsMenu(menu);
     }
 
-    private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (action == null) return;
-            switch (action) {
-                case DatabaseService.ACTION_UPDATED:
-                    int position = intent.getIntExtra(DatabaseService.PARAM_POSITION, -1);
-                    if (mTwoPane) {
-                        if (position != -1) {
-                            List<Station> stations = mAdapter.getStations();
-                            if (stations != null) stations.get(position)._status = false;
-                            setEnabled(true);
-                            mSwipeRefreshLayout.setRefreshing(false);
-                        }
-                        mAdapter.notifyDataSetChanged();
-                    } else {
-                        if (position != -1) {
-                            List<Station> stations = mStationListAdapter.getStations();
-                            if (stations != null) stations.get(position)._status = false;
-                            setEnabled(true);
-                            mSwipeRefreshLayout.setRefreshing(false);
-                        }
-                        mStationListAdapter.notifyDataSetChanged();
-                    }
-                    break;
-                case ConnectivityManager.CONNECTIVITY_ACTION:
-                    if (!Network.isAvailable(StationsActivity.this)) break;
-                    mSwipeRefreshLayout.setRefreshing(true);
-                    getStations(true);
-                    break;
-            }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                NavUtils.navigateUpFromSameTask(this);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
-    };
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (mSearchView != null && !mSearchView.isIconified()) {
+            mSearchView.setIconified(true);
+        } else {
+            super.onBackPressed();
+        }
+    }
 
     @Override
     protected void onStart() {
@@ -654,45 +700,6 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
         unregisterReceiver(mBroadcastReceiver);
     }
 
-    private void setEnabled(boolean enabled) {
-        if (mTwoPane && mAllStations != null) {
-            for (int i = 0; i < mAllStations.getChildCount(); i++) {
-                View child = mAllStations.getChildAt(i);
-                child.setEnabled(enabled);
-            }
-
-        }
-        for (int i = 0; i < mStationList.getChildCount(); i++) {
-            View child = mStationList.getChildAt(i);
-            child.setEnabled(enabled);
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case PERMISSION_REQUEST_FINE_LOCATION: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0 &&
-                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                    io.github.hazyair.util.Location.requestUpdates(this,
-                            mLocationManager, this);
-
-                    //if (mTwoPane && mAdapter != null) mAdapter.setDistance(true);
-                    //if (mStationListAdapter != null) mStationListAdapter.setDistance(true);
-
-                } /*else {
-                    if (mTwoPane && mAdapter != null) mAdapter.setDistance(true);
-                    if (mStationList != null) mStationListAdapter.setDistance(false);
-
-                }*/
-            }
-
-        }
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -706,14 +713,6 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
         io.github.hazyair.util.Location.removeUpdates(this, mLocationManager,
                 this);
     }
-
-    private int mAllStationsPosition;
-    private int mStationListPosition;
-
-    private final static String PARAM_ALL_STATIONS_POSITION =
-            "io.github.hazyair.PARAM_ALL_STATIONS_POSITION";
-    private final static String PARAM_STATION_LIST_POSITION =
-            "io.github.hazyair.PARAM_STATION_LIST_POSITION";
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -733,41 +732,51 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
 
     }
 
-    private void getStations(boolean scroll) {
-        Source.with(StationsActivity.this).load(Source.Type.GIOS).into(new StationsCallback() {
-            @Override
-            public void onSuccess(List<Station> stations) {
-                if (mTwoPane) {
-                    mAdapter.setStations(stations);
-                    if (scroll && mAllStations != null) {
-                        RecyclerView.LayoutManager layoutManager
-                                = mAllStations.getLayoutManager();
-                        if (layoutManager instanceof GridLayoutManager) {
-                            ((GridLayoutManager) layoutManager)
-                                    .scrollToPositionWithOffset(mAllStationsPosition,
-                                            0);
-                        }
-                    }
-                } else {
-                    mStationListAdapter.setStations(stations);
-                }
-                if (scroll && mStationList != null) {
-                    RecyclerView.LayoutManager layoutManager
-                            = mStationList.getLayoutManager();
-                    if (layoutManager instanceof LinearLayoutManager) {
-                        ((LinearLayoutManager) layoutManager)
-                                .scrollToPositionWithOffset(mStationListPosition,
-                                        0);
-                    }
-                }
-                mSwipeRefreshLayout.setRefreshing(false);
-            }
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case PERMISSION_REQUEST_FINE_LOCATION: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
 
-            @Override
-            public void onError() {
-                mSwipeRefreshLayout.setRefreshing(false);
-            }
-        });
+                    io.github.hazyair.util.Location.requestUpdates(this,
+                            mLocationManager, this);
 
+                }
+            }
+        }
     }
+
+    // Location handlers
+    @Override
+    public void onLocationChanged(Location location) {
+        if (mTwoPane) {
+            mAdapter.setLocation(location);
+        }
+        mStationListAdapter.setLocation(location);
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+        if (mTwoPane) {
+            mAdapter.setDistance(true);
+        }
+        mStationListAdapter.setDistance(true);
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+        if (mTwoPane) {
+            mAdapter.setDistance(false);
+        }
+        mStationListAdapter.setDistance(false);
+    }
+
 }

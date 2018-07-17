@@ -10,26 +10,39 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.support.v4.app.DatabaseService;
+import android.util.Log;
 
 import java.util.concurrent.TimeUnit;
+
+import io.github.hazyair.util.Preference;
 
 import static android.app.job.JobScheduler.RESULT_SUCCESS;
 
 public class DatabaseSyncService extends JobService {
-    private static boolean mInitialized = false;
-    private static final int INTERVAL = 15;
+    private static int mInterval = -1;
     private static final int JOB_ID = 0xDEADCAFE;
     private JobParameters mJobParams;
 
-    public static void schedule(Context context) {
-        if (mInitialized) return;
+    public static void schedule(Context context, int interval) {
         JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
-        if (jobScheduler != null && jobScheduler.schedule(new JobInfo.Builder(JOB_ID,
+        if (interval != mInterval && jobScheduler != null) {
+            if (interval == 0) {
+                jobScheduler.cancel(JOB_ID);
+            } else if (
+                jobScheduler.schedule(new JobInfo.Builder(JOB_ID,
                 new ComponentName(context, DatabaseSyncService.class))
-                .setPeriodic(TimeUnit.MINUTES.toMillis(INTERVAL))
+                .setPeriodic(TimeUnit.MINUTES.toMillis(interval))
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 .setPersisted(true)
-                .build()) == RESULT_SUCCESS) mInitialized = true;
+                .build()) == RESULT_SUCCESS) {
+                mInterval = interval;
+                Log.e("aaa", "scheduled" + interval);
+            }
+        }
+    }
+
+    public static void schedule(Context context) {
+        schedule(context, Preference.getSyncFrequency(context));
     }
 
     @Override
@@ -49,9 +62,6 @@ public class DatabaseSyncService extends JobService {
     @Override
     public boolean onStartJob(final JobParameters params) {
         mJobParams = params;
-        /*DatabaseService.enqueueWork(this,
-                new Intent(DatabaseSyncService.this, DatabaseSyncService.class)
-                        .setAction(DatabaseService.ACTION_UPDATE));*/
         DatabaseService.update(this);
         return true;
     }

@@ -17,6 +17,6 @@ public class Quality {
             }});
 
     public static int normalize(String parameter, double value) {
-        return (int)(100 * value / limits.get(parameter));
+        return (int)Math.round(100 * value / limits.get(parameter));
     }
 }

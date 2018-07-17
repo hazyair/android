@@ -60,3 +60,4 @@ fastlane/readme.md
 
 # Gradle
 .gradle/
+fabric.properties

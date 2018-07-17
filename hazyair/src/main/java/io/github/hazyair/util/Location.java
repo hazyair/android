@@ -11,6 +11,8 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 
+import java.util.concurrent.TimeUnit;
+
 import io.github.hazyair.R;
 
 public final class Location {
@@ -36,10 +38,10 @@ public final class Location {
             // this thread waiting for the user's response! After the user
             // sees the explanation, try again to request the permission.
             new AlertDialog.Builder(activity)
-                    .setTitle(activity.getString(R.string.title_location_permission_request))
-                    .setMessage(activity.getString(R.string.message_location_permission_request))
+                    .setTitle(activity.getString(R.string.title_location))
+                    .setMessage(activity.getString(R.string.message_location))
                     .setPositiveButton(
-                            activity.getString(R.string.button_positive_location_permission_request),
+                            activity.getString(R.string.button_location),
                             (dialogInterface, i) -> {
                                 //Prompt the user once explanation has been shown
                                 requestFineLocationPermission(activity);
@@ -60,9 +62,9 @@ public final class Location {
         if (ContextCompat.checkSelfPermission(context,
                 Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
             return;
-        // TODO Change criteria setup time and distance
         locationManager.requestLocationUpdates(locationManager.getBestProvider(new Criteria(),
-                false), 1000*60, 1000, locationListener);
+                false), TimeUnit.MINUTES.toMillis(15), 1000,
+                locationListener);
     }
 
     public static void removeUpdates(Context context, LocationManager locationManager,

@@ -1,20 +1,72 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="channel_description">Monitorowanie jakości powietrza</string>
     <string name="contentDescription_address">Adres</string>
     <string name="contentDescription_place">Miejsce</string>
     <string name="contentDescription_sensor_data">Dane z czujnika</string>
     <string name="data_poland">Polska</string>
     <string name="data_source_gios">GIOŚ</string>
-    <string name="message_location_permission_request">Szanujemy Twoją prywatność. Prosimy o zaakceptowanie dostępu do usług lokalizacji dla lepszego wykorzystania aplikacji. Informacje o lokalizacji będą tylko i wyłącznie używane do zaprezentowania spersonalizowanych danych i nie będą wykorzystywane na zewnątrz aplikacji.</string>
+    <string name="message_crashlytics">Aby zmiany przyniosły efekt, uruchom ponownie aplikację.</string>
+    <string name="message_location">Szanujemy Twoją prywatność. Prosimy o zaakceptowanie dostępu do usług lokalizacji dla lepszego wykorzystania aplikacji. Informacje o lokalizacji będą tylko i wyłącznie używane do zaprezentowania spersonalizowanych danych i nie będą wykorzystywane na zewnątrz aplikacji.</string>
+    <string name="message_network">Sprawdź swoje połączenie sieciowe.</string>
     <string name="text_no_station_selected">Nie wybrano jeszcze żadnej stacji.</string>
     <string name="text_station_by">Stacja</string>
     <string name="title_add_station">Dodaj stację</string>
+    <string name="title_crashlytics">Wymagane ponowne uruchomienie aplikacji.</string>
     <string name="title_find_station">Znajdź stację</string>
-    <string name="title_location_permission_request">Prośba o dostęp do usługi lokalizacji</string>
+    <string name="title_location">Prośba o dostęp do usługi lokalizacji</string>
+    <string name="title_network">Połączenie sieciowe</string>
+    <string name="title_notification">Przekroczone normy powietrza!</string>
     <string name="title_remove_station">Usuń stację</string>
     <string name="title_settings">Ustawienia</string>
     <string name="title_sort_by_distance">Sortuj według odległości</string>
 
+    <string name="pref_header_general">Główne</string>
+    <string name="pref_summary_general">Ustawienia główne</string>
 
+    <string name="pref_title_crashlytics">Raportuj o nieoczekiwanych zamknięciach aplikacji</string>
+    <string name="pref_description_crashlytics">Pozwala wysyłać dane o nieoczekiwanych zamknięciach aplikacji</string>
+
+
+    <string name="pref_header_sync">Dane &amp; synchronizacja</string>
+    <string name="pref_summary_sync">Ustawienia synchronizacji danych</string>
+
+    <string name="pref_title_sync_on_boot">Włącz synchronizację danych podczas startu urządzenia</string>
+    <string name="pref_description_sync_on_boot">Pierwsza synchronizacja danych odbędzie sie zaraz po starcie urządzenia.</string>
+
+    <string name="pref_title_sync_frequency">Częstotliwość synchronizacji</string>
+
+    <string-array name="pref_sync_frequency_titles">
+    <item>15 minut</item>
+    <item>30 minut</item>
+    <item>1 godzina</item>
+    </string-array>
+
+    <string-array name="pref_sync_frequency_values">
+        <item>15</item>
+        <item>30</item>
+        <item>60</item>
+    </string-array>
+
+    <string name="pref_header_notifications">Powiadomienia</string>
+    <string name="pref_summary_notifications">Ustawienia powiadomień</string>
+
+    <string name="pref_title_notifications_on_boot">Włącz powiadomienia przy starcie urządzenia</string>
+    <string name="pref_description_notifications_on_boot">Pierwsze powiadomienie zostanie wyświetlone jak tylko urządzenie się uruchomi.</string>
+
+    <string name="pref_title_notifications_frequency">Maksymalna częstotliwość powiadomień</string>
+
+    <string-array name="pref_notifications_frequency_titles">
+        <item>Wyłącz</item>m>
+        <item>1 godzina</item>
+        <item>6 godzin</item>
+        <item>1 dzień</item>
+    </string-array>
+    <string-array name="pref_notifications_frequency_values">
+        <item>0</item>
+        <item>60</item>
+        <item>360</item>
+        <item>1440</item>
+    </string-array>
 
 </resources>

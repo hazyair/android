@@ -15,10 +15,6 @@ public class StationMapFragment extends SupportMapFragment {
 
     private View mOriginalView;
 
-    public static StationMapFragment newInstance() {
-        return new StationMapFragment();
-    }
-
     private class TouchableWrapperView extends FrameLayout {
         public TouchableWrapperView(@NonNull Context context) {
             super(context);
@@ -39,6 +35,10 @@ public class StationMapFragment extends SupportMapFragment {
 
             return super.dispatchTouchEvent(ev);
         }
+    }
+
+    public static StationMapFragment newInstance() {
+        return new StationMapFragment();
     }
 
     @Override

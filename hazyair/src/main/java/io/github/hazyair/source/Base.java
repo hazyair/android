@@ -4,14 +4,14 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.os.Bundle;
 
+import com.crashlytics.android.Crashlytics;
+
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-
-import timber.log.Timber;
 
 public class Base {
 
@@ -26,7 +26,7 @@ public class Base {
             try {
                 field.set(this, bundle.get(name));
             } catch (IllegalAccessException e) {
-                Timber.e(e);
+                Crashlytics.logException(e);
             }
         }
     }
@@ -52,7 +52,7 @@ public class Base {
                 }
                 field.set(this, value);
             } catch (IllegalAccessException e) {
-                Timber.e(e);
+                Crashlytics.logException(e);
             }
         }
     }
@@ -72,7 +72,7 @@ public class Base {
             try {
                 map.put(name, field.get(this));
             } catch (IllegalAccessException e) {
-                Timber.e(e);
+                Crashlytics.logException(e);
             }
         }
         return map;

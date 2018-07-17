@@ -1,10 +1,10 @@
 package io.github.hazyair.gui;
 
 import android.app.Activity;
-import android.content.BroadcastReceiver;
+//import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
+//import android.content.Intent;
+//import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.database.Cursor;
@@ -61,67 +61,17 @@ import io.github.hazyair.source.Data;
 import io.github.hazyair.source.Sensor;
 import io.github.hazyair.source.Station;
 
-import android.support.v4.app.DatabaseService;
+//import android.support.v4.app.DatabaseService;
 
 import static io.github.hazyair.util.Location.PERMISSION_REQUEST_FINE_LOCATION;
 
 public class StationFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>,
         LocationListener {
-    private static final String SELECTED = "selected";
 
-    @NonNull
-    @Override
-    public Loader<Cursor> onCreateLoader(int id, @Nullable Bundle args) {
-        if (id == 0) {
-            return SensorsLoader.newInstanceForAllSensorsFromStation(getContext(),
-                    args == null ? 0 : args.getInt(StationsContract.COLUMN__ID));
-        } else if (id > 0) {
-            return DataLoader.newInstanceForLastDataFromSensor(getContext(),
-                    args == null ? 0 : args.getInt(SensorsContract.COLUMN__ID));
-        } else {
-            return DataLoader.newInstanceForAllDataFromSensor(getContext(),
-                    args == null ? 0 : args.getInt(SensorsContract.COLUMN__ID));
-        }
-    }
+    // Final definitions
+    private static final String PARAM_SELECTED = "io.github.hazyair.PARAM_SELECTED";
 
-    @Override
-    public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor cursor) {
-        int id = loader.getId();
-        if (id == 0) {
-            mSensorsAdapter.setCursor(cursor);
-        } else if (id > 0) {
-            mSensorsAdapter.setData(cursor);
-        } else {
-            mSensorsAdapter.setChart(cursor);
-        }
-    }
-
-    @Override
-    public void onLoaderReset(@NonNull Loader<Cursor> loader) {
-        mSensorsAdapter.setCursor(null);
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        mSensorsAdapter.setLocation(location);
-    }
-
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
-        mSensorsAdapter.setDistance(true);
-    }
-
-    @Override
-    public void onProviderDisabled(String provider) {
-        mSensorsAdapter.setDistance(false);
-    }
-
-
+    // Nested class definitions
     class ViewHolder extends RecyclerView.ViewHolder {
 
         @Nullable @BindView(R.id.cardview)
@@ -157,7 +107,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
             ButterKnife.bind(this, itemView);
             mStation = station;
             if (place != null)
-                place.setText(String.format("%s, %s, %s",
+                place.setText(String.format("%s %s %s",
                         mStation.getString(StationsContract.COLUMN_COUNTRY),
                         mStation.getString(StationsContract.COLUMN_LOCALITY),
                         mStation.getString(StationsContract.COLUMN_ADDRESS)));
@@ -458,12 +408,15 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
 
     }
 
+    private SensorsAdapter mSensorsAdapter;
+    private LocationManager mLocationManager;
+
+    // ButterKnife
     @SuppressWarnings("WeakerAccess")
     @BindView(R.id.sensors)
     RecyclerView mRecyclerView;
 
-    private SensorsAdapter mSensorsAdapter;
-
+    // Fragment initialization
     public StationFragment() {
     }
 
@@ -473,6 +426,15 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         return fragment;
     }
 
+    // Fragment lifecycle
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Context context = getContext();
+        if (context != null)
+            mLocationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+    }
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -480,7 +442,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         ButterKnife.bind(this, rootView);
         Bundle station = getArguments();
         Bundle selected = null;
-        if (savedInstanceState != null) selected = savedInstanceState.getBundle(SELECTED);
+        if (savedInstanceState != null) selected = savedInstanceState.getBundle(PARAM_SELECTED);
         mSensorsAdapter = new SensorsAdapter(station,
                 selected,
                 io.github.hazyair.util.Location.checkPermission(getActivity()));
@@ -518,22 +480,6 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
     }
 
     @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        if (mSensorsAdapter != null)  outState.putParcelable(SELECTED, mSensorsAdapter.mSelectedItem);
-    }
-
-    private LocationManager mLocationManager;
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        Context context = getContext();
-        if (context != null)
-            mLocationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-    }
-
-    @Override
     public void onResume() {
         super.onResume();
         io.github.hazyair.util.Location.requestUpdates(getContext(), mLocationManager,
@@ -548,9 +494,16 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        //super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (mSensorsAdapter != null)
+            outState.putParcelable(PARAM_SELECTED, mSensorsAdapter.mSelectedItem);
+    }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case PERMISSION_REQUEST_FINE_LOCATION: {
                 // If request is cancelled, the result arrays are empty.
@@ -560,45 +513,64 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                     io.github.hazyair.util.Location.requestUpdates(getContext(),
                             mLocationManager, this);
 
-                }/* else {
-
-                    // permission denied, boo! Disable the
-                    // functionality that depends on this permission.
-
-                }*/
+                }
             }
 
         }
     }
 
-    private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (action == null) return;
-            switch (action) {
-                case DatabaseService.ACTION_UPDATED:
-                    //mSensorsAdapter.notifyDataSetChanged();
-                    //getLoaderManager().initLoader(0, mStation, StationFragment.this);
-                    break;
-            }
+    // Loader handlers
+    @NonNull
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, @Nullable Bundle args) {
+        if (id == 0) {
+            return SensorsLoader.newInstanceForAllSensorsFromStation(getContext(),
+                    args == null ? 0 : args.getInt(StationsContract.COLUMN__ID));
+        } else if (id > 0) {
+            return DataLoader.newInstanceForLastDataFromSensor(getContext(),
+                    args == null ? 0 : args.getInt(SensorsContract.COLUMN__ID));
+        } else {
+            return DataLoader.newInstanceForAllDataFromSensor(getContext(),
+                    args == null ? 0 : args.getInt(SensorsContract.COLUMN__ID));
         }
-    };
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(DatabaseService.ACTION_UPDATED);
-        Context context = getContext();
-        if (context != null) context.registerReceiver(mBroadcastReceiver, intentFilter);
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
-        Context context = getContext();
-        if (context != null) context.unregisterReceiver(mBroadcastReceiver);
+    public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor cursor) {
+        int id = loader.getId();
+        if (id == 0) {
+            mSensorsAdapter.setCursor(cursor);
+        } else if (id > 0) {
+            mSensorsAdapter.setData(cursor);
+        } else {
+            mSensorsAdapter.setChart(cursor);
+        }
     }
+
+    @Override
+    public void onLoaderReset(@NonNull Loader<Cursor> loader) {
+        mSensorsAdapter.setCursor(null);
+    }
+
+    // Location handlers
+    @Override
+    public void onLocationChanged(Location location) {
+        if (mSensorsAdapter != null) mSensorsAdapter.setLocation(location);
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+    }
+
+    @Override
+    public void onProviderEnabled(String provider) {
+        if (mSensorsAdapter != null) mSensorsAdapter.setDistance(true);
+    }
+
+    @Override
+    public void onProviderDisabled(String provider) {
+        if (mSensorsAdapter != null) mSensorsAdapter.setDistance(false);
+    }
+
 
 }

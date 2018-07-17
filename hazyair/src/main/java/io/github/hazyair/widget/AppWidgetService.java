@@ -29,7 +29,7 @@ public class AppWidgetService extends RemoteViewsService {
 
             @Override
             public void onDataSetChanged() {
-                mInfo = Preference.restoreInfo(getApplicationContext());
+                mInfo = Preference.getInfo(getApplicationContext());
             }
 
             @Override

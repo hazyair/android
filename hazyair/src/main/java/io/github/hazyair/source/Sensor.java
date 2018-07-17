@@ -54,6 +54,7 @@ public class Sensor extends Base implements Parcelable {
         this.unit = (unit == null ? "" : unit);
     }
 
+    @SuppressWarnings("unused")
     public Sensor(Bundle bundle) {
         super(bundle);
     }

@@ -18,9 +18,7 @@ import java.util.List;
 
 import io.github.hazyair.source.Sensor;
 import io.github.hazyair.source.Station;
-import timber.log.Timber;
 
-//@SuppressWarnings("ALL")
 @ContentProvider(
         authority = HazyairProvider.AUTHORITY,
         database = HazyairDatabase.class)
@@ -67,23 +65,11 @@ public final class HazyairProvider {
             return result;
         }
 
-        public static void bulkInsertAdd(io.github.hazyair.source.Station station,
+        public synchronized static void bulkInsertAdd(io.github.hazyair.source.Station station,
                                          ArrayList<ContentProviderOperation> cpo) {
             cpo.add(ContentProviderOperation.newInsert(Stations.CONTENT_URI)
                     .withValues(station.toContentValues()).build());
         }
-
-        /*public static void bulkInsertAdd(List<io.github.hazyair.source.Station> stations,
-                                         ArrayList<ContentProviderOperation> cpo) {
-            for (io.github.hazyair.source.Station station : stations) {
-                bulkInsertAdd(station, cpo);
-            }
-        }
-
-        public static Cursor selectAll(Context context) {
-            return context.getContentResolver().query(CONTENT_URI,
-                    Station.keys(), null, null, null);
-        }*/
 
         public static Cursor select(Context context, int _id) {
             return context.getContentResolver().query(CONTENT_URI,
@@ -113,8 +99,9 @@ public final class HazyairProvider {
             return CONTENT_URI.buildUpon().appendPath(String.valueOf(id)).build();
         }
 
-        public static void bulkInsertAdd(int _station_id, List<io.github.hazyair.source.Sensor> sensors,
-                                         ArrayList<ContentProviderOperation> cpo) {
+        public synchronized static void bulkInsertAdd(int _station_id,
+                                                      List<io.github.hazyair.source.Sensor> sensors,
+                                                      ArrayList<ContentProviderOperation> cpo) {
             for (io.github.hazyair.source.Sensor sensor : sensors) {
                 cpo.add(ContentProviderOperation.newInsert(Sensors.CONTENT_URI)
                         .withValueBackReference(SensorsContract.COLUMN__STATION_ID, _station_id)
@@ -155,7 +142,7 @@ public final class HazyairProvider {
             return CONTENT_URI.buildUpon().appendPath(String.valueOf(id)).build();
         }
 
-        public static void bulkInsertAdd(int _station_id, int _sensor_id,
+        public synchronized static void bulkInsertAdd(int _station_id, int _sensor_id,
                                          List<io.github.hazyair.source.Data> data,
                                          ArrayList<ContentProviderOperation> cpo) {
             for (io.github.hazyair.source.Data entry : data) {
@@ -165,7 +152,7 @@ public final class HazyairProvider {
                         .withValues(entry.toContentValues()).build());
             }
         }
-        public static void bulkInsertAdd(List<io.github.hazyair.source.Data> data,
+        public synchronized static void bulkInsertAdd(List<io.github.hazyair.source.Data> data,
                                          ArrayList<ContentProviderOperation> cpo) {
             for (io.github.hazyair.source.Data entry : data) {
                 cpo.add(ContentProviderOperation.newInsert(Data.CONTENT_URI)
@@ -173,10 +160,10 @@ public final class HazyairProvider {
             }
         }
 
-        public static void bulkDeleteAdd(int _id, ArrayList<ContentProviderOperation> cpo) {
+        public synchronized static void bulkDeleteAdd(int _id, ArrayList<ContentProviderOperation> cpo) {
             cpo.add(ContentProviderOperation.newDelete(Data.CONTENT_URI).withSelection(
                     DataContract.COLUMN__SENSOR_ID + "=?",
-                    new String[] { String.valueOf(_id) }).build());
+                    new String[]{String.valueOf(_id)}).build());
         }
 
         public static Cursor selectLast(Context context, int _id) {
@@ -188,17 +175,16 @@ public final class HazyairProvider {
 
     }
 
-    public static ContentProviderResult[] bulkExecute(Context context,
+    public synchronized static ContentProviderResult[] bulkExecute(Context context,
                                                       ArrayList<ContentProviderOperation> cpo) {
         try {
             return context.getContentResolver().applyBatch(AUTHORITY, cpo);
         } catch (RemoteException | OperationApplicationException e) {
-            Timber.e(e);
             return null;
         }
     }
 
-    private static void bulkDeleteAdd(int _id,
+    private synchronized static void bulkDeleteAdd(int _id,
                                       ArrayList<ContentProviderOperation> cpo) {
         cpo.add(ContentProviderOperation.newDelete(Stations.CONTENT_URI).withSelection(
                 StationsContract.COLUMN__ID + "=?",
@@ -212,7 +198,7 @@ public final class HazyairProvider {
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    public static ContentProviderResult[] delete(Context context, int _id) {
+    public synchronized static ContentProviderResult[] delete(Context context, int _id) {
         ArrayList<ContentProviderOperation> cpo = new ArrayList<>();
         bulkDeleteAdd(_id, cpo);
         return bulkExecute(context, cpo);

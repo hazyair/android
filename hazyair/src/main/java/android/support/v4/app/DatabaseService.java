@@ -22,7 +22,6 @@ import io.github.hazyair.source.iface.DataCallback;
 import io.github.hazyair.source.iface.SensorsCallback;
 import io.github.hazyair.util.Preference;
 import io.github.hazyair.widget.AppWidget;
-import timber.log.Timber;
 
 public class DatabaseService extends JobIntentService {
 
@@ -33,6 +32,8 @@ public class DatabaseService extends JobIntentService {
     private final static String ACTION_INSERT_OR_DELETE =
             "io.github.hazyair.ACTION_INSERT_OR_DELETE";
     private final static String ACTION_SELECT = "io.github.hazyair.ACTION_SELECT";
+    public final static String ACTION_UPDATING =
+            "io.github.hazyair.ACTION_UPDATING";
     public final static String ACTION_UPDATED =
             "io.github.hazyair.ACTION_UPDATED";
 
@@ -108,8 +109,8 @@ public class DatabaseService extends JobIntentService {
                 break;
             }
             case ACTION_UPDATE: {
+                sendConfirmation();
                 ArrayList<ContentProviderOperation> cpo = new ArrayList<>();
-
                 Cursor cursor = HazyairProvider.Sensors.selectAll(this);
                 count = cursor.getCount();
                 for (int i = 0; i < cursor.getCount(); i++) {
@@ -136,7 +137,7 @@ public class DatabaseService extends JobIntentService {
                             count --;
                             if (count == 0) {
                                 HazyairProvider.bulkExecute(DatabaseService.this, cpo);
-                                Info info = Preference.restoreInfo(DatabaseService.this);
+                                Info info = Preference.getInfo(DatabaseService.this);
                                 if (info != null) select(info.station._id);
                                 sendConfirmation(false);
                             }
@@ -179,13 +180,17 @@ public class DatabaseService extends JobIntentService {
             sensorList.add(sensor);
             data.add(new Data(cursor));
         }
-        Preference.saveInfo(this, new Info(new Station(stationCursor), sensorList,
+        Preference.putInfo(this, new Info(new Station(stationCursor), sensorList,
                 data));
         AppWidget.update(this);
     }
 
     private void sendConfirmation(int position) {
         sendBroadcast(new Intent(ACTION_UPDATED).putExtra(PARAM_POSITION, position));
+    }
+
+    private void sendConfirmation() {
+        sendBroadcast(new Intent(ACTION_UPDATING));
     }
 
     private void sendConfirmation(boolean reschedule) {
@@ -197,16 +202,14 @@ public class DatabaseService extends JobIntentService {
 
         try {
             return super.dequeueWork();
-        } catch (SecurityException ignored) {
-            Timber.e(ignored);
-        }
+        } catch (SecurityException ignored) { }
 
         return null;
     }
 
     public static void selectStation(Context context, Bundle station) {
         if (station == null) {
-            Preference.saveInfo(context, null);
+            Preference.putInfo(context, null);
             AppWidget.update(context);
         } else {
             DatabaseService.enqueueWork(context,
@@ -218,7 +221,7 @@ public class DatabaseService extends JobIntentService {
     }
 
     public static Bundle selectedStation(Context context) {
-        Info info = Preference.restoreInfo(context);
+        Info info = Preference.getInfo(context);
         if (info != null) return info.station.toBundle();
         return null;
     }
@@ -230,7 +233,7 @@ public class DatabaseService extends JobIntentService {
                         .putExtra(DatabaseService.PARAM__ID, _id));
     }
 
-    public static void updateOrDelete(Context context, int position, Station station) {
+    public static void insertOrDelete(Context context, int position, Station station) {
         DatabaseService.enqueueWork(context,
                 new Intent(context, DatabaseService.class)
                         .setAction(DatabaseService.ACTION_INSERT_OR_DELETE)
