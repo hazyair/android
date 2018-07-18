@@ -67,6 +67,11 @@ public class DatabaseService extends JobIntentService {
                 int position = intent.getIntExtra(PARAM_POSITION, -1);
                 if (HazyairProvider.Stations.selected(this, station)) {
                     HazyairProvider.delete(this, station._id);
+                    Info info =Preference.getInfo(this);
+                    if (info != null && info.station._id == station._id) {
+                        Preference.putInfo(this, null);
+                        AppWidget.update(this);
+                    }
                     sendConfirmation(position);
                 } else {
                     ArrayList<ContentProviderOperation> cpo = new ArrayList<>();

@@ -551,22 +551,37 @@ public class MainActivity extends AppCompatActivity implements
                     removeRemoveStationButton();
                     mStationListAdapter.deselectCurrentStation();
                     position = mStationListAdapter.getCurrentItem();
-                    if (position + 1 < mStationListAdapter.getItemCount()) {
-                        cursor.moveToPosition(position + 1);
-                    } else if (position > 0) {
-                        cursor.moveToPosition(position - 1);
-                    } else cursor.moveToFirst();
-                    mSelectedStation = Station.toBundleFromCursor(cursor);
+                    int count = mStationListAdapter.getItemCount();
+                    if (count > 0) {
+                        if (position + 1 < count) {
+                            cursor.moveToPosition(position + 1);
+                        } else if (position > 0) {
+                            cursor.moveToPosition(position - 1);
+                        } else cursor.moveToFirst();
+                        mSelectedStation = Station.toBundleFromCursor(cursor);
+                    } else {
+                        mSelectedStation = null;
+                    }
+                    mStationFragment = null;
                 } else {
                     if (mViewPager == null || mStationPagerAdapter == null) return true;
                     cursor = mStationPagerAdapter.getCursor();
                     if (cursor == null || cursor.getCount() == 0) return true;
                     position = mViewPager.getCurrentItem();
+                    int count = mStationPagerAdapter.getCount();
+                    if (count > 0) {
+                        if (position + 1 < count) {
+                            cursor.moveToPosition(position + 1);
+                        } else if (position > 0) {
+                            cursor.moveToPosition(position - 1);
+                        } else cursor.moveToFirst();
+                        mSelectedStation = Station.toBundleFromCursor(cursor);
+                    } else {
+                        mSelectedStation = null;
+                    }
                     mStationPagerAdapter.removePage(position);
-                    cursor.moveToPosition(position);
-                    DatabaseService.delete(this, Station.toBundleFromCursor(cursor)
-                            .getInt(StationsContract.COLUMN__ID));
                 }
+                DatabaseService.selectStation(MainActivity.this, mSelectedStation);
                 cursor.moveToPosition(position);
                 DatabaseService.delete(this, Station.toBundleFromCursor(cursor)
                         .getInt(StationsContract.COLUMN__ID));
@@ -655,11 +670,9 @@ public class MainActivity extends AppCompatActivity implements
             DatabaseService.selectStation(this, null);
         } else {
             addRemoveStationButton();
-            if (mSelectedStation == null) {
-                data.moveToFirst();
-                DatabaseService.selectStation(this, Station.toBundleFromCursor(data));
-            } else {
-                for (int i = 0; i < count; i++) {
+            if (mSelectedStation != null) {
+                int i;
+                for (i = 0; i < count; i++) {
                     data.moveToPosition(i);
                     if (Station.equals(Station.toBundleFromCursor(data), mSelectedStation)) {
                         if (mTwoPane) {
@@ -671,6 +684,13 @@ public class MainActivity extends AppCompatActivity implements
                         break;
                     }
                 }
+                if (i == count) {
+                    mSelectedStation = null;
+                }
+            }
+            if (mSelectedStation == null) {
+                data.moveToFirst();
+                DatabaseService.selectStation(this, Station.toBundleFromCursor(data));
             }
         }
     }

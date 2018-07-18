@@ -19,7 +19,6 @@
     <string name="title_notification">Przekroczone normy powietrza!</string>
     <string name="title_remove_station">Usuń stację</string>
     <string name="title_settings">Ustawienia</string>
-    <string name="title_sort_by_distance">Sortuj według odległości</string>
 
     <string name="pref_header_general">Główne</string>
     <string name="pref_summary_general">Ustawienia główne</string>

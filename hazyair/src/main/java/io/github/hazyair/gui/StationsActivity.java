@@ -315,6 +315,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
         @Override
         public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
             ViewHolder holder = (ViewHolder) viewHolder;
+            DatabaseService.selectStation(StationsActivity.this, null);
             DatabaseService.delete(StationsActivity.this, holder._id);
         }
 

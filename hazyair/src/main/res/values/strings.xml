@@ -26,7 +26,6 @@
     <string name="title_notification">Air quality standards exceeded!</string>
     <string name="title_remove_station">Remove station</string>
     <string name="title_settings">Settings</string>
-    <string name="title_sort_by_distance">Sort by distance</string>
 
     <string name="pref_header_general">General</string>
     <string name="pref_summary_general">General settings</string>
@@ -34,28 +33,6 @@
     <string name="pref_title_crashlytics">Enable crash reports</string>
     <string name="pref_description_crashlytics">Allows to send data about application crashes</string>
     <string name="pref_key_crashlytics" translatable="false">io.github.hazyair.PREF_CRASHLYTICS</string>
-
-    <!--<string name="pref_title_social_recommendations">Enable social recommendations</string>
-    <string name="pref_description_social_recommendations">Recommendations for people to contact
-        based on your message history
-    </string>-->
-
-    <!--<string name="pref_title_display_name">Display name</string>
-    <string name="pref_default_display_name">John Smith</string>-->
-
-    <!--<string name="pref_title_add_friends_to_messages">Add friends to messages</string>
-    <string-array name="pref_example_list_titles">
-        <item>Always</item>
-        <item>When possible</item>
-        <item>Never</item>
-    </string-array>
-    <string-array name="pref_example_list_values">
-        <item>1</item>
-        <item>0</item>
-        <item>-1</item>
-    </string-array>-->
-
-    <!-- Example settings for Data & Sync -->
 
     <string name="pref_header_sync">Data &amp; sync</string>
     <string name="pref_summary_sync">Data synchronization settings</string>
