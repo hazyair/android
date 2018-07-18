@@ -54,6 +54,7 @@ public class DatabaseService extends JobIntentService {
         if (intent == null || intent.getAction() == null) return;
         switch (intent.getAction()) {
             case ACTION_DELETE: {
+                sendConfirmation();
                 int _id = intent.getIntExtra(PARAM__ID, 0);
                 if (_id == 0) return;
                 HazyairProvider.delete(this, _id);
@@ -61,6 +62,7 @@ public class DatabaseService extends JobIntentService {
                 break;
             }
             case ACTION_INSERT_OR_DELETE: {
+                sendConfirmation();
                 Station station = intent.getParcelableExtra(PARAM_STATION);
                 int position = intent.getIntExtra(PARAM_POSITION, -1);
                 if (HazyairProvider.Stations.selected(this, station)) {
@@ -109,46 +111,48 @@ public class DatabaseService extends JobIntentService {
                 break;
             }
             case ACTION_UPDATE: {
-                sendConfirmation();
                 ArrayList<ContentProviderOperation> cpo = new ArrayList<>();
                 Cursor cursor = HazyairProvider.Sensors.selectAll(this);
                 count = cursor.getCount();
-                for (int i = 0; i < cursor.getCount(); i++) {
-                    cursor.moveToPosition(i);
-                    Bundle sensor = Sensor.toBundleFromCursor(cursor);
-                    int _sensor_id = sensor.getInt(SensorsContract.COLUMN__ID);
-                    int _station_id = sensor.getInt(SensorsContract.COLUMN__STATION_ID);
-                    HazyairProvider.Data.bulkDeleteAdd(sensor.getInt(SensorsContract.COLUMN__ID),
-                            cpo);
-                    Source.with(DatabaseService.this).load(Source.Type.GIOS)
-                            .from(new Sensor(sensor.getString(SensorsContract.COLUMN_ID),
-                                    sensor.getString(SensorsContract.COLUMN_STATION_ID),
-                                    sensor.getString(SensorsContract.COLUMN_PARAMETER),
-                                    sensor.getString(SensorsContract.COLUMN_UNIT)
-                                    )).into(new DataCallback() {
+                if (cursor.getCount() > 0) {
+                    sendConfirmation();
+                    for (int i = 0; i < cursor.getCount(); i++) {
+                        cursor.moveToPosition(i);
+                        Bundle sensor = Sensor.toBundleFromCursor(cursor);
+                        int _sensor_id = sensor.getInt(SensorsContract.COLUMN__ID);
+                        int _station_id = sensor.getInt(SensorsContract.COLUMN__STATION_ID);
+                        HazyairProvider.Data.bulkDeleteAdd(
+                                sensor.getInt(SensorsContract.COLUMN__ID), cpo);
+                        Source.with(DatabaseService.this).load(Source.Type.GIOS)
+                                .from(new Sensor(sensor.getString(SensorsContract.COLUMN_ID),
+                                        sensor.getString(SensorsContract.COLUMN_STATION_ID),
+                                        sensor.getString(SensorsContract.COLUMN_PARAMETER),
+                                        sensor.getString(SensorsContract.COLUMN_UNIT)
+                                )).into(new DataCallback() {
 
-                        @Override
-                        public void onSuccess(List<Data> data) {
-                            for (Data entry: data) {
-                                entry._sensor_id = _sensor_id;
-                                entry._station_id = _station_id;
+                            @Override
+                            public void onSuccess(List<Data> data) {
+                                for (Data entry : data) {
+                                    entry._sensor_id = _sensor_id;
+                                    entry._station_id = _station_id;
+                                }
+                                HazyairProvider.Data.bulkInsertAdd(data, cpo);
+                                count--;
+                                if (count == 0) {
+                                    HazyairProvider.bulkExecute(DatabaseService.this, cpo);
+                                    Info info = Preference.getInfo(DatabaseService.this);
+                                    if (info != null) select(info.station._id);
+                                    sendConfirmation(false);
+                                }
+
                             }
-                            HazyairProvider.Data.bulkInsertAdd(data, cpo);
-                            count --;
-                            if (count == 0) {
-                                HazyairProvider.bulkExecute(DatabaseService.this, cpo);
-                                Info info = Preference.getInfo(DatabaseService.this);
-                                if (info != null) select(info.station._id);
-                                sendConfirmation(false);
+
+                            @Override
+                            public void onError() {
+                                sendConfirmation(true);
                             }
-
-                        }
-
-                        @Override
-                        public void onError() {
-                            sendConfirmation(true);
-                        }
-                    });
+                        });
+                    }
                 }
                 break;
             }

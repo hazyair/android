@@ -41,9 +41,6 @@ import android.net.ConnectivityManager;
 import com.annimon.stream.Collectors;
 import com.annimon.stream.Stream;
 
-import org.apache.commons.lang3.StringUtils;
-
-import java.text.Normalizer;
 import java.util.List;
 
 import butterknife.BindView;
@@ -58,19 +55,23 @@ import io.github.hazyair.source.Station;
 import android.support.v4.app.DatabaseService;
 
 import io.github.hazyair.util.Network;
+import io.github.hazyair.util.Text;
 
 import static android.support.v7.widget.helper.ItemTouchHelper.ACTION_STATE_SWIPE;
 import static android.support.v7.widget.helper.ItemTouchHelper.LEFT;
 import static android.support.v7.widget.helper.ItemTouchHelper.RIGHT;
 import static io.github.hazyair.util.Location.PERMISSION_REQUEST_FINE_LOCATION;
 
-public class StationsActivity extends AppCompatActivity implements LocationListener {
+public class StationsActivity extends AppCompatActivity implements LocationListener,
+        SearchView.OnQueryTextListener {
 
     // Final definitions
     private final static String PARAM_ALL_STATIONS_POSITION =
             "io.github.hazyair.PARAM_ALL_STATIONS_POSITION";
     private final static String PARAM_STATION_LIST_POSITION =
             "io.github.hazyair.PARAM_STATION_LIST_POSITION";
+    private final static String PARAM_QUERY_STRING = "io.github.hazyair.PARAM_QUERY_STRING";
+    private final static String PARAM_ICONIFIED = "io.github.hazyair.PARAM_ICONIFIED";
 
     // Nested classes definitions
     class ViewHolder extends RecyclerView.ViewHolder {
@@ -282,7 +283,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                                 DatabaseService.insertOrDelete(StationsActivity.this,
                                         layoutPosition, station);
                             } else {
-                                Network.displayWarning(v.getContext());
+                                Network.showWarning(v.getContext());
                             }
                         });
                     }
@@ -419,33 +420,35 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
             String action = intent.getAction();
             if (action == null) return;
             switch (action) {
+                case DatabaseService.ACTION_UPDATING:
+                    mSwipeRefreshLayout.setRefreshing(true);
+                    break;
                 case DatabaseService.ACTION_UPDATED:
                     int position = intent.getIntExtra(DatabaseService.PARAM_POSITION,
                             -1);
-                    if (mTwoPane) {
-                        if (position != -1) {
-                            List<Station> stations = mAdapter.getStations();
+                    if (position != -1) {
+                        List<Station> stations;
+                        if (mTwoPane) {
+                            stations = mAdapter.getStations();
                             if (stations != null) stations.get(position)._status = false;
                             setEnabled(true);
-                            mSwipeRefreshLayout.setRefreshing(false);
-                        }
-                        mAdapter.notifyDataSetChanged();
-                    } else {
-                        if (position != -1) {
-                            List<Station> stations = mStationListAdapter.getStations();
+                            mAdapter.notifyDataSetChanged();
+                        } else {
+                            stations = mStationListAdapter.getStations();
                             if (stations != null) stations.get(position)._status = false;
                             setEnabled(true);
-                            mSwipeRefreshLayout.setRefreshing(false);
+                            mStationListAdapter.notifyDataSetChanged();
                         }
-                        mStationListAdapter.notifyDataSetChanged();
+
                     }
+                    mSwipeRefreshLayout.setRefreshing(false);
                     break;
                 case ConnectivityManager.CONNECTIVITY_ACTION:
                     if (Network.isAvailable(StationsActivity.this)) {
                         mSwipeRefreshLayout.setRefreshing(true);
                         getStations(true);
                     } else {
-                        Network.displayWarning(StationsActivity.this);
+                        Network.showWarning(StationsActivity.this);
                     }
                     break;
             }
@@ -465,6 +468,12 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
     private int mAllStationsPosition;
 
     private int mStationListPosition;
+
+    private String mQueryString;
+
+    private boolean mIconified = true;
+
+    private List<Station> mStations;
 
     // ButterKnife
     @SuppressWarnings("WeakerAccess")
@@ -522,6 +531,11 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                                         0);
                     }
                 }
+                if (!mIconified) {
+                    mStations = stations;
+                    if (mTwoPane) query(mAdapter, mQueryString);
+                    else query(mStationListAdapter, mQueryString);
+                }
                 mSwipeRefreshLayout.setRefreshing(false);
             }
 
@@ -555,6 +569,8 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                     savedInstanceState.getInt(PARAM_ALL_STATIONS_POSITION, 0);
             mStationListPosition =
                     savedInstanceState.getInt(PARAM_STATION_LIST_POSITION, 0);
+            mQueryString = savedInstanceState.getString(PARAM_QUERY_STRING);
+            mIconified = savedInstanceState.getBoolean(PARAM_ICONIFIED);
         }
 
         if (mTwoPane) {
@@ -578,7 +594,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                 getStations(false);
             } else {
                 mSwipeRefreshLayout.setRefreshing(false);
-                Network.displayWarning(StationsActivity.this);
+                Network.showWarning(StationsActivity.this);
             }
         });
 
@@ -610,6 +626,20 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
 
     }
 
+
+    private void query(StationListAdapter stationListAdapter, String newText) {
+        if (mStations == null) mStations = stationListAdapter.getStations();
+        if (mStations == null || mStations.size() == 0) return;
+        stationListAdapter.setStations(Stream.of(mStations)
+                .filter(p -> Text.contains(p.locality, newText) ||
+                        Text.contains(p.address, newText) ||
+                        Text.contains(p.country, newText))
+                .collect(Collectors.toList()));
+        stationListAdapter.notifyDataSetChanged();
+    }
+
+
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_stations, menu);
@@ -623,44 +653,13 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
             mSearchView.setMaxWidth(dm.widthPixels / 2);
         }
 
-        mSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            List<Station> mStations;
 
-            boolean contains(String string, String query) {
-                return StringUtils.containsIgnoreCase(
-                        Normalizer.normalize(string, Normalizer.Form.NFD)
-                                .replaceAll("\\p{InCombiningDiacriticalMarks}+",
-                                        "").replaceAll("ł", "l")
-                                .replaceAll("Ł", "L"), query);
-            }
+        if (!mIconified) {
+            mSearchView.setIconified(false);
+            mSearchView.setQuery(mQueryString, false);
+        }
 
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                // TODO: Create normalized keywords on async thread
-                if (mTwoPane) {
-                    query(mAdapter, newText);
-                } else {
-                    query(mStationListAdapter, newText);
-                }
-                return false;
-            }
-
-            private void query(StationListAdapter stationListAdapter, String newText) {
-                if (mStations == null) mStations = stationListAdapter.getStations();
-                if (mStations == null || mStations.size() == 0) return;
-                stationListAdapter.setStations(Stream.of(mStations)
-                        .filter(p -> contains(p.locality, newText) ||
-                                contains(p.address, newText) ||
-                                contains(p.country, newText))
-                        .collect(Collectors.toList()));
-                stationListAdapter.notifyDataSetChanged();
-            }
-        });
+        mSearchView.setOnQueryTextListener(this);
 
         return super.onCreateOptionsMenu(menu);
     }
@@ -670,6 +669,9 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
         switch (item.getItemId()) {
             case android.R.id.home:
                 NavUtils.navigateUpFromSameTask(this);
+                return true;
+            case R.id.action_settings:
+                startActivity(new Intent(this, SettingsActivity.class));
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -689,6 +691,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
     protected void onStart() {
         super.onStart();
         IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(DatabaseService.ACTION_UPDATING);
         intentFilter.addAction(DatabaseService.ACTION_UPDATED);
         intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         registerReceiver(mBroadcastReceiver, intentFilter);
@@ -729,7 +732,8 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                             .findFirstCompletelyVisibleItemPosition());
 
         }
-
+        outState.putString(PARAM_QUERY_STRING, mQueryString);
+        outState.putBoolean(PARAM_ICONIFIED, mSearchView.isIconified());
     }
 
     @Override
@@ -777,6 +781,20 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
             mAdapter.setDistance(false);
         }
         mStationListAdapter.setDistance(false);
+    }
+
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        return false;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText) {
+        // TODO: Create normalized keywords on async thread
+        if (mTwoPane) query(mAdapter, newText);
+        else query(mStationListAdapter, newText);
+        mQueryString = newText;
+        return false;
     }
 
 }

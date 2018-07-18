@@ -17,7 +17,7 @@ public class Network {
         return networkInfo != null && networkInfo.isConnectedOrConnecting();
     }
 
-    public static void displayWarning(Context context) {
+    public static void showWarning(Context context) {
         new AlertDialog.Builder(context)
                 .setTitle(context.getString(R.string.title_network))
                 .setMessage(context.getString(R.string.message_network))
