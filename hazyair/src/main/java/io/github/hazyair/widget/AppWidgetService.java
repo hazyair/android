@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
@@ -14,6 +15,8 @@ import io.github.hazyair.source.Info;
 import io.github.hazyair.source.Sensor;
 import io.github.hazyair.util.Preference;
 import io.github.hazyair.util.Quality;
+
+import static android.graphics.Typeface.BOLD;
 
 public class AppWidgetService extends RemoteViewsService {
 
@@ -54,8 +57,10 @@ public class AppWidgetService extends RemoteViewsService {
                 Sensor sensor = mInfo.sensors.get(position);
                 Data data = mInfo.data.get(position);
                 int percent = Quality.normalize(sensor.parameter, data.value);
-                SpannableString text = new SpannableString(String.format("%s = %s %s (%s%%)",
+                SpannableString text = new SpannableString(String.format("%s: %s %s (%s%%)",
                         sensor.parameter, data.value, sensor.unit, String.valueOf(percent)));
+                text.setSpan(new StyleSpan(BOLD), 0, sensor.parameter.length()+1,
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 if (percent > 100) {
                     text.setSpan(new ForegroundColorSpan(getColor(android.R.color.holo_red_light)),
                             0, text.length(),

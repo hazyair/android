@@ -655,12 +655,17 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
         }
 
 
+        mSearchView.setIconified(mIconified);
         if (!mIconified) {
-            mSearchView.setIconified(false);
             mSearchView.setQuery(mQueryString, false);
         }
 
         mSearchView.setOnQueryTextListener(this);
+        mSearchView.setOnSearchClickListener((view) -> mIconified = false);
+        mSearchView.setOnCloseListener(() -> {
+            mIconified = true;
+            return false;
+        });
 
         return super.onCreateOptionsMenu(menu);
     }

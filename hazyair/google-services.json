@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "510938942899",
+    "firebase_url": "https://hazyair-app.firebaseio.com",
+    "project_id": "hazyair-app",
+    "storage_bucket": "hazyair-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:510938942899:android:df820961deebc912",
+        "android_client_info": {
+          "package_name": "io.github.hazyair"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "510938942899-f0sta2b4s16rvvk4unmirnfr5c2c6qa3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "io.github.hazyair",
+            "certificate_hash": "e74865c120f56238fcedaab84fc425e8f6d9cce1"
+          }
+        },
+        {
+          "client_id": "510938942899-gpbo6r3iik9fk45t3occiqelqq9hsuev.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAOOVD3K50SadSePr6WUTUlda8Sr2ktwsA"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "510938942899-gpbo6r3iik9fk45t3occiqelqq9hsuev.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

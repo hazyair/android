@@ -1,5 +1,22 @@
 package io.github.hazyair.data;
 
+public class SensorsContract {
+
+    public static final String COLUMN__ID = "_id";
+
+    public static final String COLUMN__STATION_ID = "_station_id";
+
+    public static final String COLUMN_ID = "id";
+
+    public static final String COLUMN_STATION_ID = "station_id";
+
+    public static final String COLUMN_PARAMETER = "parameter";
+
+    public static final String COLUMN_UNIT = "unit";
+}
+
+/*package io.github.hazyair.data;
+
 import net.simonvt.schematic.annotation.AutoIncrement;
 import net.simonvt.schematic.annotation.ConflictResolutionType;
 import net.simonvt.schematic.annotation.DataType;
@@ -30,3 +47,4 @@ public class SensorsContract {
 
 
 }
+*/
