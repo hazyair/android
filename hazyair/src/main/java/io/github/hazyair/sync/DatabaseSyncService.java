@@ -36,7 +36,6 @@ public class DatabaseSyncService extends JobService {
                 .setPersisted(true)
                 .build()) == RESULT_SUCCESS) {
                 mInterval = interval;
-                Log.e("aaa", "scheduled" + interval);
             }
         }
     }

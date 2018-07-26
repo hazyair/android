@@ -5,6 +5,7 @@
     <string name="button_network" translatable="false">OK</string>
     <string name="channel_name" translatable="false">hazyair</string>
     <string name="channel_description">Air quality monitoring</string>
+    <string name="chart_no_data_available">No data available.</string>
     <string name="contentDescription_address">Address</string>
     <string name="contentDescription_place">Place</string>
     <string name="contentDescription_sensor_data">Sensor data</string>

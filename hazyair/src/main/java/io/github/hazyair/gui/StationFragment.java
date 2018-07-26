@@ -1,10 +1,7 @@
 package io.github.hazyair.gui;
 
 import android.app.Activity;
-//import android.content.BroadcastReceiver;
 import android.content.Context;
-//import android.content.Intent;
-//import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.database.Cursor;
@@ -60,6 +57,7 @@ import io.github.hazyair.source.Base;
 import io.github.hazyair.source.Data;
 import io.github.hazyair.source.Sensor;
 import io.github.hazyair.source.Station;
+import io.github.hazyair.util.Quality;
 
 //import android.support.v4.app.DatabaseService;
 
@@ -142,6 +140,9 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         @Nullable @BindView(R.id.result)
         TextView result;
 
+        @Nullable @BindView(R.id.updated)
+        TextView updated;
+
         @Nullable @BindView(R.id.expand_collapse)
         Button expandCollapse;
 
@@ -183,8 +184,10 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                 Bundle bundle = Sensor.toBundleFromCursor(cursor);
                 getLoaderManager().initLoader(bundle.getInt(SensorsContract.COLUMN__ID), bundle,
                         StationFragment.this);
-                getLoaderManager().initLoader(-bundle.getInt(SensorsContract.COLUMN__ID), bundle,
-                        StationFragment.this);
+            }
+            if (mSelectedItem != null) {
+                getLoaderManager().initLoader(-mSelectedItem.getInt(SensorsContract.COLUMN__ID),
+                        mSelectedItem, StationFragment.this);
             }
             mCursor = cursor;
             notifyDataSetChanged();
@@ -252,7 +255,8 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                     Context context = getContext();
                     if (context == null) return;
                     MapViewHolder mapViewHolder = (MapViewHolder) holder;
-                    if (Base.equals(mSelectedItem, mStation)) expand(context, mapViewHolder, mStation);
+                    if (Base.equals(mSelectedItem, mStation))
+                        expand(context, mapViewHolder, mStation);
                     else collapse(context, mapViewHolder);
                     if (mapViewHolder.cardView != null)
                         mapViewHolder.cardView.setOnClickListener((v) ->
@@ -291,16 +295,42 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                         if (sensorViewHolder.cardView != null)
                             sensorViewHolder.cardView
                                     .setCardBackgroundColor(context.getColor(R.color.textLight));
-                        //sensorViewHolder.itemView.setVisibility(View.GONE);
                     } else {
                         if (sensorViewHolder.cardView != null)
                             sensorViewHolder.cardView
                                     .setCardBackgroundColor(context.getColor(android.R.color.white));
-                        //sensorViewHolder.itemView.setVisibility(View.VISIBLE);
-                        if (sensorViewHolder.result != null)
-                            sensorViewHolder.result.setText(String.format("%s %s",
+                        if (sensorViewHolder.result != null) {
+                            int percent = Quality.normalize(
+                                    sensor.getString(SensorsContract.COLUMN_PARAMETER),
+                                    data.getDouble(DataContract.COLUMN_VALUE));
+                            sensorViewHolder.result.setText(String.format(": %s %s (%s%%)",
                                     String.valueOf(data.getDouble(DataContract.COLUMN_VALUE)),
-                                    sensor.getString(SensorsContract.COLUMN_UNIT)));
+                                    sensor.getString(SensorsContract.COLUMN_UNIT),
+                                    String.valueOf(percent)));
+                            if (sensorViewHolder.updated != null) {
+                                long hours = (System.currentTimeMillis() -
+                                        data.getLong(DataContract.COLUMN_TIMESTAMP)) /
+                                        3600000;
+                                long minutes = (System.currentTimeMillis() -
+                                        data.getLong(DataContract.COLUMN_TIMESTAMP)) %
+                                        3600000 / 60000;
+                                sensorViewHolder.updated.setText(String.format("%s %s",
+                                        (hours > 0 ? String.valueOf(hours) :
+                                                String.valueOf(minutes)),
+                                        (hours > 0 ? "h" : "min")));
+                            }
+                            if (percent > 100) {
+                                sensorViewHolder.parameter.setTextColor(
+                                        context.getColor(android.R.color.holo_red_light));
+                                sensorViewHolder.result.setTextColor(
+                                        context.getColor(android.R.color.holo_red_light));
+                            } else {
+                                sensorViewHolder.parameter.setTextColor(
+                                        context.getColor(R.color.textDark));
+                                sensorViewHolder.result.setTextColor(
+                                        context.getColor(R.color.textDark));
+                            }
+                        }
                     }
                     LongSparseArray<Double> chart =
                             mChart.get(sensor.getInt(SensorsContract.COLUMN__ID));
@@ -325,6 +355,8 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                         description.setText(sensor.getString(SensorsContract.COLUMN_UNIT));
                         sensorViewHolder.chart.setDescription(description);
                         sensorViewHolder.chart.setData(new LineData(lineDataSet));
+                        sensorViewHolder.chart.setNoDataText(
+                                getString(R.string.chart_no_data_available));
                     }
                     if (Base.equals(mSelectedItem, sensor))
                         expand(context, sensorViewHolder, sensor);
@@ -397,6 +429,8 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                     collapse(context,
                             (ViewHolder) mRecyclerView.findViewHolderForLayoutPosition(i));
                 }
+                getLoaderManager().initLoader(-bundle.getInt(SensorsContract.COLUMN__ID),
+                        bundle, StationFragment.this);
                 expand(context, viewHolder, bundle);
             }
         }
@@ -405,6 +439,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         public int getItemCount() {
             return mCursor == null ? 1 : mCursor.getCount() + 1;
         }
+
 
     }
 

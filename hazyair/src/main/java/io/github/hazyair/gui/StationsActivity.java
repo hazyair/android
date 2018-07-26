@@ -432,13 +432,13 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                         if (mTwoPane) {
                             stations = mAdapter.getStations();
                             if (stations != null) stations.get(position)._status = false;
-                            setEnabled(true);
                             mAdapter.notifyDataSetChanged();
+                            setEnabled(true);
                         } else {
                             stations = mStationListAdapter.getStations();
                             if (stations != null) stations.get(position)._status = false;
-                            setEnabled(true);
                             mStationListAdapter.notifyDataSetChanged();
+                            setEnabled(true);
                         }
 
                     }
@@ -721,6 +721,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
         super.onPause();
         io.github.hazyair.util.Location.removeUpdates(this, mLocationManager,
                 this);
+        mSwipeRefreshLayout.setRefreshing(false);
     }
 
     @Override

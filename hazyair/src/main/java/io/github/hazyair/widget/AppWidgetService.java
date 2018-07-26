@@ -59,7 +59,7 @@ public class AppWidgetService extends RemoteViewsService {
                 int percent = Quality.normalize(sensor.parameter, data.value);
                 SpannableString text = new SpannableString(String.format("%s: %s %s (%s%%)",
                         sensor.parameter, data.value, sensor.unit, String.valueOf(percent)));
-                text.setSpan(new StyleSpan(BOLD), 0, sensor.parameter.length()+1,
+                text.setSpan(new StyleSpan(BOLD), 0, sensor.parameter.length(),
                         Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 if (percent > 100) {
                     text.setSpan(new ForegroundColorSpan(getColor(android.R.color.holo_red_light)),

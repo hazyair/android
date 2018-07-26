@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="channel_description">Monitorowanie jakości powietrza</string>
+    <string name="chart_no_data_available">Dane niedostępne.</string>
     <string name="contentDescription_address">Adres</string>
     <string name="contentDescription_place">Miejsce</string>
     <string name="contentDescription_sensor_data">Dane z czujnika</string>

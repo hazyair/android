@@ -315,7 +315,6 @@ public class MainActivity extends AppCompatActivity implements
                             getString(R.string.text_km)));
                 }
             }
-            //if (holder.card == null) return;
             if (layoutPosition == mCurrentItem) {
                 selectStation(holder, layoutPosition);
                 mCurrentViewHolder = holder;
@@ -628,6 +627,7 @@ public class MainActivity extends AppCompatActivity implements
         super.onPause();
         io.github.hazyair.util.Location.removeUpdates(this, mLocationManager,
                 this);
+        mSwipeRefreshLayout.setRefreshing(false);
     }
 
     @Override

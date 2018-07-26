@@ -1,19 +1,4 @@
-package io.github.hazyair.data;;
-
-public class DataContract {
-
-    public static final String COLUMN__ID = "_id";
-
-    public static final String COLUMN__STATION_ID = "_station_id";
-
-    public static final String COLUMN__SENSOR_ID = "_sensor_id";
-
-    public static final String COLUMN_TIMESTAMP = "timestamp";
-
-    public static final String COLUMN_VALUE = "value";
-}
-
-/*package io.github.hazyair.data;
+package io.github.hazyair.data;
 
 import net.simonvt.schematic.annotation.AutoIncrement;
 import net.simonvt.schematic.annotation.ConflictResolutionType;
@@ -38,4 +23,3 @@ public class DataContract {
     @DataType(DataType.Type.REAL)
     public static final String COLUMN_VALUE = "value";
 }
-*/

@@ -74,7 +74,7 @@
         </activity>
         <provider
             android:authorities="io.github.hazyair.provider"
-            android:name=".data.HazyairProvider"
+            android:name=".data.generated.HazyairProvider"
             android:exported="false"
             android:syncable="true"/>
         <meta-data

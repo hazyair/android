@@ -32,7 +32,7 @@
             android:id="@+id/distance"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingTop="4dp"
+            android:paddingTop="@dimen/half_edge"
             android:paddingEnd="@dimen/edge"
             android:paddingStart="0dp"
             app:layout_constraintEnd_toStartOf="@id/expand_collapse"

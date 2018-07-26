@@ -1,47 +1,5 @@
 package io.github.hazyair.data;
 
-import io.github.hazyair.source.Station;
-
-@SuppressWarnings("WeakerAccess")
-public class StationsContract {
-
-    public static final String COLUMN__ID = "_id";
-
-    public static final String COLUMN_ID = "id";
-
-    public static final String COLUMN_NAME = "name";
-
-    public static final String COLUMN_LATITUDE = "latitude";
-
-    public static final String COLUMN_LONGITUDE = "longitude";
-
-    public static final String COLUMN_COUNTRY = "country";
-
-    public static final String COLUMN_LOCALITY = "locality";
-
-    public static final String COLUMN_ADDRESS = "address";
-
-    public static final String COLUMN_SOURCE = "source";
-
-    public static final String selection = COLUMN_ID + "=? AND " +
-            COLUMN_NAME + "=? AND " +
-            COLUMN_LATITUDE + "=? AND " +
-            COLUMN_LONGITUDE + "=? AND " +
-            COLUMN_COUNTRY + "=? AND " +
-            COLUMN_LOCALITY + "=? AND " +
-            COLUMN_ADDRESS + "=? AND " +
-            COLUMN_SOURCE + "=?";
-
-    public static String[] selectionArgs(Station station) {
-        return new String[] {station.id, station.name, String.valueOf(station.latitude),
-                String.valueOf(station.longitude), station.country, station.locality,
-                station.address, station.source};
-    }
-}
-
-/*
-package io.github.hazyair.data;
-
 import net.simonvt.schematic.annotation.AutoIncrement;
 import net.simonvt.schematic.annotation.ConflictResolutionType;
 import net.simonvt.schematic.annotation.DataType;
@@ -104,4 +62,3 @@ public class StationsContract {
                 station.address, station.source};
     }
 }
-*/
