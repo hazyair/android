@@ -113,8 +113,6 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
 
         private boolean mDistance;
         private Location mLocation;
-        private int mDivider;
-
 
         StationListAdapter(boolean distance) {
             super();
@@ -157,14 +155,10 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                 return VIEW_TYPE_SELECTED;
             }
             int size = (mStations == null ? 0 : mStations.size());
-            if (count > 0 && size > 0) {
-                mDivider = 1;
-                if(position == count) {
-                    return VIEW_TYPE_DIVIDER;
-                }
+            if(position == count) {
+                return VIEW_TYPE_DIVIDER;
             }
-            else mDivider = 0;
-            if(position - count - mDivider < size){
+            if(position - count - 1 < size){
                 return VIEW_TYPE_ALL;
             }
             return -1;
@@ -224,13 +218,19 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                 }
                 break;
                 case VIEW_TYPE_DIVIDER: {
-                    holder.itemView.setVisibility(View.VISIBLE);
+                    int count = (mCursor == null ? 0 : mCursor.getCount());
+                    int size = (mStations == null ? 0 : mStations.size());
+                    if (count > 0 && size > 0) {
+                        holder.itemView.setVisibility(View.VISIBLE);
+                    } else {
+                        holder.itemView.setVisibility(View.GONE);
+                    }
                 }
                 break;
                 case VIEW_TYPE_ALL: {
                     if (holder.card == null) break;
                     int layoutPosition = holder.getLayoutPosition() -
-                            (mCursor == null ? 0 : mCursor.getCount()) - mDivider;
+                            (mCursor == null ? 0 : mCursor.getCount()) - 1;
                     Station station = mStations.get(layoutPosition);
                     if (holder.place == null) break;
                     holder.place.setText(String.format("%s %s",
@@ -294,7 +294,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
 
         @Override
         public int getItemCount() {
-            return (mCursor == null ? 0 : mCursor.getCount()) + mDivider +
+            return (mCursor == null ? 0 : mCursor.getCount()) + 1 +
                     (mStations == null ? 0 : mStations.size());
         }
     }
@@ -315,6 +315,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
         @Override
         public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
             ViewHolder holder = (ViewHolder) viewHolder;
+            // TODO Incorrect
             DatabaseService.selectStation(StationsActivity.this, null);
             DatabaseService.delete(StationsActivity.this, holder._id);
         }
@@ -442,6 +443,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                         }
 
                     }
+                    mStationListAdapter.notifyDataSetChanged();
                     mSwipeRefreshLayout.setRefreshing(false);
                     break;
                 case ConnectivityManager.CONNECTIVITY_ACTION:
@@ -636,7 +638,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                         Text.contains(p.address, newText) ||
                         Text.contains(p.country, newText))
                 .collect(Collectors.toList()));
-        stationListAdapter.notifyDataSetChanged();
+        //stationListAdapter.notifyDataSetChanged();
     }
 
 
