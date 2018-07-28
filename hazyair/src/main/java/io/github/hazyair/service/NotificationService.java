@@ -1,4 +1,4 @@
-package io.github.hazyair.notifications;
+package io.github.hazyair.service;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -25,7 +25,7 @@ import io.github.hazyair.util.Quality;
 
 import static android.app.job.JobScheduler.RESULT_SUCCESS;
 
-public class NotificationService extends SimpleJobService{
+public class NotificationService extends SimpleJobService {
     private static int mInterval = -1;
     private static final int JOB_ID = 0xCAFEFEED;
     private static final String CHANNEL_ID = "io.github.hazyair";

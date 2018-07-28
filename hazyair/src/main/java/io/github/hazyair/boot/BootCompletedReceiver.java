@@ -8,8 +8,8 @@ import android.os.Build;
 import com.crashlytics.android.Crashlytics;
 
 import io.fabric.sdk.android.Fabric;
-import io.github.hazyair.notifications.NotificationService;
-import io.github.hazyair.sync.DatabaseSyncService;
+import io.github.hazyair.service.NotificationService;
+import io.github.hazyair.service.DatabaseSyncService;
 import io.github.hazyair.util.Preference;
 
 public class BootCompletedReceiver extends BroadcastReceiver {

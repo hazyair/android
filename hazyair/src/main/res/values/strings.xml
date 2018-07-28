@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name" translatable="false">hazyair</string>
-    <string name="button_crashlytics" translatable="false">OK</string>
-    <string name="button_location" translatable="false">OK</string>
-    <string name="button_network" translatable="false">OK</string>
+    <string name="button_ok" translatable="false">OK</string>
+    <string name="button_agree">AGREE</string>
+    <string name="button_exit">DISAGREE &amp; EXIT</string>
     <string name="channel_name" translatable="false">hazyair</string>
     <string name="channel_description">Air quality monitoring</string>
     <string name="chart_no_data_available">No data available.</string>
@@ -14,14 +14,17 @@
     <string name="data_source_gios">CIEP</string>
     <!--<string name="data_source_smoksmog" translatable="false">SMOKSMOG</string>-->
     <string name="message_crashlytics">In order to changes make effect please restart the application.</string>
+    <string name="message_license">\"hazyair\" application is an open source project developed under permissive MIT License.\n\nBy using this application you agree to terms and conditions defined by CIEP at http://powietrze.gios.gov.pl/pjp/content/terms_of_service.\n\nYou are kindly requested to submit any discovered issues under https://github.com/hazyair/android/issues.\n\nYou could also reach me out at marcin.sielski@gmail.com before leaving negative comment on Google Play Store.\n\nEnjoy!</string>
     <string name="message_location">We respect your privacy. For the best user experience please allow this application to access location services. The location information will be solely used to present personalized data and will not be sent outside of the application.</string>
     <string name="message_network">Please check your network connection.</string>
+    <string name="message_maximum">Already added maximum number of stations.</string>
     <string name="text_km" translatable="false">km</string>
     <string name="text_no_station_selected">No station selected yet.</string>
     <string name="text_station_by">Station by</string>
     <string name="title_add_station">Add station</string>
     <string name="title_crashlytics">Application restart required</string>
     <string name="title_find_station">Find station</string>
+    <string name="title_license">License</string>
     <string name="title_location">Location permission request</string>
     <string name="title_network">Network connection</string>
     <string name="title_notification">Air quality standards exceeded!</string>

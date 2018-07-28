@@ -22,7 +22,7 @@ public class Network {
                 .setTitle(context.getString(R.string.title_network))
                 .setMessage(context.getString(R.string.message_network))
                 .setPositiveButton(
-                        context.getString(R.string.button_network),
+                        context.getString(R.string.button_ok),
                         null)
                 .create()
                 .show();

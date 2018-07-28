@@ -54,6 +54,7 @@ import io.github.hazyair.source.Source;
 import io.github.hazyair.source.Station;
 import android.support.v4.app.DatabaseService;
 
+import io.github.hazyair.util.License;
 import io.github.hazyair.util.Network;
 import io.github.hazyair.util.Text;
 
@@ -113,14 +114,15 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
 
         private boolean mDistance;
         private Location mLocation;
+        private final boolean mDivider;
 
-        StationListAdapter(boolean distance) {
+        StationListAdapter(boolean distance, boolean divider) {
             super();
             mDistance = distance;
+            mDivider = divider;
         }
 
         void setCursor(Cursor cursor) {
-            //if (mCursor != null) mCursor.close();
             mCursor = cursor;
             if (mCursor != null) notifyDataSetChanged();
         }
@@ -155,10 +157,10 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                 return VIEW_TYPE_SELECTED;
             }
             int size = (mStations == null ? 0 : mStations.size());
-            if(position == count) {
+            if(mDivider && position == count) {
                 return VIEW_TYPE_DIVIDER;
             }
-            if(position - count - 1 < size){
+            if(position - count - (mDivider ? 1 : 0) < size){
                 return VIEW_TYPE_ALL;
             }
             return -1;
@@ -230,7 +232,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                 case VIEW_TYPE_ALL: {
                     if (holder.card == null) break;
                     int layoutPosition = holder.getLayoutPosition() -
-                            (mCursor == null ? 0 : mCursor.getCount()) - 1;
+                            (mCursor == null ? 0 : mCursor.getCount()) - (mDivider ? 1 : 0);
                     Station station = mStations.get(layoutPosition);
                     if (holder.place == null) break;
                     holder.place.setText(String.format("%s %s",
@@ -294,7 +296,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
 
         @Override
         public int getItemCount() {
-            return (mCursor == null ? 0 : mCursor.getCount()) + 1 +
+            return (mCursor == null ? 0 : mCursor.getCount()) + (mDivider ? 1 : 0) +
                     (mStations == null ? 0 : mStations.size());
         }
     }
@@ -315,8 +317,9 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
         @Override
         public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
             ViewHolder holder = (ViewHolder) viewHolder;
-            // TODO Incorrect
-            DatabaseService.selectStation(StationsActivity.this, null);
+            Bundle station = DatabaseService.selectedStation(StationsActivity.this);
+            if (station != null && station.getInt(StationsContract.COLUMN__ID) == holder._id)
+                        DatabaseService.selectStation(StationsActivity.this, null);
             DatabaseService.delete(StationsActivity.this, holder._id);
         }
 
@@ -428,7 +431,13 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                 case DatabaseService.ACTION_UPDATED:
                     int position = intent.getIntExtra(DatabaseService.PARAM_POSITION,
                             -1);
-                    if (position != -1) {
+                    if (position == -1) {
+                        if (mTwoPane) {
+                            mAdapter.notifyDataSetChanged();
+                        } else {
+                            mStationListAdapter.notifyDataSetChanged();
+                        }
+                    } else {
                         List<Station> stations;
                         if (mTwoPane) {
                             stations = mAdapter.getStations();
@@ -441,10 +450,12 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                             mStationListAdapter.notifyDataSetChanged();
                             setEnabled(true);
                         }
-
                     }
-                    mStationListAdapter.notifyDataSetChanged();
                     mSwipeRefreshLayout.setRefreshing(false);
+                    String message = intent.getStringExtra(DatabaseService.PARAM_MESSAGE);
+                    if (message != null) {
+                        DatabaseService.showWarning(context, message);
+                    }
                     break;
                 case ConnectivityManager.CONNECTIVITY_ACTION:
                     if (Network.isAvailable(StationsActivity.this)) {
@@ -578,7 +589,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
 
         if (mTwoPane) {
             mAdapter = new StationListAdapter(
-                    io.github.hazyair.util.Location.checkPermission(this));
+                    io.github.hazyair.util.Location.checkPermission(this), false);
             if (mAllStations != null) {
                 mAllStations.setAdapter(mAdapter);
                 mAllStations.addItemDecoration(new AllStationsItemDecoration());
@@ -590,7 +601,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
         }
 
         mStationListAdapter = new StationListAdapter(
-                io.github.hazyair.util.Location.checkPermission(this));
+                io.github.hazyair.util.Location.checkPermission(this), true);
 
         mSwipeRefreshLayout.setOnRefreshListener(() -> {
             if (Network.isAvailable(StationsActivity.this)) {
@@ -638,7 +649,6 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                         Text.contains(p.address, newText) ||
                         Text.contains(p.country, newText))
                 .collect(Collectors.toList()));
-        //stationListAdapter.notifyDataSetChanged();
     }
 
 
@@ -680,6 +690,9 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                 return true;
             case R.id.action_settings:
                 startActivity(new Intent(this, SettingsActivity.class));
+                return true;
+            case R.id.action_license:
+                License.showLicense(this);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

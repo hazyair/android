@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="button_agree">ZGADZAM SIĘ</string>
+    <string name="button_exit">NIE ZGADZAM SIĘ &amp; WYCHODZĘ</string>
     <string name="channel_description">Monitorowanie jakości powietrza</string>
     <string name="chart_no_data_available">Dane niedostępne.</string>
     <string name="contentDescription_address">Adres</string>
@@ -8,13 +10,16 @@
     <string name="data_poland">Polska</string>
     <string name="data_source_gios">GIOŚ</string>
     <string name="message_crashlytics">Aby zmiany przyniosły efekt, uruchom ponownie aplikację.</string>
+    <string name="message_license">Aplikacja \"hazyair\" jest projektem typu otwarte żródła, które zostały udostępnione na licencji MIT.\n\nUżywając tego programu zgadzasz się na regulamin serwisu GIOŚ dostępnego na stronie http://powietrze.gios.gov.pl/pjp/content/terms_of_service.\n\nUprzejmie proszę o zgłaszanie wszelkich problemów z aplikacją pod adresem https://github.com/hazyair/android/issues.\n\nProszę napisz do mnie na adres e-mail marcin.sielski@gmail.com zanim wystawisz negatywny komentarz na Google Play Store.\n\nMiłego korzystania z aplikacji!</string>
     <string name="message_location">Szanujemy Twoją prywatność. Prosimy o zaakceptowanie dostępu do usług lokalizacji dla lepszego wykorzystania aplikacji. Informacje o lokalizacji będą tylko i wyłącznie używane do zaprezentowania spersonalizowanych danych i nie będą wykorzystywane na zewnątrz aplikacji.</string>
     <string name="message_network">Sprawdź swoje połączenie sieciowe.</string>
+    <string name="message_maximum">Dodano już maksymalną ilość stacji.</string>
     <string name="text_no_station_selected">Nie wybrano jeszcze żadnej stacji.</string>
     <string name="text_station_by">Stacja</string>
     <string name="title_add_station">Dodaj stację</string>
     <string name="title_crashlytics">Wymagane ponowne uruchomienie aplikacji.</string>
     <string name="title_find_station">Znajdź stację</string>
+    <string name="title_license">Licencja</string>
     <string name="title_location">Prośba o dostęp do usługi lokalizacji</string>
     <string name="title_network">Połączenie sieciowe</string>
     <string name="title_notification">Przekroczone normy powietrza!</string>

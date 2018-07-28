@@ -6,10 +6,12 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v7.app.AlertDialog;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import io.github.hazyair.R;
 import io.github.hazyair.data.HazyairProvider;
 import io.github.hazyair.data.SensorsContract;
 import io.github.hazyair.data.StationsContract;
@@ -28,6 +30,7 @@ public class DatabaseService extends JobIntentService {
     private static final int JOB_ID = 0xABADCAFE;
 
     private final static String ACTION_UPDATE = "io.github.hazyair.ACTION_UPDATE";
+    private final static String ACTION_UPDATE_STATION = "io.github.hazyair.ACTION_UPDATE_STATION";
     private final static String ACTION_DELETE = "io.github.hazyair.ACTION_DELETE";
     private final static String ACTION_INSERT_OR_DELETE =
             "io.github.hazyair.ACTION_INSERT_OR_DELETE";
@@ -40,8 +43,9 @@ public class DatabaseService extends JobIntentService {
 
     private final static String PARAM__ID = "io.github.hazyair.PARAM__ID";
     private final static String PARAM_STATION = "io.github.hazyair.PARAM_STATION";
-    public final static String PARAM_POSITION = "io.github.hazyair.POSITION";
+    public final static String PARAM_POSITION = "io.github.hazyair.PARAM_POSITION";
     public final static String PARAM_RESCHEDULE = "io.github.hazyair.PARAM_RESCHEDULE";
+    public final static String PARAM_MESSAGE = "io.github.hazyair.PARAM_MESSAGE";
 
     private static int count;
 
@@ -67,7 +71,7 @@ public class DatabaseService extends JobIntentService {
                 int position = intent.getIntExtra(PARAM_POSITION, -1);
                 if (HazyairProvider.Stations.selected(this, station)) {
                     HazyairProvider.delete(this, station._id);
-                    Info info =Preference.getInfo(this);
+                    Info info = Preference.getInfo(this);
                     if (info != null && info.station._id == station._id) {
                         Preference.putInfo(this, null);
                         AppWidget.update(this);
@@ -75,13 +79,20 @@ public class DatabaseService extends JobIntentService {
                     sendConfirmation(position);
                 } else {
                     ArrayList<ContentProviderOperation> cpo = new ArrayList<>();
+                    Cursor cursor = HazyairProvider.Stations.select(this);
+                    if (cursor.getCount() >= 8) {
+                        sendConfirmation(position, getString(R.string.message_maximum));
+                        break;
+                    }
+                    cursor.close();
                     HazyairProvider.Stations.bulkInsertAdd(station, cpo);
                     Source.with(DatabaseService.this).load(Source.Type.GIOS).from(station)
                             .into(new SensorsCallback() {
                                 @Override
                                 public void onSuccess(List<Sensor> sensors) {
                                     count = sensors.size();
-                                    HazyairProvider.Sensors.bulkInsertAdd(0, sensors, cpo);
+                                    HazyairProvider.Sensors.bulkInsertAdd(0, sensors,
+                                            cpo);
                                     int index = 1;
                                     for (Sensor sensor : sensors) {
                                         sensor._id = index;
@@ -94,7 +105,8 @@ public class DatabaseService extends JobIntentService {
                                                         sensor._id, data, cpo);
                                                 count--;
                                                 if (count == 0) {
-                                                    HazyairProvider.bulkExecute(DatabaseService.this, cpo);
+                                                    HazyairProvider.bulkExecute(
+                                                            DatabaseService.this, cpo);
                                                     sendConfirmation(position);
                                                 }
                                             }
@@ -118,6 +130,53 @@ public class DatabaseService extends JobIntentService {
             case ACTION_UPDATE: {
                 ArrayList<ContentProviderOperation> cpo = new ArrayList<>();
                 Cursor cursor = HazyairProvider.Sensors.selectAll(this);
+                count = cursor.getCount();
+                if (cursor.getCount() > 0) {
+                    sendConfirmation();
+                    for (int i = 0; i < cursor.getCount(); i++) {
+                        cursor.moveToPosition(i);
+                        Bundle sensor = Sensor.toBundleFromCursor(cursor);
+                        int _sensor_id = sensor.getInt(SensorsContract.COLUMN__ID);
+                        int _station_id = sensor.getInt(SensorsContract.COLUMN__STATION_ID);
+                        HazyairProvider.Data.bulkDeleteAdd(
+                                sensor.getInt(SensorsContract.COLUMN__ID), cpo);
+                        Source.with(DatabaseService.this).load(Source.Type.GIOS)
+                                .from(new Sensor(sensor.getString(SensorsContract.COLUMN_ID),
+                                        sensor.getString(SensorsContract.COLUMN_STATION_ID),
+                                        sensor.getString(SensorsContract.COLUMN_PARAMETER),
+                                        sensor.getString(SensorsContract.COLUMN_UNIT)
+                                )).into(new DataCallback() {
+
+                            @Override
+                            public void onSuccess(List<Data> data) {
+                                for (Data entry : data) {
+                                    entry._sensor_id = _sensor_id;
+                                    entry._station_id = _station_id;
+                                }
+                                HazyairProvider.Data.bulkInsertAdd(data, cpo);
+                                count--;
+                                if (count == 0) {
+                                    HazyairProvider.bulkExecute(DatabaseService.this, cpo);
+                                    Info info = Preference.getInfo(DatabaseService.this);
+                                    if (info != null) select(info.station._id);
+                                    sendConfirmation(false);
+                                }
+
+                            }
+
+                            @Override
+                            public void onError() {
+                                sendConfirmation(true);
+                            }
+                        });
+                    }
+                }
+                break;
+            }
+            case ACTION_UPDATE_STATION: {
+                Station station = intent.getParcelableExtra(PARAM_STATION);
+                ArrayList<ContentProviderOperation> cpo = new ArrayList<>();
+                Cursor cursor = HazyairProvider.Sensors.select(this, station._id);
                 count = cursor.getCount();
                 if (cursor.getCount() > 0) {
                     sendConfirmation();
@@ -206,6 +265,11 @@ public class DatabaseService extends JobIntentService {
         sendBroadcast(new Intent(ACTION_UPDATED).putExtra(PARAM_RESCHEDULE, reschedule));
     }
 
+    private void sendConfirmation(int position, String message) {
+        sendBroadcast(new Intent(ACTION_UPDATED).putExtra(PARAM_POSITION, position)
+                .putExtra(PARAM_MESSAGE, message));
+    }
+
     @Override
     GenericWorkItem dequeueWork() {
 
@@ -255,6 +319,23 @@ public class DatabaseService extends JobIntentService {
                 new Intent(context, DatabaseService.class)
                         .setAction(DatabaseService.ACTION_UPDATE));
 
+    }
+
+    /*public static void update(Context context, Station station) {
+        DatabaseService.enqueueWork(context, new Intent(context, DatabaseService.class)
+                        .setAction(DatabaseService.ACTION_UPDATE_STATION)
+                        .putExtra(DatabaseService.PARAM_STATION, station));
+    }*/
+
+    public static void showWarning(Context context, String message) {
+        new AlertDialog.Builder(context)
+                .setTitle(context.getString(R.string.title_add_station))
+                .setMessage(message)
+                .setPositiveButton(
+                        context.getString(R.string.button_ok),
+                        null)
+                .create()
+                .show();
     }
 
 }

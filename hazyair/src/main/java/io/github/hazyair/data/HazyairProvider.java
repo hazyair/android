@@ -75,6 +75,11 @@ public final class HazyairProvider {
             return context.getContentResolver().query(CONTENT_URI,
                     Station.keys(), "_id="+_id, null, null);
         }
+
+        public static Cursor select(Context context) {
+            return context.getContentResolver().query(CONTENT_URI,
+                    Station.keys(), null, null, null);
+        }
     }
 
     @SuppressWarnings("unused")
@@ -100,7 +105,7 @@ public final class HazyairProvider {
         }
 
         public synchronized static void bulkInsertAdd(int _station_id,
-                                                      List<io.github.hazyair.source.Sensor> sensors,
+                                                      List<Sensor> sensors,
                                                       ArrayList<ContentProviderOperation> cpo) {
             for (io.github.hazyair.source.Sensor sensor : sensors) {
                 cpo.add(ContentProviderOperation.newInsert(Sensors.CONTENT_URI)
@@ -153,14 +158,16 @@ public final class HazyairProvider {
             }
         }
         public synchronized static void bulkInsertAdd(List<io.github.hazyair.source.Data> data,
-                                         ArrayList<ContentProviderOperation> cpo) {
+                                                      ArrayList<ContentProviderOperation> cpo) {
+
             for (io.github.hazyair.source.Data entry : data) {
                 cpo.add(ContentProviderOperation.newInsert(Data.CONTENT_URI)
                         .withValues(entry.toContentValues()).build());
             }
         }
 
-        public synchronized static void bulkDeleteAdd(int _id, ArrayList<ContentProviderOperation> cpo) {
+        public synchronized static void bulkDeleteAdd(int _id,
+                                                      ArrayList<ContentProviderOperation> cpo) {
             cpo.add(ContentProviderOperation.newDelete(Data.CONTENT_URI).withSelection(
                     DataContract.COLUMN__SENSOR_ID + "=?",
                     new String[]{String.valueOf(_id)}).build());

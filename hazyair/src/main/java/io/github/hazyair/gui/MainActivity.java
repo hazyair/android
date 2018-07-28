@@ -14,6 +14,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
@@ -47,10 +48,11 @@ import io.github.hazyair.BuildConfig;
 import io.github.hazyair.R;
 import io.github.hazyair.data.StationsContract;
 import io.github.hazyair.data.StationsLoader;
-import io.github.hazyair.notifications.NotificationService;
+import io.github.hazyair.service.NotificationService;
 import io.github.hazyair.source.Station;
 import android.support.v4.app.DatabaseService;
-import io.github.hazyair.sync.DatabaseSyncService;
+import io.github.hazyair.service.DatabaseSyncService;
+import io.github.hazyair.util.License;
 import io.github.hazyair.util.Preference;
 
 import static android.view.MenuItem.SHOW_AS_ACTION_IF_ROOM;
@@ -60,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements
 
     // Final definitions
     public static final String PARAM_STATION = "io.github.hazyair.PARAM_STATION";
+    public static final String PARAM_EXIT = "io.github.hazyair.PARAM_EXIT";
     private static final int ACTION_REMOVE_STATION = 0xDEADBEEF;
 
     // Nested classes definitions
@@ -401,6 +404,10 @@ public class MainActivity extends AppCompatActivity implements
     @BindView(R.id.swipe)
     SwipeRefreshLayout mSwipeRefreshLayout;
 
+    @SuppressWarnings("WeakerAccess")
+    @BindView(R.id.tabDots)
+    TabLayout mTabLayout;
+
 
     // Activity lifecycle
     @Override
@@ -415,6 +422,14 @@ public class MainActivity extends AppCompatActivity implements
 
         if (BuildConfig.DEBUG) {
             Stetho.initializeWithDefaults(this);
+        }
+
+        if (!Preference.getLicense(this)) {
+            License.showLicense(this);
+        }
+
+        if (getIntent().getBooleanExtra(PARAM_EXIT, false)) {
+            finish();
         }
 
         setSupportActionBar(mToolbar);
@@ -472,7 +487,7 @@ public class MainActivity extends AppCompatActivity implements
 
                 mStationPagerAdapter = new StationPagerAdapter(getSupportFragmentManager());
                 mViewPager.setAdapter(mStationPagerAdapter);
-                mViewPager.setOffscreenPageLimit(2);
+                mViewPager.setOffscreenPageLimit(4);
                 mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
                     @Override
                     public void onPageScrolled(int position, float positionOffset,
@@ -493,9 +508,12 @@ public class MainActivity extends AppCompatActivity implements
 
                     }
                 });
+                mTabLayout.setupWithViewPager(mViewPager, true);
+                mTabLayout.setVisibility(View.VISIBLE);
             }
         }
         mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
     }
 
     @Override
@@ -539,6 +557,9 @@ public class MainActivity extends AppCompatActivity implements
         switch (item.getItemId()) {
             case R.id.action_settings:
                 startActivity(new Intent(this, SettingsActivity.class));
+                return true;
+            case R.id.action_license:
+                License.showLicense(this);
                 return true;
             case ACTION_REMOVE_STATION:
                 int position;
@@ -640,6 +661,28 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    @Override
+    protected void onNewIntent(Intent intent) {
+        if (intent.getBooleanExtra(PARAM_EXIT, false)) {
+            finish();
+        }
+        mSelectedStation = intent.getBundleExtra(PARAM_STATION);
+        if (mSelectedStation == null) {
+            mSelectedStation = DatabaseService.selectedStation(this);
+        } else {
+            DatabaseService.selectStation(this, mSelectedStation);
+        }
+
+        Cursor data;
+        if (mTwoPane) {
+            data = mStationListAdapter.getCursor();
+        } else {
+            data = mStationPagerAdapter.getCursor();
+        }
+        selectStation(data);
+        super.onNewIntent(intent);
+    }
+
     // Loader handlers
     @NonNull
     @Override
@@ -650,7 +693,6 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
         if (data == null) return;
-
         if (mTwoPane) {
             if (data.getCount() == 0) {
                 getSupportFragmentManager().beginTransaction().replace(R.id.container,
@@ -664,35 +706,7 @@ public class MainActivity extends AppCompatActivity implements
             mStationPagerAdapter.setCursor(data);
         }
 
-        int count = data.getCount();
-        if (count == 0) {
-            removeRemoveStationButton();
-            DatabaseService.selectStation(this, null);
-        } else {
-            addRemoveStationButton();
-            if (mSelectedStation != null) {
-                int i;
-                for (i = 0; i < count; i++) {
-                    data.moveToPosition(i);
-                    if (Station.equals(Station.toBundleFromCursor(data), mSelectedStation)) {
-                        if (mTwoPane) {
-                            if (mStationListAdapter != null) mStationListAdapter.setCurrentItem(i);
-                            if (mRecyclerView != null) mRecyclerView.scrollToPosition(i);
-                        } else {
-                            if (mViewPager != null) mViewPager.setCurrentItem(i, false);
-                        }
-                        break;
-                    }
-                }
-                if (i == count) {
-                    mSelectedStation = null;
-                }
-            }
-            if (mSelectedStation == null) {
-                data.moveToFirst();
-                DatabaseService.selectStation(this, Station.toBundleFromCursor(data));
-            }
-        }
+        selectStation(data);
     }
 
     @Override
@@ -724,4 +738,35 @@ public class MainActivity extends AppCompatActivity implements
         if (mTwoPane && mStationListAdapter != null) mStationListAdapter.setDistance(false);
     }
 
+    private void selectStation(Cursor data) {
+        int count = data.getCount();
+        if (count == 0) {
+            removeRemoveStationButton();
+            DatabaseService.selectStation(this, null);
+        } else {
+            addRemoveStationButton();
+            if (mSelectedStation != null) {
+                int i;
+                for (i = 0; i < count; i++) {
+                    data.moveToPosition(i);
+                    if (Station.equals(Station.toBundleFromCursor(data), mSelectedStation)) {
+                        if (mTwoPane) {
+                            if (mStationListAdapter != null) mStationListAdapter.setCurrentItem(i);
+                            if (mRecyclerView != null) mRecyclerView.scrollToPosition(i);
+                        } else {
+                            if (mViewPager != null) mViewPager.setCurrentItem(i, false);
+                        }
+                        break;
+                    }
+                }
+                if (i == count) {
+                    mSelectedStation = null;
+                }
+            }
+            if (mSelectedStation == null) {
+                data.moveToFirst();
+                DatabaseService.selectStation(this, Station.toBundleFromCursor(data));
+            }
+        }
+    }
 }

@@ -41,7 +41,7 @@ public final class Location {
                     .setTitle(activity.getString(R.string.title_location))
                     .setMessage(activity.getString(R.string.message_location))
                     .setPositiveButton(
-                            activity.getString(R.string.button_location),
+                            activity.getString(R.string.button_ok),
                             (dialogInterface, i) -> {
                                 //Prompt the user once explanation has been shown
                                 requestFineLocationPermission(activity);

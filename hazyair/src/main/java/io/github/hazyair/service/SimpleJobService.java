@@ -1,4 +1,4 @@
-package io.github.hazyair.notifications;
+package io.github.hazyair.service;
 
 import android.annotation.SuppressLint;
 import android.app.job.JobParameters;

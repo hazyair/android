@@ -20,8 +20,8 @@ import java.util.List;
 
 import io.fabric.sdk.android.Fabric;
 import io.github.hazyair.R;
-import io.github.hazyair.notifications.NotificationService;
-import io.github.hazyair.sync.DatabaseSyncService;
+import io.github.hazyair.service.NotificationService;
+import io.github.hazyair.service.DatabaseSyncService;
 
 public class SettingsActivity extends AppCompatPreferenceActivity {
 
@@ -63,7 +63,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                                 .setTitle(context.getString(R.string.title_crashlytics))
                                 .setMessage(context.getString(R.string.message_crashlytics))
                                 .setPositiveButton(
-                                        context.getString(R.string.button_crashlytics),
+                                        context.getString(R.string.button_ok),
                                         null)
                                 .create()
                                 .show();
