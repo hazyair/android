@@ -739,6 +739,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void selectStation(Cursor data) {
+        if (data == null) return;
         int count = data.getCount();
         if (count == 0) {
             removeRemoveStationButton();
