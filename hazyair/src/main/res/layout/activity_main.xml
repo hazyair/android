@@ -55,7 +55,7 @@
         android:layout_marginEnd="80dp"
         android:layout_marginBottom="@dimen/fab_margin"
         android:layout_gravity="bottom|center"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="48dp"
         app:tabBackground="@drawable/tab_selector"
         app:tabGravity="center"
