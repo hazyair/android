@@ -2,6 +2,7 @@ package io.github.hazyair.util;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.support.v4.app.DatabaseService;
 import android.support.v7.app.AlertDialog;
 
 import io.github.hazyair.R;
@@ -11,6 +12,7 @@ public class License {
 
     private static void dismiss(Activity activity) {
         Preference.setLicense(activity, false);
+        DatabaseService.selectStation(activity, null);
         if (activity instanceof MainActivity) {
             activity.finish();
         } else {
