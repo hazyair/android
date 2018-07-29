@@ -5,6 +5,7 @@ import android.net.Uri;
 
 import com.crashlytics.android.Crashlytics;
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
 import java.math.BigDecimal;
@@ -74,8 +75,13 @@ public class Source implements io.github.hazyair.source.iface.Source {
     @Override
     public List<io.github.hazyair.source.Station> stations(String json) {
         List<io.github.hazyair.source.Station> result = new ArrayList<>();
-        List<Station> stations = new Gson().fromJson(json,
-                new TypeToken<List<Station>>() {}.getType());
+        List<Station> stations;
+        try {
+            stations = new Gson().fromJson(json,
+                    new TypeToken<List<Station>>() {}.getType());
+        } catch (JsonSyntaxException e) {
+            return result;
+        }
         for(Station station : stations) {
             result.add(new io.github.hazyair.source.Station(String.valueOf(station.id),
                     station.stationName, Double.valueOf(station.gegrLat),
@@ -88,8 +94,13 @@ public class Source implements io.github.hazyair.source.iface.Source {
     @Override
     public List<io.github.hazyair.source.Sensor> sensors(String json) {
         List<io.github.hazyair.source.Sensor> result = new ArrayList<>();
-        List<Sensor> sensors = new Gson().fromJson(json,
-                new TypeToken<List<Sensor>>() {}.getType());
+        List<Sensor> sensors;
+        try {
+            sensors = new Gson().fromJson(json,
+                    new TypeToken<List<Sensor>>() {}.getType());
+        } catch (JsonSyntaxException e) {
+            return result;
+        }
         for (Sensor sensor : sensors) {
             result.add(new io.github.hazyair.source.Sensor(String.valueOf(sensor.id),
                     String.valueOf(sensor.stationId), parameters.get(sensor.param.paramFormula),
@@ -101,7 +112,12 @@ public class Source implements io.github.hazyair.source.iface.Source {
     @Override
     public List<io.github.hazyair.source.Data> data(String json) {
         List<io.github.hazyair.source.Data> result = new ArrayList<>();
-        Data data = new Gson().fromJson(json, new TypeToken<Data>() {}.getType());
+        Data data;
+        try {
+            data = new Gson().fromJson(json, new TypeToken<Data>() {}.getType());
+        } catch (JsonSyntaxException e) {
+            return result;
+        }
         long timestamp = 0;
         for (Value value : data.values) {
             if (value.value == null) continue;
