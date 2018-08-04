@@ -11,7 +11,7 @@ import io.github.hazyair.source.Info;
 
 public class Preference {
     private static final String SYNC_INTERVAL = "15";
-    private static final String NOTIFICATIONS_INTERVAL = "60";
+    private static final String NOTIFICATIONS_INTERVAL = "30";
     private final static String PREF_INFO = "io.github.hazyair.PREF_INFO";
     private final static String PREF_LICENSE = "io.github.hazyair.PREF_LICENSE";
 

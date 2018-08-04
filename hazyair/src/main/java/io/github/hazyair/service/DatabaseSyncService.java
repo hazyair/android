@@ -3,12 +3,12 @@ package io.github.hazyair.service;
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
+import android.app.job.JobService;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.support.annotation.NonNull;
 import android.support.v4.app.DatabaseService;
 
 import java.util.concurrent.TimeUnit;
@@ -17,7 +17,7 @@ import io.github.hazyair.util.Preference;
 
 import static android.app.job.JobScheduler.RESULT_SUCCESS;
 
-public class DatabaseSyncService extends SimpleJobService {
+public class DatabaseSyncService extends JobService {
     private static int mInterval = -1;
     private static final int JOB_ID = 0xDEADCAFE;
     private JobParameters mJobParams;
@@ -57,13 +57,6 @@ public class DatabaseSyncService extends SimpleJobService {
         super.onDestroy();
     }
 
-    @Override
-    protected boolean onRunJob(@NonNull JobParameters job) {
-        mJobParams = job;
-        DatabaseService.update(this);
-        return true;
-    }
-
     private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -79,4 +72,15 @@ public class DatabaseSyncService extends SimpleJobService {
         }
     };
 
+    @Override
+    public boolean onStartJob(JobParameters params) {
+        mJobParams = params;
+        DatabaseService.update(this);
+        return true;
+    }
+
+    @Override
+    public boolean onStopJob(JobParameters params) {
+        return true;
+    }
 }

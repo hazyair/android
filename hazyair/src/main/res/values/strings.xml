@@ -70,15 +70,15 @@
     <string name="pref_key_notifications_frequency" translatable="false">io.github.hazyair.PREF_NOTIFICATIONS_FREQUENCY</string>
     <string-array name="pref_notifications_frequency_titles">
         <item>Disable</item>
+        <item>30 min</item>
         <item>1 hour</item>
         <item>6 hours</item>
-        <item>1 day</item>
     </string-array>
     <string-array name="pref_notifications_frequency_values">
         <item>0</item>
+        <item>30</item>
         <item>60</item>
         <item>360</item>
-        <item>1440</item>
     </string-array>
 
 </resources>
