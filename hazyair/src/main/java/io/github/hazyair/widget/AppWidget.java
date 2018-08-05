@@ -40,7 +40,7 @@ public class AppWidget extends AppWidgetProvider {
             remoteViews.setOnClickPendingIntent(R.id.address, pendingIntent);
             remoteViews.setPendingIntentTemplate(R.id.sensors, pendingIntent);
             remoteViews.setTextViewText(R.id.place, Text.truncateSting(String.format("%s %s",
-                    station.getString(StationsContract.COLUMN_COUNTRY),
+                    context.getString(station.getInt(StationsContract.COLUMN_COUNTRY)),
                     station.getString(StationsContract.COLUMN_LOCALITY)), 32));
             remoteViews.setTextViewText(R.id.address,
                     Text.truncateSting(station.getString(StationsContract.COLUMN_ADDRESS),

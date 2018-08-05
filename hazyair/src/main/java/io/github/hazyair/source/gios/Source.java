@@ -1,6 +1,5 @@
 package io.github.hazyair.source.gios;
 
-import android.content.Context;
 import android.net.Uri;
 
 import com.crashlytics.android.Crashlytics;
@@ -43,14 +42,13 @@ public class Source implements io.github.hazyair.source.iface.Source {
     private static final String ug_m3 = "µg/m³";
 
     private static io.github.hazyair.source.iface.Source mInstance;
-    private final Context mContext;
 
-    private Source(Context context) {
-        mContext = context;
+    private Source() {
+
     }
 
-    public static io.github.hazyair.source.iface.Source getInstance(Context context) {
-        if (mInstance == null) mInstance = new Source(context);
+    public static io.github.hazyair.source.iface.Source getInstance() {
+        if (mInstance == null) mInstance = new Source();
         return mInstance;
     }
 
@@ -85,8 +83,8 @@ public class Source implements io.github.hazyair.source.iface.Source {
         for(Station station : stations) {
             result.add(new io.github.hazyair.source.Station(String.valueOf(station.id),
                     station.stationName, Double.valueOf(station.gegrLat),
-                    Double.valueOf(station.gegrLon), mContext.getString(R.string.data_poland), station.city.name,
-                    station.addressStreet, mContext.getString(R.string.data_source_gios)));
+                    Double.valueOf(station.gegrLon), R.string.data_poland, station.city.name,
+                    station.addressStreet, R.string.data_source_gios));
         }
         return result;
     }

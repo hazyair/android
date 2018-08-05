@@ -12,10 +12,10 @@ public class Station extends Base implements Parcelable {
     public String name;
     public double latitude;
     public double longitude;
-    public String country;
+    public int country;
     public String locality;
     public String address;
-    public String source;
+    public int source;
 
     public static Bundle toBundleFromCursor(Cursor cursor) {
         return new Station()._toBundleFromCursor(cursor);
@@ -26,21 +26,21 @@ public class Station extends Base implements Parcelable {
     }
 
     public Station() {
-        this(null, null, 0, 0, null, null,
-                null, null);
+        this(null, null, 0, 0, 0, null,
+                null, 0);
     }
 
-    public Station(String id, String name, double latitude, double longitude, String country,
-                   String locality, String address, String source) {
+    public Station(String id, String name, double latitude, double longitude, int country,
+                   String locality, String address, int source) {
         this._status = false;
         this.id = (id == null ? "" : id);
         this.name = (name == null ? "" : name);
         this.latitude = latitude;
         this.longitude = longitude;
-        this.country = (country == null ? "" : country);
+        this.country = country;
         this.locality = (locality == null ? "" : locality);
         this.address = (address == null ? "" : address);
-        this.source = (source == null ? "" : source);
+        this.source = source;
     }
 
     public Station(Bundle bundle) {
@@ -57,10 +57,10 @@ public class Station extends Base implements Parcelable {
         name = in.readString();
         latitude = in.readDouble();
         longitude = in.readDouble();
-        country = in.readString();
+        country = in.readInt();
         locality = in.readString();
         address = in.readString();
-        source = in.readString();
+        source = in.readInt();
     }
 
     public static final Creator<Station> CREATOR = new Creator<Station>() {
@@ -87,9 +87,9 @@ public class Station extends Base implements Parcelable {
         dest.writeString(name);
         dest.writeDouble(latitude);
         dest.writeDouble(longitude);
-        dest.writeString(country);
+        dest.writeInt(country);
         dest.writeString(locality);
         dest.writeString(address);
-        dest.writeString(source);
+        dest.writeInt(source);
     }
 }

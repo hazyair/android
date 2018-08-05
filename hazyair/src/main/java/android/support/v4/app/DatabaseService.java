@@ -133,7 +133,7 @@ public class DatabaseService extends JobIntentService {
                 count = cursor.getCount();
                 if (cursor.getCount() > 0) {
                     sendConfirmation();
-                    for (int i = 0; i < cursor.getCount(); i++) {
+                    for (int i = 0; i < cursor.getCount() && count > 0; i++) {
                         cursor.moveToPosition(i);
                         Bundle sensor = Sensor.toBundleFromCursor(cursor);
                         int _sensor_id = sensor.getInt(SensorsContract.COLUMN__ID);
@@ -159,6 +159,7 @@ public class DatabaseService extends JobIntentService {
                                     HazyairProvider.bulkExecute(DatabaseService.this, cpo);
                                     Info info = Preference.getInfo(DatabaseService.this);
                                     if (info != null) select(info.station._id);
+                                    cursor.close();
                                     sendConfirmation(false);
                                 }
 
@@ -166,6 +167,8 @@ public class DatabaseService extends JobIntentService {
 
                             @Override
                             public void onError() {
+                                count = 0;
+                                cursor.close();
                                 sendConfirmation(true);
                             }
                         });
@@ -180,7 +183,7 @@ public class DatabaseService extends JobIntentService {
                 count = cursor.getCount();
                 if (cursor.getCount() > 0) {
                     sendConfirmation();
-                    for (int i = 0; i < cursor.getCount(); i++) {
+                    for (int i = 0; i < cursor.getCount() && count > 0; i++) {
                         cursor.moveToPosition(i);
                         Bundle sensor = Sensor.toBundleFromCursor(cursor);
                         int _sensor_id = sensor.getInt(SensorsContract.COLUMN__ID);
@@ -206,6 +209,7 @@ public class DatabaseService extends JobIntentService {
                                     HazyairProvider.bulkExecute(DatabaseService.this, cpo);
                                     Info info = Preference.getInfo(DatabaseService.this);
                                     if (info != null) select(info.station._id);
+                                    cursor.close();
                                     sendConfirmation(false);
                                 }
 
@@ -213,6 +217,8 @@ public class DatabaseService extends JobIntentService {
 
                             @Override
                             public void onError() {
+                                count = 0;
+                                cursor.close();
                                 sendConfirmation(true);
                             }
                         });
@@ -231,15 +237,23 @@ public class DatabaseService extends JobIntentService {
 
     private void select(int _id) {
         Cursor stationCursor = HazyairProvider.Stations.select(this, _id);
-        if (stationCursor == null || stationCursor.getCount() <= 0 ||
-                !stationCursor.moveToFirst()) return;
+        if (stationCursor == null) return;
+        if (stationCursor.getCount() <= 0 || !stationCursor.moveToFirst()) {
+            stationCursor.close();
+            return;
+        }
         Cursor cursor = HazyairProvider.Sensors.select(this, _id);
-        if (cursor == null || cursor.getCount() <= 0) return;
+        if (cursor == null) return;
+        if (cursor.getCount() <= 0) {
+            cursor.close();
+            return;
+        }
         List<Sensor> sensors = new ArrayList<>();
         for (int i = 0; i < cursor.getCount(); i++) {
             if (!cursor.moveToPosition(i)) continue;
             sensors.add(new Sensor(cursor));
         }
+        cursor.close();
         List<Data> data = new ArrayList<>();
         List<Sensor> sensorList = new ArrayList<>();
         for (Sensor sensor: sensors) {
@@ -247,9 +261,11 @@ public class DatabaseService extends JobIntentService {
             if (cursor == null || cursor.getCount() <= 0 || !cursor.moveToFirst()) continue;
             sensorList.add(sensor);
             data.add(new Data(cursor));
+            cursor.close();
         }
         Preference.putInfo(this, new Info(new Station(stationCursor), sensorList,
                 data));
+        stationCursor.close();
         AppWidget.update(this);
     }
 

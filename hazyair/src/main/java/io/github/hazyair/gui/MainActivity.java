@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity implements
 
         void setCursor(Cursor cursor) {
             mCursor = cursor;
-            notifyDataSetChanged();
+            if (mCursor != null) notifyDataSetChanged();
         }
 
         Cursor getCursor() {
@@ -191,7 +191,7 @@ public class MainActivity extends AppCompatActivity implements
 
         void setCursor(Cursor cursor) {
             mCursor = cursor;
-            notifyDataSetChanged();
+            if (mCursor != null) notifyDataSetChanged();
         }
 
         Cursor getCursor() {

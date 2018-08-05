@@ -1,4 +1,5 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/appwidget"
     android:layout_width="@dimen/widget_width"
     android:layout_height="@dimen/widget_height"
@@ -12,10 +13,11 @@
         android:layout_height="wrap_content"
         android:background="@android:color/transparent"
         android:contentDescription="@string/contentDescription_place"
-        android:textSize="@dimen/text_size"
+        android:textSize="@dimen/text_size_widget"
         android:textColor="@android:color/white"
         android:textStyle="bold"
-        android:text="@string/app_name" />
+        android:text="@string/app_name"
+        tools:ignore="SpUsage" />
 
     <TextView
         android:id="@+id/address"
@@ -23,10 +25,11 @@
         android:layout_height="wrap_content"
         android:background="@android:color/transparent"
         android:contentDescription="@string/contentDescription_address"
-        android:textSize="@dimen/text_size"
+        android:textSize="@dimen/text_size_widget"
         android:textColor="@android:color/white"
         android:text="@string/text_no_station_selected"
-        android:paddingBottom="@dimen/edge"/>
+        android:paddingBottom="@dimen/edge"
+        tools:ignore="SpUsage" />
 
     <ListView
         android:id="@+id/sensors"

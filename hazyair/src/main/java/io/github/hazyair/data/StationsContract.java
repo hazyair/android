@@ -31,7 +31,7 @@ public class StationsContract {
     @NotNull
     public static final String COLUMN_LONGITUDE = "longitude";
 
-    @DataType(DataType.Type.TEXT)
+    @DataType(DataType.Type.INTEGER)
     @NotNull
     public static final String COLUMN_COUNTRY = "country";
 
@@ -43,7 +43,7 @@ public class StationsContract {
     @NotNull
     public static final String COLUMN_ADDRESS = "address";
 
-    @DataType(DataType.Type.TEXT)
+    @DataType(DataType.Type.INTEGER)
     @NotNull
     public static final String COLUMN_SOURCE = "source";
 
@@ -57,8 +57,8 @@ public class StationsContract {
             COLUMN_SOURCE + "=?";
 
     public static String[] selectionArgs(Station station) {
-        return new String[] {station.id, station.name, String.valueOf(station.latitude),
-                String.valueOf(station.longitude), station.country, station.locality,
-                station.address, station.source};
+        return new String[] { station.id, station.name, String.valueOf(station.latitude),
+                String.valueOf(station.longitude), String.valueOf(station.country), station.locality,
+                station.address, String.valueOf(station.source) };
     }
 }

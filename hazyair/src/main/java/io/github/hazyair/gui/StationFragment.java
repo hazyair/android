@@ -58,6 +58,7 @@ import io.github.hazyair.source.Data;
 import io.github.hazyair.source.Sensor;
 import io.github.hazyair.source.Station;
 import io.github.hazyair.util.Quality;
+import io.github.hazyair.util.Text;
 
 //import android.support.v4.app.DatabaseService;
 
@@ -105,13 +106,13 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
             ButterKnife.bind(this, itemView);
             mStation = station;
             if (place != null)
-                place.setText(String.format("%s %s %s",
-                        mStation.getString(StationsContract.COLUMN_COUNTRY),
+                place.setText(Text.truncateSting(String.format("%s %s %s",
+                        getString(mStation.getInt(StationsContract.COLUMN_COUNTRY)),
                         mStation.getString(StationsContract.COLUMN_LOCALITY),
-                        mStation.getString(StationsContract.COLUMN_ADDRESS)));
+                        mStation.getString(StationsContract.COLUMN_ADDRESS)), 32));
         }
 
-        public void getMap() {
+        void getMap() {
             mSupportMapFragment = StationMapFragment.newInstance();
             getChildFragmentManager().beginTransaction()
                     .replace(R.id.map, mSupportMapFragment).commitAllowingStateLoss();
@@ -125,7 +126,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
             googleMap.addMarker(new MarkerOptions().position(latLng)
                     .title(String.format("%s %s",
                             getString(R.string.text_station_by),
-                            mStation.getString(StationsContract.COLUMN_SOURCE))));
+                            getString(mStation.getInt(StationsContract.COLUMN_SOURCE)))));
             googleMap.moveCamera(CameraUpdateFactory.zoomTo(10));
             googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
         }
@@ -180,7 +181,10 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         }
 
         void setCursor(Cursor cursor) {
-            if (cursor == null || cursor.getCount() == 0) return;
+            if (cursor == null) {
+                mCursor = null;
+                return;
+            }
             for (int i = 0; i < cursor.getCount(); i++) {
                 cursor.moveToPosition(i);
                 Bundle bundle = Sensor.toBundleFromCursor(cursor);
@@ -270,7 +274,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                         mapViewHolder.distance.setVisibility(mDistance ? View.VISIBLE : View.GONE);
                         if (mDistance && mLocation != null) {
                             Location location = new Location(
-                                    mStation.getString(StationsContract.COLUMN_SOURCE));
+                                    getString(mStation.getInt(StationsContract.COLUMN_SOURCE)));
                             location.setLongitude(
                                     mStation.getDouble(StationsContract.COLUMN_LONGITUDE));
                             location.setLatitude(

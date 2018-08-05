@@ -11,7 +11,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 
@@ -95,11 +94,9 @@ public class NotificationService extends JobService {
                             .setContentTitle(getString(R.string.title_notification))
                             .setContentText(stringBuilder)
                             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                            .setContentIntent(PendingIntent.getActivity(this, 0,
-                                    new Intent(this, MainActivity.class)
-                                            .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK |
-                                                    Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                                            .putExtra(MainActivity.PARAM_STATION,
+                            .setContentIntent(PendingIntent.getActivity(this,
+                                    info.station._id, new Intent(this,
+                                            MainActivity.class).putExtra(MainActivity.PARAM_STATION,
                                                     info.station.toBundle()), 0)).build());
         } else {
             notificationManager.cancel(NOTIFICATION_ID);

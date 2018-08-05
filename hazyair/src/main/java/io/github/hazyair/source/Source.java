@@ -31,7 +31,7 @@ public class Source {
 
     private Source(Context context) {
         mSources = new HashMap<>();
-        mSources.put(Type.GIOS, io.github.hazyair.source.gios.Source.getInstance(context));
+        mSources.put(Type.GIOS, io.github.hazyair.source.gios.Source.getInstance());
         //mSources.put(Type.AIRLY, io.github.hazyair.source.airly.Source.getInstance(context));
         //mSources.put(Type.SMOKSMOG, io.github.hazyair.source.smoksmog.Source.getInstance(context));
         mRequestQueue = Volley.newRequestQueue(context);

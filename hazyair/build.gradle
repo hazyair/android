@@ -21,8 +21,8 @@ android {
         applicationId "io.github.hazyair"
         minSdkVersion 23
         targetSdkVersion 27
-        versionCode 7
-        versionName "0.7"
+        versionCode 8
+        versionName "0.8"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         resValue "string", "google_maps_api_key", (project.findProperty("GOOGLE_MAPS_API_KEY") ?: "")
     }
@@ -68,7 +68,8 @@ dependencies {
     implementation 'com.annimon:stream:1.2.0'
     implementation 'org.apache.commons:commons-lang3:3.3.1'
     implementation 'net.simonvt.schematic:schematic:0.6.3'
-    implementation 'com.google.android.gms:play-services-maps:15.0.1'
+    implementation "com.google.android.gms:play-services-maps:$playServicesVersion"
+    implementation "com.google.android.gms:play-services-location:$playServicesVersion"
     annotationProcessor 'net.simonvt.schematic:schematic-compiler:0.6.3'
     implementation "com.jakewharton:butterknife:$butterknifeVersion"
     annotationProcessor "com.jakewharton:butterknife-compiler:$butterknifeVersion"

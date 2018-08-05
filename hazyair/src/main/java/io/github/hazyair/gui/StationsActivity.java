@@ -185,18 +185,18 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                     Bundle station = Station.toBundleFromCursor(mCursor);
                     if (holder.place == null) return;
                     holder.place.setText(String.format("%s %s",
-                            station.getString(StationsContract.COLUMN_COUNTRY),
+                            getString(station.getInt(StationsContract.COLUMN_COUNTRY)),
                             station.getString(StationsContract.COLUMN_LOCALITY)));
                     if (holder.address == null) return;
                     holder.address.setText(station.getString(StationsContract.COLUMN_ADDRESS));
                     if (holder.station == null) return;
                     holder.station.setText(String.format("%s %s",
                             getString(R.string.text_station_by),
-                            station.getString(StationsContract.COLUMN_SOURCE)));
+                            getString(station.getInt(StationsContract.COLUMN_SOURCE))));
                     if (holder.distance == null) return;
                     holder.distance.setVisibility(mDistance ? View.VISIBLE : View.GONE);
                     Location location =
-                            new Location(station.getString(StationsContract.COLUMN_SOURCE));
+                            new Location(getString(station.getInt(StationsContract.COLUMN_SOURCE)));
                     location.setLongitude(station.getDouble(StationsContract.COLUMN_LONGITUDE));
                     location.setLatitude(station.getDouble(StationsContract.COLUMN_LATITUDE));
                     if (mDistance && mLocation != null)
@@ -236,15 +236,15 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                     Station station = mStations.get(layoutPosition);
                     if (holder.place == null) break;
                     holder.place.setText(String.format("%s %s",
-                            station.country, station.locality));
+                            getString(station.country), station.locality));
                     if (holder.address == null) break;
                     holder.address.setText(station.address);
                     if (holder.station == null) break;
                     holder.station.setText(String.format("%s %s",
-                            getString(R.string.text_station_by), station.source));
+                            getString(R.string.text_station_by), getString(station.source)));
                     if (holder.distance == null) break;
                     holder.distance.setVisibility(mDistance ? View.VISIBLE : View.GONE);
-                    Location location = new Location(station.source);
+                    Location location = new Location(getString(station.source));
                     location.setLongitude(station.longitude);
                     location.setLatitude(station.latitude);
                     if (mDistance && mLocation != null)
@@ -647,7 +647,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
         stationListAdapter.setStations(Stream.of(mStations)
                 .filter(p -> Text.contains(p.locality, newText) ||
                         Text.contains(p.address, newText) ||
-                        Text.contains(p.country, newText))
+                        Text.contains(getString(p.country), newText))
                 .collect(Collectors.toList()));
     }
 
