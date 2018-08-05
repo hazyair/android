@@ -98,7 +98,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         FrameLayout frameLayout;
 
         private final Bundle mStation;
-        private final SupportMapFragment mSupportMapFragment;
+        private SupportMapFragment mSupportMapFragment;
 
         MapViewHolder(View itemView, Bundle station) {
             super(itemView);
@@ -109,11 +109,13 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                         mStation.getString(StationsContract.COLUMN_COUNTRY),
                         mStation.getString(StationsContract.COLUMN_LOCALITY),
                         mStation.getString(StationsContract.COLUMN_ADDRESS)));
+        }
+
+        public void getMap() {
             mSupportMapFragment = StationMapFragment.newInstance();
             getChildFragmentManager().beginTransaction()
                     .replace(R.id.map, mSupportMapFragment).commitAllowingStateLoss();
             mSupportMapFragment.getMapAsync(this);
-
         }
 
         @Override
@@ -390,6 +392,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                 viewHolder.expandCollapse.setBackground(
                         context.getDrawable(R.drawable.ic_keyboard_arrow_up_black_24dp));
             if (viewHolder instanceof MapViewHolder && viewHolder.frameLayout != null) {
+                ((MapViewHolder) viewHolder).getMap();
                 viewHolder.frameLayout.setVisibility(View.VISIBLE);
                 mSelectedItem = bundle;
             }
@@ -424,13 +427,15 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                     if (sensorViewHolder.chart != null)
                         sensorViewHolder.chart.setVisibility(View.GONE);
                 }
+                mSelectedItem = null;
             } else {
                 for (int i = 0; i < getItemCount(); i++) {
                     collapse(context,
                             (ViewHolder) mRecyclerView.findViewHolderForLayoutPosition(i));
                 }
-                getLoaderManager().initLoader(-bundle.getInt(SensorsContract.COLUMN__ID),
-                        bundle, StationFragment.this);
+                if (viewHolder instanceof SensorViewHolder)
+                    getLoaderManager().initLoader(-bundle.getInt(SensorsContract.COLUMN__ID),
+                            bundle, StationFragment.this);
                 expand(context, viewHolder, bundle);
             }
         }

@@ -487,7 +487,7 @@ public class MainActivity extends AppCompatActivity implements
 
                 mStationPagerAdapter = new StationPagerAdapter(getSupportFragmentManager());
                 mViewPager.setAdapter(mStationPagerAdapter);
-                mViewPager.setOffscreenPageLimit(4);
+                mViewPager.setOffscreenPageLimit(8);
                 mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
                     @Override
                     public void onPageScrolled(int position, float positionOffset,
