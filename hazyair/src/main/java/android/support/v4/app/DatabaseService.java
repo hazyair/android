@@ -160,6 +160,8 @@ public class DatabaseService extends JobIntentService {
                                     Info info = Preference.getInfo(DatabaseService.this);
                                     if (info != null) select(info.station._id);
                                     cursor.close();
+                                    Preference.setUpdate(DatabaseService.this,
+                                            System.currentTimeMillis());
                                     sendConfirmation(false);
                                 }
 

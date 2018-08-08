@@ -14,6 +14,7 @@ public class Preference {
     private static final String NOTIFICATIONS_INTERVAL = "30";
     private final static String PREF_INFO = "io.github.hazyair.PREF_INFO";
     private final static String PREF_LICENSE = "io.github.hazyair.PREF_LICENSE";
+    private final static String PREF_UPDATE = "io.github.hazyair.PREF_UPDATE";
 
     public static void initialize(Context context) {
         PreferenceManager.setDefaultValues(context, R.xml.pref_general, false);
@@ -68,8 +69,20 @@ public class Preference {
         return PreferenceManager.getDefaultSharedPreferences(context)
                 .getBoolean(PREF_LICENSE, false);
     }
+
     public static void setLicense(Context context, boolean license) {
         PreferenceManager.getDefaultSharedPreferences(context).edit().putBoolean(PREF_LICENSE,
                 license).apply();
     }
+
+    public static long getUpdate(Context context) {
+        return PreferenceManager.getDefaultSharedPreferences(context)
+                .getLong(PREF_UPDATE, 0);
+    }
+
+    public static void setUpdate(Context context, long timestamp) {
+        PreferenceManager.getDefaultSharedPreferences(context).edit().putLong(PREF_UPDATE,
+                timestamp).apply();
+    }
+
 }

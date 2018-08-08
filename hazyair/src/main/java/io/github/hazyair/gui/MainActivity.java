@@ -51,6 +51,9 @@ import io.github.hazyair.data.StationsLoader;
 import io.github.hazyair.service.NotificationService;
 import io.github.hazyair.source.Station;
 import android.support.v4.app.DatabaseService;
+
+import java.util.concurrent.TimeUnit;
+
 import io.github.hazyair.service.DatabaseSyncService;
 import io.github.hazyair.util.License;
 import io.github.hazyair.util.Preference;
@@ -96,10 +99,11 @@ public class MainActivity extends AppCompatActivity implements
         @Override
         public Fragment getItem(int position) {
             mCursor.moveToPosition(position);
-            Fragment fragment;
-            fragment = StationFragment.newInstance(mCursor);
-            mFragments.put(position, fragment);
-            return fragment;
+            Fragment newFragment = StationFragment.newInstance(mCursor);
+            StationFragment oldFragment = (StationFragment) mFragments.get(position);
+            if (oldFragment != null) oldFragment.clear();
+            mFragments.put(position, newFragment);
+            return newFragment;
         }
 
         @Override
@@ -115,7 +119,7 @@ public class MainActivity extends AppCompatActivity implements
         @Override
         public Parcelable saveState() {
             Bundle state = (Bundle) super.saveState();
-            for (int i=0; i<mFragments.size(); i++) {
+            for (int i = 0; i < mFragments.size(); i++) {
                 Fragment fragment = mFragments.get(i);
                 if (fragment != null && fragment.isAdded()) {
                     if (state == null) {
@@ -125,6 +129,7 @@ public class MainActivity extends AppCompatActivity implements
                     mFragmentManager.putFragment(state, key, fragment);
                 }
             }
+            mFragments.clear();
             return state;
         }
 
@@ -146,6 +151,13 @@ public class MainActivity extends AppCompatActivity implements
                     }
                 }
             }
+        }
+
+        void clear() {
+            for (int i = 0; i < mFragments.size(); i ++) {
+                ((StationFragment)mFragments.get(i)).clear();
+            }
+            mFragments.clear();
         }
     }
 
@@ -327,6 +339,7 @@ public class MainActivity extends AppCompatActivity implements
             holder.itemView.setOnClickListener((v) -> {
                 if (layoutPosition == mCurrentItem) return;
                 deselectCurrentStation();
+                if (mStationFragment != null) mStationFragment.clear();
                 mStationFragment = null;
                 selectStation(holder, layoutPosition);
                 mCurrentViewHolder = holder;
@@ -413,6 +426,7 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         Preference.initialize(this);
         if (Preference.isCrashlyticsEnabled(this)) {
             Fabric.with(this, new Crashlytics());
@@ -518,8 +532,27 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     protected void onDestroy() {
-        super.onDestroy();
+        if (mStationFragment != null) mStationFragment.clear();
         mStationFragment = null;
+        if (mTwoPane) {
+            mStationListAdapter = null;
+        } else {
+            mStationPagerAdapter.clear();
+            if (mViewPager != null) mViewPager.setAdapter(null);
+            mStationPagerAdapter = null;
+            mViewPager = null;
+        }
+        mSelectedStation = null;
+        mTabLayout = null;
+        mSwipeRefreshLayout = null;
+        mRecyclerView = null;
+        mDivider = null;
+        mMenu = null;
+        mToolbar = null;
+        mContainer = null;
+        mFloatingActionButton = null;
+        mLocationManager = null;
+        super.onDestroy();
     }
 
     private void addRemoveStationButton() {
@@ -582,6 +615,7 @@ public class MainActivity extends AppCompatActivity implements
                     } else {
                         mSelectedStation = null;
                     }
+                    if (mStationFragment != null) mStationFragment.clear();
                     mStationFragment = null;
                 } else {
                     if (mViewPager == null || mStationPagerAdapter == null) return true;
@@ -633,7 +667,12 @@ public class MainActivity extends AppCompatActivity implements
             mFloatingActionButton.setOnClickListener(null);
             startActivity(new Intent(MainActivity.this, StationsActivity.class));
         });
-        mSwipeRefreshLayout.setOnRefreshListener(() -> DatabaseService.update(this));
+        mSwipeRefreshLayout.setOnRefreshListener(() -> {
+            if (System.currentTimeMillis() - Preference.getUpdate(MainActivity.this) >
+                    TimeUnit.MINUTES.toMillis(30))
+                DatabaseService.update(this);
+            else mSwipeRefreshLayout.setRefreshing(false);
+        });
         DatabaseSyncService.schedule(this);
         NotificationService.schedule(this);
         if (mTwoPane) {
@@ -646,8 +685,10 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onPause() {
         super.onPause();
-        io.github.hazyair.util.Location.removeUpdates(this, mLocationManager,
-                this);
+        if (mTwoPane) {
+            io.github.hazyair.util.Location.removeUpdates(this, mLocationManager,
+                    this);
+        }
         mSwipeRefreshLayout.setRefreshing(false);
     }
 

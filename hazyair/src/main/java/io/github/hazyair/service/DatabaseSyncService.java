@@ -30,10 +30,10 @@ public class DatabaseSyncService extends JobService {
             } else if (
                 jobScheduler.schedule(new JobInfo.Builder(JOB_ID,
                 new ComponentName(context, DatabaseSyncService.class))
-                .setPeriodic(TimeUnit.MINUTES.toMillis(interval))
-                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                .setPersisted(true)
-                .build()) == RESULT_SUCCESS) {
+                        .setPeriodic(TimeUnit.MINUTES.toMillis(interval))
+                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                        .setPersisted(true)
+                        .build()) == RESULT_SUCCESS) {
                 mInterval = interval;
             }
         }

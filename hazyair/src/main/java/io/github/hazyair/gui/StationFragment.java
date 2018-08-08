@@ -113,7 +113,8 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         }
 
         void getMap() {
-            mSupportMapFragment = StationMapFragment.newInstance();
+            if (mSupportMapFragment == null)
+                mSupportMapFragment = StationMapFragment.newInstance();
             getChildFragmentManager().beginTransaction()
                     .replace(R.id.map, mSupportMapFragment).commitAllowingStateLoss();
             mSupportMapFragment.getMapAsync(this);
@@ -361,18 +362,24 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                         description.setText(sensor.getString(SensorsContract.COLUMN_UNIT));
                         sensorViewHolder.chart.setDescription(description);
                         sensorViewHolder.chart.setData(new LineData(lineDataSet));
-                        sensorViewHolder.chart.setNoDataText(
-                                getString(R.string.chart_no_data_available));
                     }
                     if (Base.equals(mSelectedItem, sensor))
                         expand(context, sensorViewHolder, sensor);
                     else collapse(context, sensorViewHolder);
-                    if (sensorViewHolder.expandCollapse != null && data != null)
-                        sensorViewHolder.expandCollapse.setOnClickListener((v) ->
-                                OnClickListener(context, sensorViewHolder, sensor));
-                    if (sensorViewHolder.cardView != null && data != null)
-                        sensorViewHolder.cardView.setOnClickListener((v) ->
-                                OnClickListener(context, sensorViewHolder, sensor));
+                    if (sensorViewHolder.expandCollapse != null) {
+                        if (data != null)
+                            sensorViewHolder.expandCollapse.setOnClickListener((v) ->
+                                    OnClickListener(context, sensorViewHolder, sensor));
+                        else
+                            sensorViewHolder.expandCollapse.setOnClickListener(null);
+                    }
+                    if (sensorViewHolder.cardView != null) {
+                        if (data != null)
+                            sensorViewHolder.cardView.setOnClickListener((v) ->
+                                    OnClickListener(context, sensorViewHolder, sensor));
+                        else
+                            sensorViewHolder.cardView.setOnClickListener(null);
+                    }
             }
         }
 
@@ -403,6 +410,8 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
             if (viewHolder instanceof  SensorViewHolder) {
                 SensorViewHolder sensorViewHolder = (SensorViewHolder) viewHolder;
                 if (sensorViewHolder.chart != null) {
+                    sensorViewHolder.chart.setNoDataText(
+                            getString(R.string.chart_no_data_available));
                     sensorViewHolder.chart.setVisibility(View.VISIBLE);
                     mSelectedItem = bundle;
                 }
@@ -480,6 +489,12 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
     }
 
     @Override
+    public void onDestroy() {
+        clear();
+        super.onDestroy();
+    }
+
+    @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
@@ -487,8 +502,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         Bundle station = getArguments();
         Bundle selected = null;
         if (savedInstanceState != null) selected = savedInstanceState.getBundle(PARAM_SELECTED);
-        mSensorsAdapter = new SensorsAdapter(station,
-                selected,
+        mSensorsAdapter = new SensorsAdapter(station, selected,
                 io.github.hazyair.util.Location.checkPermission(getActivity()));
         mRecyclerView.setAdapter(mSensorsAdapter);
         mRecyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
@@ -616,5 +630,12 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         if (mSensorsAdapter != null) mSensorsAdapter.setDistance(false);
     }
 
+    public void clear() {
+        io.github.hazyair.util.Location.removeUpdates(getContext(), mLocationManager,
+                this);
+        mRecyclerView = null;
+        mLocationManager = null;
+        mSensorsAdapter = null;
+    }
 
 }

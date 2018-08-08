@@ -69,6 +69,7 @@ public final class Location {
 
     public static void removeUpdates(Context context, LocationManager locationManager,
                                      LocationListener locationListener) {
+        if (context == null || locationManager == null || locationListener == null) return;
         if (ContextCompat.checkSelfPermission(context,
                 Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
 
