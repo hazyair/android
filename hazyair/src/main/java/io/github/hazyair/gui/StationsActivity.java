@@ -514,9 +514,11 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
             }
 
         }
-        for (int i = 0; i < mStationList.getChildCount(); i++) {
-            View child = mStationList.getChildAt(i);
-            child.setEnabled(enabled);
+        if (mStationList != null) {
+            for (int i = 0; i < mStationList.getChildCount(); i++) {
+                View child = mStationList.getChildAt(i);
+                child.setEnabled(enabled);
+            }
         }
     }
 
@@ -553,7 +555,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                     if (mTwoPane) query(mAdapter, mQueryString);
                     else query(mStationListAdapter, mQueryString);
                 }
-                mSwipeRefreshLayout.setRefreshing(false);
+                if (mSwipeRefreshLayout != null) mSwipeRefreshLayout.setRefreshing(false);
                 setEnabled(true);
             }
 
