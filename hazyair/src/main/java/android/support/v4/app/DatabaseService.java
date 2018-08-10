@@ -39,6 +39,8 @@ public class DatabaseService extends JobIntentService {
             "io.github.hazyair.ACTION_UPDATING";
     public final static String ACTION_UPDATED =
             "io.github.hazyair.ACTION_UPDATED";
+    public final static String ACTION_SELECTED =
+            "io.github.hazyair.ACTION_SELECTED";
 
 
     private final static String PARAM__ID = "io.github.hazyair.PARAM__ID";
@@ -46,6 +48,7 @@ public class DatabaseService extends JobIntentService {
     public final static String PARAM_POSITION = "io.github.hazyair.PARAM_POSITION";
     public final static String PARAM_RESCHEDULE = "io.github.hazyair.PARAM_RESCHEDULE";
     public final static String PARAM_MESSAGE = "io.github.hazyair.PARAM_MESSAGE";
+    public final static String PARAM_INFO = "io.github.hazyair.PARAM_INFO";
 
     private static int count;
 
@@ -265,10 +268,9 @@ public class DatabaseService extends JobIntentService {
             data.add(new Data(cursor));
             cursor.close();
         }
-        Preference.putInfo(this, new Info(new Station(stationCursor), sensorList,
-                data));
+        Info info = new Info(new Station(stationCursor), sensorList, data);
         stationCursor.close();
-        AppWidget.update(this);
+        sendBroadcast(new Intent(ACTION_SELECTED).putExtra(PARAM_INFO, info));
     }
 
     private void sendConfirmation(int position) {

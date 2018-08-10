@@ -28,7 +28,6 @@ public class AppWidget extends AppWidgetProvider {
                     context.getString(R.string.app_name));
             remoteViews.setTextViewText(R.id.address,
                     context.getString(R.string.text_no_station_selected));
-            appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.sensors);
         } else {
             Intent intent = new Intent(context, MainActivity.class);
             intent.putExtra(MainActivity.PARAM_STATION, station);
@@ -47,9 +46,9 @@ public class AppWidget extends AppWidgetProvider {
                             32));
             remoteViews.setRemoteAdapter(R.id.sensors,
                     new Intent(context, AppWidgetService.class));
-            appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.sensors);
         }
         appWidgetManager.updateAppWidget(appWidgetId, remoteViews);
+        appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.sensors);
     }
 
     @Override

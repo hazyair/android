@@ -56,7 +56,9 @@ import android.support.v4.app.DatabaseService;
 
 import io.github.hazyair.util.License;
 import io.github.hazyair.util.Network;
+import io.github.hazyair.util.Preference;
 import io.github.hazyair.util.Text;
+import io.github.hazyair.widget.AppWidget;
 
 import static android.support.v7.widget.helper.ItemTouchHelper.ACTION_STATE_SWIPE;
 import static android.support.v7.widget.helper.ItemTouchHelper.LEFT;
@@ -467,6 +469,11 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                         Network.showWarning(StationsActivity.this);
                     }
                     break;
+                case DatabaseService.ACTION_SELECTED:
+                    Preference.putInfo(StationsActivity.this,
+                            intent.getParcelableExtra(DatabaseService.PARAM_INFO));
+                    AppWidget.update(StationsActivity.this);
+                    break;
             }
         }
     };
@@ -738,6 +745,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
         intentFilter.addAction(DatabaseService.ACTION_UPDATING);
         intentFilter.addAction(DatabaseService.ACTION_UPDATED);
         intentFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        intentFilter.addAction(DatabaseService.ACTION_SELECTED);
         registerReceiver(mBroadcastReceiver, intentFilter);
     }
 

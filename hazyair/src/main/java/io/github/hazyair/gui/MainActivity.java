@@ -57,6 +57,7 @@ import java.util.concurrent.TimeUnit;
 import io.github.hazyair.service.DatabaseSyncService;
 import io.github.hazyair.util.License;
 import io.github.hazyair.util.Preference;
+import io.github.hazyair.widget.AppWidget;
 
 import static android.view.MenuItem.SHOW_AS_ACTION_IF_ROOM;
 
@@ -366,6 +367,11 @@ public class MainActivity extends AppCompatActivity implements
                 case DatabaseService.ACTION_UPDATED:
                     mSwipeRefreshLayout.setRefreshing(false);
                     break;
+                case DatabaseService.ACTION_SELECTED:
+                    Preference.putInfo(MainActivity.this,
+                            intent.getParcelableExtra(DatabaseService.PARAM_INFO));
+                    AppWidget.update(MainActivity.this);
+                    break;
             }
         }
     };
@@ -651,6 +657,7 @@ public class MainActivity extends AppCompatActivity implements
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(DatabaseService.ACTION_UPDATED);
         intentFilter.addAction(DatabaseService.ACTION_UPDATING);
+        intentFilter.addAction(DatabaseService.ACTION_SELECTED);
         registerReceiver(mBroadcastReceiver, intentFilter);
     }
 
