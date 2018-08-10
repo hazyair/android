@@ -519,6 +519,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
     }
 
     private void getStations(boolean scroll) {
+        setEnabled(false);
         Source.with(StationsActivity.this).load(Source.Type.GIOS).into(new StationsCallback() {
             @Override
             public void onSuccess(List<Station> stations) {
@@ -551,11 +552,13 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                     else query(mStationListAdapter, mQueryString);
                 }
                 mSwipeRefreshLayout.setRefreshing(false);
+                setEnabled(true);
             }
 
             @Override
             public void onError() {
                 mSwipeRefreshLayout.setRefreshing(false);
+                setEnabled(true);
             }
         });
     }
@@ -640,6 +643,22 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
 
     }
 
+    @Override
+    protected void onDestroy() {
+        mSearchView = null;
+        mLocationManager = null;
+        mSwipeRefreshLayout = null;
+        mStationListAdapter = null;
+        mStationList.setAdapter(null);
+        mStationList = null;
+        if (mTwoPane) {
+            if (mAllStations != null)
+                mAllStations.setAdapter(null);
+            mAllStations = null;
+            mAdapter = null;
+        }
+        super.onDestroy();
+    }
 
     private void query(StationListAdapter stationListAdapter, String newText) {
         if (mStations == null) mStations = stationListAdapter.getStations();
@@ -748,7 +767,8 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                     ((GridLayoutManager)mAllStations.getLayoutManager())
                             .findFirstCompletelyVisibleItemPosition());
         }
-        if (mStationList != null && mStationList.getLayoutManager()instanceof LinearLayoutManager) {
+        if (mStationList != null && mStationList.getLayoutManager()
+                instanceof LinearLayoutManager) {
             outState.putInt(PARAM_STATION_LIST_POSITION,
                     ((LinearLayoutManager)mStationList.getLayoutManager())
                             .findFirstCompletelyVisibleItemPosition());

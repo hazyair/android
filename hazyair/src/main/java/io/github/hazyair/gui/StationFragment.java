@@ -302,6 +302,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                         if (sensorViewHolder.cardView != null)
                             sensorViewHolder.cardView
                                     .setCardBackgroundColor(context.getColor(R.color.textLight));
+                        collapse(context, sensorViewHolder);
                     } else {
                         if (sensorViewHolder.cardView != null)
                             sensorViewHolder.cardView
