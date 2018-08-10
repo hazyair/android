@@ -441,12 +441,14 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                         List<Station> stations;
                         if (mTwoPane) {
                             stations = mAdapter.getStations();
-                            if (stations != null) stations.get(position)._status = false;
+                            if (stations != null && stations.size() > 0)
+                                stations.get(position)._status = false;
                             mAdapter.notifyDataSetChanged();
                             setEnabled(true);
                         } else {
                             stations = mStationListAdapter.getStations();
-                            if (stations != null) stations.get(position)._status = false;
+                            if (stations != null && stations.size() > 0)
+                                stations.get(position)._status = false;
                             mStationListAdapter.notifyDataSetChanged();
                             setEnabled(true);
                         }
@@ -535,7 +537,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                         }
                     }
                 } else {
-                    mStationListAdapter.setStations(stations);
+                    if (mStationListAdapter != null) mStationListAdapter.setStations(stations);
                 }
                 if (scroll && mStationList != null) {
                     RecyclerView.LayoutManager layoutManager
