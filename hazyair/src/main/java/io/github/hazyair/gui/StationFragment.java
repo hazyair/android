@@ -567,7 +567,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                 mLocationRequest,mLocationCallback);
     }
 
-    public void removeUpdates() {
+    private void removeUpdates() {
         io.github.hazyair.util.Location.removeUpdates(getContext(), mFusedLocationProviderClient,
                 mLocationCallback);
     }

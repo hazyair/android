@@ -4,9 +4,6 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
-import android.location.Criteria;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
@@ -17,7 +14,6 @@ import com.google.android.gms.location.LocationRequest;
 
 import java.util.concurrent.TimeUnit;
 
-import io.fabric.sdk.android.services.concurrency.Task;
 import io.github.hazyair.R;
 
 public final class Location {

@@ -7,8 +7,8 @@
     android:contentDescription="@string/contentDescription_sensor_data"
     android:textSize="@dimen/text_size_widget"
     android:textColor="@android:color/white"
-    android:layout_marginTop="4dp"
-    android:layout_marginBottom="4dp"
-    android:layout_marginStart="@dimen/edge"
-    android:layout_marginEnd="@dimen/edge"
+    android:paddingTop="@dimen/half_edge"
+    android:paddingBottom="@dimen/half_edge"
+    android:paddingStart="@dimen/edge"
+    android:paddingEnd="@dimen/edge"
     tools:ignore="SpUsage" />

@@ -390,7 +390,8 @@ public class StationsActivity extends AppCompatActivity implements SearchView.On
                         itemPosition == mStationListAdapter.getCursor().getCount() - 1) ||
                         itemPosition == itemCount - 1)) {
                     outRect.set(0, 0, padding, padding);
-                } else {
+                } else if (mStationListAdapter.getCursor() == null ||
+                        itemPosition != mStationListAdapter.getCursor().getCount()) {
                     outRect.set(0, 0, padding, 0);
                 }
 

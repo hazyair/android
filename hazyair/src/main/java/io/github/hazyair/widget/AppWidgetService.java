@@ -69,8 +69,8 @@ public class AppWidgetService extends RemoteViewsService {
                 }
                 remoteViews.setTextViewText(R.id.sensor, text);
                 remoteViews.setOnClickFillInIntent(R.id.sensor, new Intent(getApplicationContext(),
-                        MainActivity.class).
-                putExtra(MainActivity.PARAM_STATION, mInfo.station.toBundle()));
+                        MainActivity.class)
+                        .putExtra(MainActivity.PARAM_STATION, mInfo.station.toBundle()));
                 return remoteViews;
             }
 
