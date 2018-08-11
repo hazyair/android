@@ -4,11 +4,11 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Rect;
 import android.location.Location;
 import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -40,6 +40,12 @@ import android.widget.TextView;
 
 import com.crashlytics.android.Crashlytics;
 import com.facebook.stetho.Stetho;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationAvailability;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -56,10 +62,12 @@ import java.util.concurrent.TimeUnit;
 
 import io.github.hazyair.service.DatabaseSyncService;
 import io.github.hazyair.util.License;
+import io.github.hazyair.util.Network;
 import io.github.hazyair.util.Preference;
 import io.github.hazyair.widget.AppWidget;
 
 import static android.view.MenuItem.SHOW_AS_ACTION_IF_ROOM;
+import static io.github.hazyair.util.Location.PERMISSION_REQUEST_FINE_LOCATION;
 
 public class MainActivity extends AppCompatActivity implements
         LoaderManager.LoaderCallbacks<Cursor>, LocationListener {
@@ -388,7 +396,11 @@ public class MainActivity extends AppCompatActivity implements
 
     private StationFragment mStationFragment;
 
-    private LocationManager mLocationManager;
+    private LocationCallback mLocationCallback;
+
+    private LocationRequest mLocationRequest;
+
+    private FusedLocationProviderClient mFusedLocationProviderClient;
 
     // ButterKnife
     @SuppressWarnings("WeakerAccess")
@@ -501,6 +513,28 @@ public class MainActivity extends AppCompatActivity implements
                         }
                     }
                 });
+                mFusedLocationProviderClient =
+                        LocationServices.getFusedLocationProviderClient(this);
+
+                mLocationCallback = new LocationCallback() {
+                    @Override
+                    public void onLocationResult(LocationResult locationResult) {
+                        super.onLocationResult(locationResult);
+                        if (locationResult == null) {
+                            return;
+                        }
+                        for (Location location : locationResult.getLocations()) {
+                            mStationListAdapter.setLocation(location);
+                        }
+                    }
+
+                    @Override
+                    public void onLocationAvailability(LocationAvailability locationAvailability) {
+                        super.onLocationAvailability(locationAvailability);
+                        mStationListAdapter.setDistance(locationAvailability.isLocationAvailable());
+                    }
+                };
+                mLocationRequest = io.github.hazyair.util.Location.createLocationRequest();
             }
         } else {
             if (mViewPager != null) {
@@ -532,8 +566,6 @@ public class MainActivity extends AppCompatActivity implements
                 mTabLayout.setVisibility(View.VISIBLE);
             }
         }
-        mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-
     }
 
     @Override
@@ -557,7 +589,9 @@ public class MainActivity extends AppCompatActivity implements
         mToolbar = null;
         mContainer = null;
         mFloatingActionButton = null;
-        mLocationManager = null;
+        mLocationCallback = null;
+        mLocationRequest = null;
+        mFusedLocationProviderClient = null;
         super.onDestroy();
     }
 
@@ -676,25 +710,26 @@ public class MainActivity extends AppCompatActivity implements
         });
         mSwipeRefreshLayout.setOnRefreshListener(() -> {
             if (System.currentTimeMillis() - Preference.getUpdate(MainActivity.this) >
-                    TimeUnit.MINUTES.toMillis(30))
-                DatabaseService.update(this);
-            else mSwipeRefreshLayout.setRefreshing(false);
+                    TimeUnit.MINUTES.toMillis(30)) {
+                if (Network.isAvailable(MainActivity.this))
+                    DatabaseService.update(this);
+                else {
+                    mSwipeRefreshLayout.setRefreshing(false);
+                    Network.showWarning(MainActivity.this);
+                }
+            } else mSwipeRefreshLayout.setRefreshing(false);
         });
         DatabaseSyncService.schedule(this);
         NotificationService.schedule(this);
-        if (mTwoPane) {
-            io.github.hazyair.util.Location.requestUpdates(this, mLocationManager,
-                    this);
-        }
-
+        if (mTwoPane) requestUpdates();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         if (mTwoPane) {
-            io.github.hazyair.util.Location.removeUpdates(this, mLocationManager,
-                    this);
+            io.github.hazyair.util.Location.removeUpdates(this,
+                    mFusedLocationProviderClient, mLocationCallback);
         }
         mSwipeRefreshLayout.setRefreshing(false);
     }
@@ -705,6 +740,35 @@ public class MainActivity extends AppCompatActivity implements
         if (mTwoPane && mStationFragment != null && mStationFragment.isAdded()) {
             getSupportFragmentManager().putFragment(outState, StationFragment.class.getName(),
                     mStationFragment);
+
+        }
+    }
+
+    private void requestUpdates() {
+        io.github.hazyair.util.Location.requestUpdates(this,
+                mFusedLocationProviderClient, mLocationRequest, mLocationCallback);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case PERMISSION_REQUEST_FINE_LOCATION: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0 &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+                    if (mTwoPane) {
+                        requestUpdates();
+                    } else {
+                        for (Fragment fragment: getSupportFragmentManager().getFragments()) {
+                            ((StationFragment) fragment).requestUpdates();
+                        }
+                    }
+
+                }
+            }
 
         }
     }
@@ -753,7 +817,8 @@ public class MainActivity extends AppCompatActivity implements
         } else {
             mStationPagerAdapter.setCursor(data);
         }
-
+        if (!mTwoPane && data.getCount() > 0)
+            io.github.hazyair.util.Location.checkPermission(this);
         selectStation(data);
     }
 

@@ -8,8 +8,6 @@ import android.content.pm.PackageManager;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
 import android.content.Context;
@@ -40,6 +38,12 @@ import android.net.ConnectivityManager;
 
 import com.annimon.stream.Collectors;
 import com.annimon.stream.Stream;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationAvailability;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 
 import java.util.List;
 
@@ -52,6 +56,7 @@ import io.github.hazyair.data.StationsLoader;
 import io.github.hazyair.source.iface.StationsCallback;
 import io.github.hazyair.source.Source;
 import io.github.hazyair.source.Station;
+
 import android.support.v4.app.DatabaseService;
 
 import io.github.hazyair.util.License;
@@ -65,8 +70,7 @@ import static android.support.v7.widget.helper.ItemTouchHelper.LEFT;
 import static android.support.v7.widget.helper.ItemTouchHelper.RIGHT;
 import static io.github.hazyair.util.Location.PERMISSION_REQUEST_FINE_LOCATION;
 
-public class StationsActivity extends AppCompatActivity implements LocationListener,
-        SearchView.OnQueryTextListener {
+public class StationsActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
 
     // Final definitions
     private final static String PARAM_ALL_STATIONS_POSITION =
@@ -81,19 +85,24 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
 
         final int viewType;
 
-        @Nullable @BindView(R.id.cardview)
+        @Nullable
+        @BindView(R.id.cardview)
         CardView card;
 
-        @Nullable @BindView(R.id.place)
+        @Nullable
+        @BindView(R.id.place)
         TextView place;
 
-        @Nullable @BindView(R.id.address)
+        @Nullable
+        @BindView(R.id.address)
         TextView address;
 
-        @Nullable @BindView(R.id.station)
+        @Nullable
+        @BindView(R.id.station)
         TextView station;
 
-        @Nullable @BindView(R.id.distance)
+        @Nullable
+        @BindView(R.id.distance)
         TextView distance;
 
         int _id;
@@ -153,16 +162,16 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
         }
 
         @Override
-        public int getItemViewType(int position){
+        public int getItemViewType(int position) {
             int count = (mCursor == null ? 0 : mCursor.getCount());
-            if(position < count){
+            if (position < count) {
                 return VIEW_TYPE_SELECTED;
             }
             int size = (mStations == null ? 0 : mStations.size());
-            if(mDivider && position == count) {
+            if (mDivider && position == count) {
                 return VIEW_TYPE_DIVIDER;
             }
-            if(position - count - (mDivider ? 1 : 0) < size){
+            if (position - count - (mDivider ? 1 : 0) < size) {
                 return VIEW_TYPE_ALL;
             }
             return -1;
@@ -321,7 +330,7 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
             ViewHolder holder = (ViewHolder) viewHolder;
             Bundle station = DatabaseService.selectedStation(StationsActivity.this);
             if (station != null && station.getInt(StationsContract.COLUMN__ID) == holder._id)
-                        DatabaseService.selectStation(StationsActivity.this, null);
+                DatabaseService.selectStation(StationsActivity.this, null);
             DatabaseService.delete(StationsActivity.this, holder._id);
         }
 
@@ -484,7 +493,11 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
 
     private SearchView mSearchView;
 
-    private LocationManager mLocationManager;
+    private LocationCallback mLocationCallback;
+
+    private LocationRequest mLocationRequest;
+
+    private FusedLocationProviderClient mFusedLocationProviderClient;
 
     private boolean mTwoPane;
 
@@ -582,7 +595,33 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
 
         mTwoPane = getResources().getBoolean(R.bool.two_pane);
 
-        mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+
+        mLocationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+                if (locationResult == null) {
+                    return;
+                }
+                for (Location location : locationResult.getLocations()) {
+                    if (mTwoPane) {
+                        mAdapter.setLocation(location);
+                    }
+                    mStationListAdapter.setLocation(location);
+                }
+            }
+
+            @Override
+            public void onLocationAvailability(LocationAvailability locationAvailability) {
+                super.onLocationAvailability(locationAvailability);
+                if (mTwoPane) {
+                    mAdapter.setDistance(locationAvailability.isLocationAvailable());
+                }
+                mStationListAdapter.setDistance(locationAvailability.isLocationAvailable());
+            }
+        };
+        mLocationRequest = io.github.hazyair.util.Location.createLocationRequest();
 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
@@ -607,8 +646,8 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
             if (mAllStations != null) {
                 mAllStations.setAdapter(mAdapter);
                 mAllStations.addItemDecoration(new AllStationsItemDecoration());
-                ((GridLayoutManager)mAllStations.getLayoutManager())
-                        .setSpanCount((int)((float) getResources().getDisplayMetrics().widthPixels /
+                ((GridLayoutManager) mAllStations.getLayoutManager())
+                        .setSpanCount((int) ((float) getResources().getDisplayMetrics().widthPixels /
                                 getResources().getDimensionPixelSize(R.dimen.panel) - 1));
             }
 
@@ -633,31 +672,32 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
         itemTouchhelper.attachToRecyclerView(mStationList);
         getSupportLoaderManager().initLoader(0, null,
                 new LoaderManager.LoaderCallbacks<Cursor>() {
-            @NonNull
-            @Override
-            public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-                return StationsLoader.newInstanceForAllStations(StationsActivity.this);
-            }
+                    @NonNull
+                    @Override
+                    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+                        return StationsLoader.newInstanceForAllStations(StationsActivity.this);
+                    }
 
 
-            @Override
-            public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
-                mStationListAdapter.setCursor(data);
-            }
+                    @Override
+                    public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
+                        mStationListAdapter.setCursor(data);
+                    }
 
-            @Override
-            public void onLoaderReset(@NonNull Loader<Cursor> loader) {
-                mStationListAdapter.setCursor(null);
-            }
+                    @Override
+                    public void onLoaderReset(@NonNull Loader<Cursor> loader) {
+                        mStationListAdapter.setCursor(null);
+                    }
 
-        });
-
+                });
     }
 
     @Override
     protected void onDestroy() {
         mSearchView = null;
-        mLocationManager = null;
+        mLocationCallback = null;
+        mLocationRequest = null;
+        mFusedLocationProviderClient = null;
         mSwipeRefreshLayout = null;
         mStationListAdapter = null;
         mStationList.setAdapter(null);
@@ -680,7 +720,6 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                         Text.contains(getString(p.country), newText))
                 .collect(Collectors.toList()));
     }
-
 
 
     @Override
@@ -758,15 +797,15 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
     @Override
     protected void onResume() {
         super.onResume();
-        io.github.hazyair.util.Location.requestUpdates(this, mLocationManager,
-                this);
+        io.github.hazyair.util.Location.requestUpdates(this,
+                mFusedLocationProviderClient, mLocationRequest, mLocationCallback);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        io.github.hazyair.util.Location.removeUpdates(this, mLocationManager,
-                this);
+        io.github.hazyair.util.Location.removeUpdates(this, mFusedLocationProviderClient,
+                mLocationCallback);
         mSwipeRefreshLayout.setRefreshing(false);
     }
 
@@ -776,13 +815,13 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
         if (mTwoPane && mAllStations != null &&
                 mAllStations.getLayoutManager() instanceof GridLayoutManager) {
             outState.putInt(PARAM_ALL_STATIONS_POSITION,
-                    ((GridLayoutManager)mAllStations.getLayoutManager())
+                    ((GridLayoutManager) mAllStations.getLayoutManager())
                             .findFirstCompletelyVisibleItemPosition());
         }
         if (mStationList != null && mStationList.getLayoutManager()
                 instanceof LinearLayoutManager) {
             outState.putInt(PARAM_STATION_LIST_POSITION,
-                    ((LinearLayoutManager)mStationList.getLayoutManager())
+                    ((LinearLayoutManager) mStationList.getLayoutManager())
                             .findFirstCompletelyVisibleItemPosition());
 
         }
@@ -799,42 +838,12 @@ public class StationsActivity extends AppCompatActivity implements LocationListe
                 // If request is cancelled, the result arrays are empty.
                 if (grantResults.length > 0 &&
                         grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
                     io.github.hazyair.util.Location.requestUpdates(this,
-                            mLocationManager, this);
+                            mFusedLocationProviderClient, mLocationRequest, mLocationCallback);
 
                 }
             }
         }
-    }
-
-    // Location handlers
-    @Override
-    public void onLocationChanged(Location location) {
-        if (mTwoPane) {
-            mAdapter.setLocation(location);
-        }
-        mStationListAdapter.setLocation(location);
-    }
-
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
-        if (mTwoPane) {
-            mAdapter.setDistance(true);
-        }
-        mStationListAdapter.setDistance(true);
-    }
-
-    @Override
-    public void onProviderDisabled(String provider) {
-        if (mTwoPane) {
-            mAdapter.setDistance(false);
-        }
-        mStationListAdapter.setDistance(false);
     }
 
     @Override

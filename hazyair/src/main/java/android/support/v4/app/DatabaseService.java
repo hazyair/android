@@ -136,7 +136,7 @@ public class DatabaseService extends JobIntentService {
                 count = cursor.getCount();
                 if (cursor.getCount() > 0) {
                     sendConfirmation();
-                    for (int i = 0; i < cursor.getCount() && count > 0; i++) {
+                    for (int i = 0; !cursor.isClosed() && i < cursor.getCount() && count > 0; i++) {
                         cursor.moveToPosition(i);
                         Bundle sensor = Sensor.toBundleFromCursor(cursor);
                         int _sensor_id = sensor.getInt(SensorsContract.COLUMN__ID);

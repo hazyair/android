@@ -11,8 +11,13 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+
 import java.util.concurrent.TimeUnit;
 
+import io.fabric.sdk.android.services.concurrency.Task;
 import io.github.hazyair.R;
 
 public final class Location {
@@ -25,11 +30,11 @@ public final class Location {
                 PERMISSION_REQUEST_FINE_LOCATION);
     }
 
-    public static boolean checkPermission(Activity activity) {
+    public static boolean checkPermission(Activity activity, boolean request) {
         if (ContextCompat.checkSelfPermission(activity,
                 Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
             return true;
-
+        if (!request) return false;
         // Should we show an explanation?
         if (ActivityCompat.shouldShowRequestPermissionRationale(activity,
                 Manifest.permission.ACCESS_FINE_LOCATION)) {
@@ -57,25 +62,36 @@ public final class Location {
         return false;
     }
 
-    public static void requestUpdates(Context context, LocationManager locationManager,
-                                      LocationListener locationListener) {
+    public static boolean checkPermission(Activity activity) {
+        return checkPermission(activity, true);
+    }
+
+    public static void requestUpdates(Context context, FusedLocationProviderClient
+            fusedLocationProviderClient, LocationRequest locationRequest,
+                                      LocationCallback locationCallback) {
+        if (context == null || fusedLocationProviderClient == null || locationRequest == null ||
+                locationCallback == null) return;
         if (ContextCompat.checkSelfPermission(context,
                 Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
             return;
-        locationManager.requestLocationUpdates(locationManager.getBestProvider(new Criteria(),
-                false), TimeUnit.MINUTES.toMillis(15), 1000,
-                locationListener);
+        fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback,
+                null);
     }
 
-    public static void removeUpdates(Context context, LocationManager locationManager,
-                                     LocationListener locationListener) {
-        if (context == null || locationManager == null || locationListener == null) return;
+    public static void removeUpdates(Context context, FusedLocationProviderClient
+            fusedLocationProviderClient, LocationCallback locationCallback) {
+        if (context == null || fusedLocationProviderClient == null || locationCallback == null)
+            return;
         if (ContextCompat.checkSelfPermission(context,
                 Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
 
-            locationManager.removeUpdates(locationListener);
+            fusedLocationProviderClient.removeLocationUpdates(locationCallback);
         }
     }
 
-
+    public static LocationRequest createLocationRequest() {
+        return LocationRequest.create().setInterval(TimeUnit.MINUTES.toMillis(1))
+                .setFastestInterval(TimeUnit.SECONDS.toMillis(6))
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    }
 }

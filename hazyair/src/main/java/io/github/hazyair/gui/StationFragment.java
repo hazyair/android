@@ -2,13 +2,10 @@ package io.github.hazyair.gui;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Rect;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -33,6 +30,12 @@ import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationAvailability;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -60,12 +63,7 @@ import io.github.hazyair.source.Station;
 import io.github.hazyair.util.Quality;
 import io.github.hazyair.util.Text;
 
-//import android.support.v4.app.DatabaseService;
-
-import static io.github.hazyair.util.Location.PERMISSION_REQUEST_FINE_LOCATION;
-
-public class StationFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>,
-        LocationListener {
+public class StationFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
     // Final definitions
     private static final String PARAM_SELECTED = "io.github.hazyair.PARAM_SELECTED";
@@ -463,7 +461,12 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
     }
 
     private SensorsAdapter mSensorsAdapter;
-    private LocationManager mLocationManager;
+
+    private LocationCallback mLocationCallback;
+
+    private LocationRequest mLocationRequest;
+
+    private FusedLocationProviderClient mFusedLocationProviderClient;
 
     // ButterKnife
     @SuppressWarnings("WeakerAccess")
@@ -485,8 +488,29 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         Context context = getContext();
-        if (context != null)
-            mLocationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        if (context != null) {
+            mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
+
+            mLocationCallback = new LocationCallback() {
+                @Override
+                public void onLocationResult(LocationResult locationResult) {
+                    super.onLocationResult(locationResult);
+                    if (locationResult == null) {
+                        return;
+                    }
+                    for (Location location : locationResult.getLocations()) {
+                        mSensorsAdapter.setLocation(location);
+                    }
+                }
+
+                @Override
+                public void onLocationAvailability(LocationAvailability locationAvailability) {
+                    super.onLocationAvailability(locationAvailability);
+                    mSensorsAdapter.setDistance(locationAvailability.isLocationAvailable());
+                }
+            };
+            mLocationRequest = io.github.hazyair.util.Location.createLocationRequest();
+        }
     }
 
     @Override
@@ -504,7 +528,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         Bundle selected = null;
         if (savedInstanceState != null) selected = savedInstanceState.getBundle(PARAM_SELECTED);
         mSensorsAdapter = new SensorsAdapter(station, selected,
-                io.github.hazyair.util.Location.checkPermission(getActivity()));
+                io.github.hazyair.util.Location.checkPermission(getActivity(), false));
         mRecyclerView.setAdapter(mSensorsAdapter);
         mRecyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
             @Override
@@ -538,18 +562,26 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         return rootView;
     }
 
+    public void requestUpdates() {
+        io.github.hazyair.util.Location.requestUpdates(getContext(), mFusedLocationProviderClient,
+                mLocationRequest,mLocationCallback);
+    }
+
+    public void removeUpdates() {
+        io.github.hazyair.util.Location.removeUpdates(getContext(), mFusedLocationProviderClient,
+                mLocationCallback);
+    }
+
     @Override
     public void onResume() {
         super.onResume();
-        io.github.hazyair.util.Location.requestUpdates(getContext(), mLocationManager,
-                this);
+        requestUpdates();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        io.github.hazyair.util.Location.removeUpdates(getContext(), mLocationManager,
-                this);
+        removeUpdates();
     }
 
     @Override
@@ -557,25 +589,6 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         super.onSaveInstanceState(outState);
         if (mSensorsAdapter != null)
             outState.putParcelable(PARAM_SELECTED, mSensorsAdapter.mSelectedItem);
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        switch (requestCode) {
-            case PERMISSION_REQUEST_FINE_LOCATION: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0 &&
-                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-
-                    io.github.hazyair.util.Location.requestUpdates(getContext(),
-                            mLocationManager, this);
-
-                }
-            }
-
-        }
     }
 
     // Loader handlers
@@ -611,31 +624,12 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         mSensorsAdapter.setCursor(null);
     }
 
-    // Location handlers
-    @Override
-    public void onLocationChanged(Location location) {
-        if (mSensorsAdapter != null) mSensorsAdapter.setLocation(location);
-    }
-
-    @Override
-    public void onStatusChanged(String provider, int status, Bundle extras) {
-    }
-
-    @Override
-    public void onProviderEnabled(String provider) {
-        if (mSensorsAdapter != null) mSensorsAdapter.setDistance(true);
-    }
-
-    @Override
-    public void onProviderDisabled(String provider) {
-        if (mSensorsAdapter != null) mSensorsAdapter.setDistance(false);
-    }
-
     public void clear() {
-        io.github.hazyair.util.Location.removeUpdates(getContext(), mLocationManager,
-                this);
+        removeUpdates();
         mRecyclerView = null;
-        mLocationManager = null;
+        mLocationCallback = null;
+        mLocationRequest = null;
+        mFusedLocationProviderClient = null;
         mSensorsAdapter = null;
     }
 
