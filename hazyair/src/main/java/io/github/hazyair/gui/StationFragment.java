@@ -515,7 +515,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
 
     @Override
     public void onDestroy() {
-        clear();
+        clean();
         super.onDestroy();
     }
 
@@ -626,11 +626,15 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
 
     public void clear() {
         removeUpdates();
+        clean();
+    }
+
+    private void clean() {
         mRecyclerView = null;
         mLocationCallback = null;
         mLocationRequest = null;
-        mFusedLocationProviderClient = null;
         mSensorsAdapter = null;
+        mFusedLocationProviderClient = null;
     }
 
 }

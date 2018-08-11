@@ -513,8 +513,8 @@ public class MainActivity extends AppCompatActivity implements
                         }
                     }
                 });
-                mFusedLocationProviderClient =
-                        LocationServices.getFusedLocationProviderClient(this);
+                mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(
+                                this);
 
                 mLocationCallback = new LocationCallback() {
                     @Override
@@ -779,19 +779,12 @@ public class MainActivity extends AppCompatActivity implements
             finish();
         }
         mSelectedStation = intent.getBundleExtra(PARAM_STATION);
-        if (mSelectedStation == null) {
+        if (mSelectedStation == null)
             mSelectedStation = DatabaseService.selectedStation(this);
-        } else {
-            DatabaseService.selectStation(this, mSelectedStation);
-        }
-
-        Cursor data;
-        if (mTwoPane) {
-            data = mStationListAdapter.getCursor();
-        } else {
-            data = mStationPagerAdapter.getCursor();
-        }
-        selectStation(data);
+        else DatabaseService.selectStation(this, mSelectedStation);
+        getSupportLoaderManager().destroyLoader(0);
+        mStationPagerAdapter.notifyDataSetChanged();
+        getSupportLoaderManager().initLoader(0, mSelectedStation, this);
         super.onNewIntent(intent);
     }
 
@@ -802,11 +795,21 @@ public class MainActivity extends AppCompatActivity implements
         return StationsLoader.newInstanceForAllStations(MainActivity.this);
     }
 
+    private void selectStation(int position) {
+        if (mTwoPane) {
+            if (mStationListAdapter != null) mStationListAdapter.setCurrentItem(position);
+            if (mRecyclerView != null) mRecyclerView.scrollToPosition(position);
+        } else {
+            if (mViewPager != null) mViewPager.setCurrentItem(position, false);
+        }
+    }
+
     @Override
     public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
         if (data == null) return;
+        int count = data.getCount();
         if (mTwoPane) {
-            if (data.getCount() == 0) {
+            if (count == 0) {
                 getSupportFragmentManager().beginTransaction().replace(R.id.container,
                         new Fragment()).commit();
                 if (mDivider != null) mDivider.setVisibility(View.GONE);
@@ -817,9 +820,31 @@ public class MainActivity extends AppCompatActivity implements
         } else {
             mStationPagerAdapter.setCursor(data);
         }
-        if (!mTwoPane && data.getCount() > 0)
+        if (!mTwoPane && count > 0)
             io.github.hazyair.util.Location.checkPermission(this);
-        selectStation(data);
+        if (count == 0) {
+            removeRemoveStationButton();
+            DatabaseService.selectStation(this, null);
+        } else {
+            addRemoveStationButton();
+            if (mSelectedStation != null) {
+                int i;
+                for (i = 0; i < count; i++) {
+                    data.moveToPosition(i);
+                    if (Station.equals(Station.toBundleFromCursor(data), mSelectedStation)) {
+                        selectStation(i);
+                        break;
+                    }
+                }
+                if (i == count) mSelectedStation = null;
+            }
+            if (mSelectedStation == null) {
+                data.moveToFirst();
+                DatabaseService.selectStation(this, Station.toBundleFromCursor(data));
+                selectStation(0);
+            }
+        }
+
     }
 
     @Override
@@ -851,36 +876,4 @@ public class MainActivity extends AppCompatActivity implements
         if (mTwoPane && mStationListAdapter != null) mStationListAdapter.setDistance(false);
     }
 
-    private void selectStation(Cursor data) {
-        if (data == null) return;
-        int count = data.getCount();
-        if (count == 0) {
-            removeRemoveStationButton();
-            DatabaseService.selectStation(this, null);
-        } else {
-            addRemoveStationButton();
-            if (mSelectedStation != null) {
-                int i;
-                for (i = 0; i < count; i++) {
-                    data.moveToPosition(i);
-                    if (Station.equals(Station.toBundleFromCursor(data), mSelectedStation)) {
-                        if (mTwoPane) {
-                            if (mStationListAdapter != null) mStationListAdapter.setCurrentItem(i);
-                            if (mRecyclerView != null) mRecyclerView.scrollToPosition(i);
-                        } else {
-                            if (mViewPager != null) mViewPager.setCurrentItem(i, false);
-                        }
-                        break;
-                    }
-                }
-                if (i == count) {
-                    mSelectedStation = null;
-                }
-            }
-            if (mSelectedStation == null) {
-                data.moveToFirst();
-                DatabaseService.selectStation(this, Station.toBundleFromCursor(data));
-            }
-        }
-    }
 }
