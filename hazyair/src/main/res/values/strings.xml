@@ -27,7 +27,7 @@
     <string name="title_license">License</string>
     <string name="title_location">Location permission request</string>
     <string name="title_network">Network connection</string>
-    <string name="title_notification">Air quality standards exceeded!</string>
+    <!--<string name="title_notification">Air quality standards exceeded!</string>-->
     <string name="title_remove_station">Remove station</string>
     <string name="title_settings">Settings</string>
 

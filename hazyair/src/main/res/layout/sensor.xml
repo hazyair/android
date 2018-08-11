@@ -28,7 +28,8 @@
             app:layout_constraintTop_toTopOf="parent"
             android:paddingTop="@dimen/half_edge"
             android:textSize="@dimen/text_size"
-            android:textStyle="bold"/>
+            android:textStyle="bold"
+            android:textColor="@color/textDarker"/>
 
         <TextView
             android:id="@+id/result"
@@ -37,7 +38,8 @@
             app:layout_constraintStart_toEndOf="@id/parameter"
             app:layout_constraintTop_toTopOf="parent"
             android:paddingTop="@dimen/half_edge"
-            android:textSize="@dimen/text_size"/>
+            android:textSize="@dimen/text_size"
+            android:textColor="@color/textDark"/>
         <TextView
             android:id="@+id/updated"
             android:layout_width="wrap_content"
@@ -48,6 +50,7 @@
             app:layout_constraintEnd_toStartOf="@id/expand_collapse"
             app:layout_constraintTop_toTopOf="parent"
             android:textSize="@dimen/text_size"
+            android:textColor="@color/textDark"
             />
         <Button
             android:id="@+id/expand_collapse"

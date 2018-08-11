@@ -27,6 +27,7 @@
             app:layout_constraintTop_toTopOf="parent"
             android:textSize="@dimen/text_size"
             android:textStyle="bold"
+            android:textColor="@color/textDarker"
             />
         <TextView
             android:id="@+id/distance"
@@ -38,6 +39,7 @@
             app:layout_constraintEnd_toStartOf="@id/expand_collapse"
             app:layout_constraintTop_toTopOf="parent"
             android:textSize="@dimen/text_size"
+            android:textColor="@color/textDark"
             />
         <Button
             android:id="@+id/expand_collapse"

@@ -22,7 +22,7 @@
     <string name="title_license">Licencja</string>
     <string name="title_location">Prośba o dostęp do usługi lokalizacji</string>
     <string name="title_network">Połączenie sieciowe</string>
-    <string name="title_notification">Przekroczone normy powietrza!</string>
+    <!--<string name="title_notification">Przekroczone normy powietrza!</string>-->
     <string name="title_remove_station">Usuń stację</string>
     <string name="title_settings">Ustawienia</string>
 

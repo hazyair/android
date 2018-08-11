@@ -103,11 +103,13 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
             super(itemView);
             ButterKnife.bind(this, itemView);
             mStation = station;
-            if (place != null)
+            if (place != null) {
                 place.setText(Text.truncateSting(String.format("%s %s %s",
                         getString(mStation.getInt(StationsContract.COLUMN_COUNTRY)),
                         mStation.getString(StationsContract.COLUMN_LOCALITY),
                         mStation.getString(StationsContract.COLUMN_ADDRESS)), 32));
+            }
+
         }
 
         void getMap() {

@@ -86,12 +86,13 @@ public class NotificationService extends JobService {
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
         if (notify) {
             stringBuilder.delete(stringBuilder.length() - 2, stringBuilder.length());
-            stringBuilder.append(".");
             createNotificationChannel();
             notificationManager.notify(NOTIFICATION_ID,
                     new NotificationCompat.Builder(this, CHANNEL_ID)
                             .setSmallIcon(R.drawable.ic_cloud_white_18dp)
-                            .setContentTitle(getString(R.string.title_notification))
+                            .setContentTitle(String.format("%s %s %s",
+                                    getString(info.station.country), info.station.locality,
+                                    info.station.address))
                             .setContentText(stringBuilder)
                             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                             .setContentIntent(PendingIntent.getActivity(this,

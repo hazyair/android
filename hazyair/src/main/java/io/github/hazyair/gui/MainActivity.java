@@ -317,14 +317,14 @@ public class MainActivity extends AppCompatActivity implements
             Bundle station = Station.toBundleFromCursor(mCursor);
             if (holder.place == null) return;
             holder.place.setText(String.format("%s %s",
-                    station.getString(StationsContract.COLUMN_COUNTRY),
+                    getString(station.getInt(StationsContract.COLUMN_COUNTRY)),
                     station.getString(StationsContract.COLUMN_LOCALITY)));
             if (holder.address == null) return;
             holder.address.setText(station.getString(StationsContract.COLUMN_ADDRESS));
             if (holder.station == null) return;
             holder.station.setText(String.format("%s %s",
                     getString(R.string.text_station_by),
-                    station.getString(StationsContract.COLUMN_SOURCE)));
+                    getString(station.getInt(StationsContract.COLUMN_SOURCE))));
             if (holder.distance != null) {
                 holder.distance.setVisibility(mDistance ? View.VISIBLE : View.GONE);
                 if (mDistance && mLocation != null) {
@@ -783,7 +783,8 @@ public class MainActivity extends AppCompatActivity implements
             mSelectedStation = DatabaseService.selectedStation(this);
         else DatabaseService.selectStation(this, mSelectedStation);
         getSupportLoaderManager().destroyLoader(0);
-        mStationPagerAdapter.notifyDataSetChanged();
+        if (mTwoPane) mStationListAdapter.notifyDataSetChanged();
+        else mStationPagerAdapter.notifyDataSetChanged();
         getSupportLoaderManager().initLoader(0, mSelectedStation, this);
         super.onNewIntent(intent);
     }
