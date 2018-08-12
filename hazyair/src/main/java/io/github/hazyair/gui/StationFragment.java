@@ -223,6 +223,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         }
 
         void setLocation(Location location) {
+            if (mLocation != null && mLocation.distanceTo(location) < 100) return;
             mLocation = location;
             notifyDataSetChanged();
         }
