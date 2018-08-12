@@ -88,6 +88,6 @@ public final class Location {
     public static LocationRequest createLocationRequest() {
         return LocationRequest.create().setInterval(TimeUnit.MINUTES.toMillis(5))
                 .setFastestInterval(TimeUnit.MINUTES.toMillis(1))
-                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY).setSmallestDisplacement(100);
     }
 }

@@ -153,7 +153,6 @@ public class StationsActivity extends AppCompatActivity implements SearchView.On
         }
 
         void setLocation(Location location) {
-            if (mLocation != null && mLocation.distanceTo(location) < 100) return;
             mLocation = location;
             notifyDataSetChanged();
         }
