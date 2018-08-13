@@ -63,7 +63,7 @@ public class AppWidgetService extends RemoteViewsService {
                 text.setSpan(new StyleSpan(BOLD), 0, sensor.parameter.length(),
                         Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 if (percent > 100) {
-                    text.setSpan(new ForegroundColorSpan(getColor(android.R.color.holo_red_light)),
+                    text.setSpan(new ForegroundColorSpan(getColor(R.color.accent)),
                             0, text.length(),
                             Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 }

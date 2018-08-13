@@ -329,9 +329,9 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                             }
                             if (percent > 100) {
                                 sensorViewHolder.parameter.setTextColor(
-                                        context.getColor(android.R.color.holo_red_light));
+                                        context.getColor(R.color.accent));
                                 sensorViewHolder.result.setTextColor(
-                                        context.getColor(android.R.color.holo_red_light));
+                                        context.getColor(R.color.accent));
                             } else {
                                 sensorViewHolder.parameter.setTextColor(
                                         context.getColor(R.color.textDark));
