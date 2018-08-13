@@ -328,9 +328,9 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                                         TimeUnit.MINUTES.toMillis(1);
                                 sensorViewHolder.updated.setText(String.format("%s %s %s",
                                         (hours < 1 ? "<" : (minutes > 0 ? (minutes > 30 ? "<" : ">")
-                                                : "")), (hours > 1 ? (minutes > 30 ?
-                                                String.valueOf(hours+1) : String.valueOf(hours))
-                                                : "1"), "h"));
+                                                : "")), (hours < 1 ? "1" : (minutes > 30 ?
+                                                String.valueOf(hours+1) : String.valueOf(hours))),
+                                        "h"));
                             }
                             if (percent > 100) {
                                 sensorViewHolder.parameter.setTextColor(
