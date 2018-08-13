@@ -28,7 +28,8 @@ allprojects {
         butterknifeVersion = "8.8.1"
         glideVersion = "4.6.1"
         playServicesVersion = "15.0.1"
-
+        leakCanaryVersion = "1.6.1"
+        schematicVersion = "0.6.3"
     }
 }
 

@@ -4,7 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.text.Normalizer;
 
-public class Text {
+public final class Text {
     private final static String ELLIPSIS = "...";
 
     public static String truncateSting(String string, int length) {

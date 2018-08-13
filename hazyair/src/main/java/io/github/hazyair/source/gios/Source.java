@@ -7,6 +7,9 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.ParseException;
@@ -124,7 +127,8 @@ public class Source implements io.github.hazyair.source.iface.Source {
             } catch (ParseException e) {
                 Crashlytics.logException(e);
             }
-            result.add(new io.github.hazyair.source.Data(timestamp,
+            result.add(new io.github.hazyair.source.Data(new DateTime(timestamp,
+                    DateTimeZone.forID("Poland")).withZone(DateTimeZone.forID("UTC")).getMillis(),
                     new BigDecimal(value.value).setScale(2,
                             RoundingMode.HALF_UP).doubleValue()));
         }

@@ -9,7 +9,7 @@ import com.google.gson.reflect.TypeToken;
 import io.github.hazyair.R;
 import io.github.hazyair.source.Info;
 
-public class Preference {
+public final class Preference {
     private static final String SYNC_INTERVAL = "15";
     private static final String NOTIFICATIONS_INTERVAL = "30";
     private final static String PREF_INFO = "io.github.hazyair.PREF_INFO";

@@ -47,6 +47,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -62,6 +63,7 @@ import io.github.hazyair.source.Sensor;
 import io.github.hazyair.source.Station;
 import io.github.hazyair.util.Quality;
 import io.github.hazyair.util.Text;
+import io.github.hazyair.util.Time;
 
 public class StationFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -215,7 +217,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
             for (int position = 0; position < cursor.getCount(); position++) {
                 cursor.moveToPosition(position);
                 bundle = Data.toBundleFromCursor(cursor);
-                data.put(bundle.getLong(DataContract.COLUMN_TIMESTAMP),
+                data.put(Time.getTimestamp(bundle.getLong(DataContract.COLUMN_TIMESTAMP)),
                         bundle.getDouble(DataContract.COLUMN_VALUE));
             }
             if (bundle != null) mChart.put(bundle.getInt(DataContract.COLUMN__SENSOR_ID), data);
@@ -316,16 +318,19 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                                     sensor.getString(SensorsContract.COLUMN_UNIT),
                                     String.valueOf(percent)));
                             if (sensorViewHolder.updated != null) {
-                                long hours = (System.currentTimeMillis() -
-                                        data.getLong(DataContract.COLUMN_TIMESTAMP)) /
-                                        3600000;
+                                long timestamp = Time
+                                        .getTimestamp(data.getLong(DataContract.COLUMN_TIMESTAMP));
+                                long hours = (System.currentTimeMillis() - timestamp) /
+                                        TimeUnit.HOURS.toMillis(1);
                                 long minutes = (System.currentTimeMillis() -
-                                        data.getLong(DataContract.COLUMN_TIMESTAMP)) %
-                                        3600000 / 60000;
-                                sensorViewHolder.updated.setText(String.format("%s %s",
-                                        (hours > 0 ? String.valueOf(hours) :
-                                                String.valueOf(minutes)),
-                                        (hours > 0 ? "h" : "min")));
+                                        timestamp) %
+                                        TimeUnit.HOURS.toMillis(1) /
+                                        TimeUnit.MINUTES.toMillis(1);
+                                sensorViewHolder.updated.setText(String.format("%s %s %s",
+                                        (hours < 1 ? "<" : (minutes > 0 ? (minutes > 30 ? "<" : ">")
+                                                : "")), (hours > 1 ? (minutes > 30 ?
+                                                String.valueOf(hours+1) : String.valueOf(hours))
+                                                : "1"), "h"));
                             }
                             if (percent > 100) {
                                 sensorViewHolder.parameter.setTextColor(

@@ -7,7 +7,7 @@ import android.support.v7.app.AlertDialog;
 
 import io.github.hazyair.R;
 
-public class Network {
+public final class Network {
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean isAvailable(Context context) {
         ConnectivityManager connectivityManager =

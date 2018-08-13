@@ -8,7 +8,7 @@ import android.support.v7.app.AlertDialog;
 import io.github.hazyair.R;
 import io.github.hazyair.gui.MainActivity;
 
-public class License {
+public final class License {
 
     private static void dismiss(Activity activity) {
         Preference.setLicense(activity, false);

@@ -4,6 +4,8 @@ import android.app.Application;
 
 import com.squareup.leakcanary.LeakCanary;
 
+import net.danlew.android.joda.JodaTimeAndroid;
+
 import io.github.hazyair.BuildConfig;
 
 @SuppressWarnings("WeakerAccess")
@@ -19,5 +21,6 @@ public class HazyairApplication extends Application {
             }
             LeakCanary.install(this);
         }
+        JodaTimeAndroid.init(this);
     }
 }

@@ -21,8 +21,8 @@ android {
         applicationId "io.github.hazyair"
         minSdkVersion 23
         targetSdkVersion 27
-        versionCode 21
-        versionName "1.0.0+21"
+        versionCode 22
+        versionName "1.0.0+22"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         resValue "string", "google_maps_api_key", (project.findProperty("GOOGLE_MAPS_API_KEY") ?: "")
     }
@@ -66,13 +66,14 @@ dependencies {
     implementation 'com.android.volley:volley:1.1.0'
     implementation 'com.annimon:stream:1.2.0'
     implementation 'org.apache.commons:commons-lang3:3.3.1'
-    implementation 'net.simonvt.schematic:schematic:0.6.3'
     implementation "com.google.android.gms:play-services-maps:$playServicesVersion"
     implementation "com.google.android.gms:play-services-location:$playServicesVersion"
-    debugImplementation 'com.squareup.leakcanary:leakcanary-android:1.6.1'
-    releaseImplementation 'com.squareup.leakcanary:leakcanary-android-no-op:1.6.1'
-    debugImplementation 'com.squareup.leakcanary:leakcanary-support-fragment:1.6.1'
-    annotationProcessor 'net.simonvt.schematic:schematic-compiler:0.6.3'
+    implementation 'net.danlew:android.joda:2.9.9.4'
+    debugImplementation "com.squareup.leakcanary:leakcanary-android:$leakCanaryVersion"
+    releaseImplementation "com.squareup.leakcanary:leakcanary-android-no-op:$leakCanaryVersion"
+    debugImplementation "com.squareup.leakcanary:leakcanary-support-fragment:$leakCanaryVersion"
+    implementation "net.simonvt.schematic:schematic:$schematicVersion"
+    annotationProcessor "net.simonvt.schematic:schematic-compiler:$schematicVersion"
     implementation "com.jakewharton:butterknife:$butterknifeVersion"
     annotationProcessor "com.jakewharton:butterknife-compiler:$butterknifeVersion"
     testImplementation 'junit:junit:4.12'

@@ -453,7 +453,7 @@ public class MainActivity extends AppCompatActivity implements
         ButterKnife.bind(this);
 
         if (BuildConfig.DEBUG) {
-            //Stetho.initializeWithDefaults(this);
+            Stetho.initializeWithDefaults(this);
         }
 
         if (!Preference.getLicense(this)) {

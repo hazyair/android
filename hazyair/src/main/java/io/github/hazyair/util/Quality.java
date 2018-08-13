@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Quality {
+public final class Quality {
     private static final Map<String, Double> limits = Collections.unmodifiableMap(
             new HashMap<String, Double>() {{
                 put("C₆H₆", 5.0);

@@ -22,6 +22,7 @@ import io.github.hazyair.source.Data;
 import io.github.hazyair.source.Info;
 import io.github.hazyair.util.Preference;
 import io.github.hazyair.util.Quality;
+import io.github.hazyair.util.Time;
 
 import static android.app.job.JobScheduler.RESULT_SUCCESS;
 
@@ -77,7 +78,8 @@ public class NotificationService extends JobService {
             String parameter = info.sensors.get(i).parameter;
             Data data = info.data.get(i);
             int percent = Quality.normalize(parameter, data.value);
-            if (timestamp - data.timestamp < 3600000 && percent > 100) {
+            if (timestamp - Time.getTimestamp(data.timestamp) < TimeUnit.HOURS.toMillis(1)
+                    && percent > 100) {
                 stringBuilder.append(parameter).append(": ").append(percent).append("%")
                         .append(", ");
                 notify = true;
