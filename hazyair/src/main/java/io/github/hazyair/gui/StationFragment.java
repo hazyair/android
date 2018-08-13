@@ -1,7 +1,10 @@
 package io.github.hazyair.gui;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Rect;
@@ -480,6 +483,21 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
     @BindView(R.id.sensors)
     RecyclerView mRecyclerView;
 
+    private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (action == null) return;
+            switch (action) {
+                case Intent.ACTION_TIME_CHANGED:
+                case Intent.ACTION_TIME_TICK:
+                case Intent.ACTION_TIMEZONE_CHANGED:
+                    mSensorsAdapter.notifyDataSetChanged();
+                    break;
+            }
+        }
+    };
+
     // Fragment initialization
     public StationFragment() {
     }
@@ -577,6 +595,26 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
     private void removeUpdates() {
         io.github.hazyair.util.Location.removeUpdates(getContext(), mFusedLocationProviderClient,
                 mLocationCallback);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        Context context = getContext();
+        if (context == null) return;
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(Intent.ACTION_TIME_CHANGED);
+        intentFilter.addAction(Intent.ACTION_TIME_TICK);
+        intentFilter.addAction(Intent.ACTION_TIMEZONE_CHANGED);
+        context.registerReceiver(mBroadcastReceiver, intentFilter);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        Context context = getContext();
+        if (context == null) return;
+        context.unregisterReceiver(mBroadcastReceiver);
     }
 
     @Override
