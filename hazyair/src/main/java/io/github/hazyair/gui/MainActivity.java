@@ -75,6 +75,7 @@ public class MainActivity extends AppCompatActivity implements
     // Final definitions
     public static final String PARAM_STATION = "io.github.hazyair.PARAM_STATION";
     public static final String PARAM_EXIT = "io.github.hazyair.PARAM_EXIT";
+    public static final String PARAM_REFRESHING = "io.github.hazyair.PARAM_REFRESHING";
     private static final int ACTION_REMOVE_STATION = 0xDEADBEEF;
 
     // Nested classes definitions
@@ -370,10 +371,12 @@ public class MainActivity extends AppCompatActivity implements
             if (action == null) return;
             switch (action) {
                 case DatabaseService.ACTION_UPDATING:
-                    mSwipeRefreshLayout.setRefreshing(true);
+                    mRefreshing = true;
+                    mSwipeRefreshLayout.setRefreshing(mRefreshing);
                     break;
                 case DatabaseService.ACTION_UPDATED:
-                    mSwipeRefreshLayout.setRefreshing(false);
+                    mRefreshing = false;
+                    mSwipeRefreshLayout.setRefreshing(mRefreshing);
                     break;
                 case DatabaseService.ACTION_SELECTED:
                     Preference.putInfo(MainActivity.this,
@@ -401,6 +404,8 @@ public class MainActivity extends AppCompatActivity implements
     private LocationRequest mLocationRequest;
 
     private FusedLocationProviderClient mFusedLocationProviderClient;
+
+    private boolean mRefreshing;
 
     // ButterKnife
     @SuppressWarnings("WeakerAccess")
@@ -467,16 +472,17 @@ public class MainActivity extends AppCompatActivity implements
         setSupportActionBar(mToolbar);
 
         mSelectedStation = getIntent().getBundleExtra(PARAM_STATION);
-        if (mSelectedStation == null) {
+        if (mSelectedStation == null)
             mSelectedStation = DatabaseService.selectedStation(this);
-        } else {
-            DatabaseService.selectStation(this, mSelectedStation);
-        }
+        else DatabaseService.selectStation(this, mSelectedStation);
+
 
         if (savedInstanceState != null) {
             mStationFragment =
                     (StationFragment) getSupportFragmentManager().getFragment(savedInstanceState,
                     StationFragment.class.getName());
+            mRefreshing = savedInstanceState.getBoolean(PARAM_REFRESHING);
+            mSwipeRefreshLayout.setRefreshing(mRefreshing);
         }
 
         getSupportLoaderManager().initLoader(0, mSelectedStation, this);
@@ -714,10 +720,14 @@ public class MainActivity extends AppCompatActivity implements
                 if (Network.isAvailable(MainActivity.this))
                     DatabaseService.update(this);
                 else {
-                    mSwipeRefreshLayout.setRefreshing(false);
+                    mRefreshing = false;
+                    mSwipeRefreshLayout.setRefreshing(mRefreshing);
                     Network.showWarning(MainActivity.this);
                 }
-            } else mSwipeRefreshLayout.setRefreshing(false);
+            } else {
+                mRefreshing = false;
+                mSwipeRefreshLayout.setRefreshing(mRefreshing);
+            }
         });
         DatabaseSyncService.schedule(this);
         NotificationService.schedule(this);
@@ -731,7 +741,6 @@ public class MainActivity extends AppCompatActivity implements
             io.github.hazyair.util.Location.removeUpdates(this,
                     mFusedLocationProviderClient, mLocationCallback);
         }
-        mSwipeRefreshLayout.setRefreshing(false);
     }
 
     @Override
@@ -740,8 +749,10 @@ public class MainActivity extends AppCompatActivity implements
         if (mTwoPane && mStationFragment != null && mStationFragment.isAdded()) {
             getSupportFragmentManager().putFragment(outState, StationFragment.class.getName(),
                     mStationFragment);
-
         }
+        outState.putBoolean(PARAM_REFRESHING, mRefreshing);
+        mRefreshing = false;
+        mSwipeRefreshLayout.setRefreshing(mRefreshing);
     }
 
     private void requestUpdates() {

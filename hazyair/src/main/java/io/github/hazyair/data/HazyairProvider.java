@@ -114,7 +114,7 @@ public final class HazyairProvider {
             }
         }
 
-        public static Cursor selectAll(Context context) {
+        public static Cursor select(Context context) {
             return context.getContentResolver().query(CONTENT_URI,
                     Sensor.keys(), null, null, null);
         }
