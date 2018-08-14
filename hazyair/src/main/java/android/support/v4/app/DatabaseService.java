@@ -10,6 +10,7 @@ import android.os.HandlerThread;
 //import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 //import android.util.SparseArray;
 //import android.util.SparseIntArray;
 
@@ -270,12 +271,9 @@ public class DatabaseService extends JobIntentService {
                                     Info info = Preference.getInfo(DatabaseService.this);
                                     if (info != null) select(info.station._id);
                                     cursor.close();
-                                    Preference.setUpdate(DatabaseService.this,
-                                            System.currentTimeMillis());
                                     sendConfirmation(false);
                                     handlerThread.quit();
                                 }
-
                             }
 
                             @Override
@@ -378,8 +376,6 @@ public class DatabaseService extends JobIntentService {
                                 Info info = Preference.getInfo(DatabaseService.this);
                                 if (info != null) select(info.station._id);
                                 cursor.close();
-                                Preference.setUpdate(DatabaseService.this,
-                                        System.currentTimeMillis());
                                 sendConfirmation(false);
                             }
 
@@ -499,9 +495,8 @@ public class DatabaseService extends JobIntentService {
                         .putExtra(DatabaseService.PARAM_STATION, station));
     }
 
-    public static boolean update(Context context) {
-        if (System.currentTimeMillis() - Preference.getUpdate(context) >
-                TimeUnit.MINUTES.toMillis(Preference.getSyncFrequency(context))) {
+    public static boolean update(Context context, long interval) {
+        if (System.currentTimeMillis() - Preference.getUpdate(context) > interval) {
             DatabaseService.enqueueWork(context,
                     new Intent(context, DatabaseService.class)
                             .setAction(DatabaseService.ACTION_UPDATE));

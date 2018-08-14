@@ -75,7 +75,9 @@ public class DatabaseSyncService extends JobService {
     @Override
     public boolean onStartJob(JobParameters params) {
         mJobParams = params;
-        DatabaseService.update(this);
+        if (!DatabaseService.update(this,
+                TimeUnit.MINUTES.toMillis(Preference.getSyncFrequency(this))))
+            jobFinished(mJobParams, false);
         return true;
     }
 

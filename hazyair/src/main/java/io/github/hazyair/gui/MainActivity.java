@@ -56,6 +56,8 @@ import io.github.hazyair.service.NotificationService;
 import io.github.hazyair.source.Station;
 import android.support.v4.app.DatabaseService;
 
+import java.util.concurrent.TimeUnit;
+
 import io.github.hazyair.service.DatabaseSyncService;
 import io.github.hazyair.util.License;
 import io.github.hazyair.util.Network;
@@ -373,6 +375,8 @@ public class MainActivity extends AppCompatActivity implements
                     mSwipeRefreshLayout.setRefreshing(true);
                     break;
                 case DatabaseService.ACTION_UPDATED:
+                    Preference.setUpdate(MainActivity.this,
+                            System.currentTimeMillis());
                     mRefreshing = false;
                     mSwipeRefreshLayout.setRefreshing(false);
                     break;
@@ -710,7 +714,7 @@ public class MainActivity extends AppCompatActivity implements
         });
         mSwipeRefreshLayout.setOnRefreshListener(() -> {
             if (Network.isAvailable(MainActivity.this)) {
-                if (!DatabaseService.update(this)) {
+                if (!DatabaseService.update(this, TimeUnit.MINUTES.toMillis(30))) {
                     mRefreshing = false;
                     mSwipeRefreshLayout.setRefreshing(false);
                 }
