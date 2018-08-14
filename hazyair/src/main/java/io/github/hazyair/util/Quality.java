@@ -21,7 +21,7 @@ import java.util.Map;
 // Poland: 40 µg/m³ annual mean, 50 µg/m³ 24-hour mean, 40 µg/m³ mean of 'good' in quality index
 
 // C₆H₆ (benzene):
-// WHO:    Undefined due to no safe level for exposure
+// WHO:    Undefined due to no safe level of exposure
 // EU:     5 µg/m³ annual mean
 // Poland: 5 µg/m³ annual mean, 9 µg/m³ mean of 'good' in quality index
 
