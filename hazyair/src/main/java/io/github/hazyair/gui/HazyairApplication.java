@@ -3,6 +3,7 @@ package io.github.hazyair.gui;
 import android.app.Application;
 import android.os.StrictMode;
 
+import com.facebook.stetho.Stetho;
 import com.squareup.leakcanary.LeakCanary;
 
 import net.danlew.android.joda.JodaTimeAndroid;
@@ -21,6 +22,7 @@ public class HazyairApplication extends Application {
                 return;
             }
             LeakCanary.install(this);
+            Stetho.initializeWithDefaults(this);
             StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
                     .detectLeakedSqlLiteObjects()
                     .detectLeakedClosableObjects()

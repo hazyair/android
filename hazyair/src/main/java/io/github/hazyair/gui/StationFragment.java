@@ -17,7 +17,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.CardView;
-import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.RecyclerView;
 import android.util.LongSparseArray;
 import android.util.SparseArray;
@@ -424,6 +423,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                     sensorViewHolder.chart.setNoDataText(
                             getString(R.string.chart_no_data_available));
                     sensorViewHolder.chart.setVisibility(View.VISIBLE);
+                    sensorViewHolder.chart.invalidate();
                     mSelectedItem = bundle;
                 }
             }
@@ -469,6 +469,9 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
             return mCursor == null ? 1 : mCursor.getCount() + 1;
         }
 
+        Bundle getSelectedItem() {
+            return mSelectedItem;
+        }
     }
 
     private SensorsAdapter mSensorsAdapter;
@@ -556,7 +559,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         if (savedInstanceState != null) selected = savedInstanceState.getBundle(PARAM_SELECTED);
         mSensorsAdapter = new SensorsAdapter(station, selected,
                 io.github.hazyair.util.Location.checkPermission(getActivity(), false));
-        ((DefaultItemAnimator)mRecyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
+        mRecyclerView.setItemAnimator(null);
         mRecyclerView.setAdapter(mSensorsAdapter);
         mRecyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
             @Override
@@ -636,7 +639,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         if (mSensorsAdapter != null)
-            outState.putParcelable(PARAM_SELECTED, mSensorsAdapter.mSelectedItem);
+            outState.putBundle(PARAM_SELECTED, mSensorsAdapter.getSelectedItem());
     }
 
     // Loader handlers

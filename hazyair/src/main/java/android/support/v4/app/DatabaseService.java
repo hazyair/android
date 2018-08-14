@@ -15,6 +15,7 @@ import android.support.v7.app.AlertDialog;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import io.github.hazyair.R;
 import io.github.hazyair.data.HazyairProvider;
@@ -498,11 +499,15 @@ public class DatabaseService extends JobIntentService {
                         .putExtra(DatabaseService.PARAM_STATION, station));
     }
 
-    public static void update(Context context) {
-        DatabaseService.enqueueWork(context,
-                new Intent(context, DatabaseService.class)
-                        .setAction(DatabaseService.ACTION_UPDATE));
-
+    public static boolean update(Context context) {
+        if (System.currentTimeMillis() - Preference.getUpdate(context) >
+                TimeUnit.MINUTES.toMillis(Preference.getSyncFrequency(context))) {
+            DatabaseService.enqueueWork(context,
+                    new Intent(context, DatabaseService.class)
+                            .setAction(DatabaseService.ACTION_UPDATE));
+            return true;
+        }
+        return false;
     }
 
     /*public static void update(Context context) {

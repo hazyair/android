@@ -39,7 +39,6 @@ import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import com.crashlytics.android.Crashlytics;
-import com.facebook.stetho.Stetho;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationAvailability;
 import com.google.android.gms.location.LocationCallback;
@@ -50,15 +49,12 @@ import com.google.android.gms.location.LocationServices;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.fabric.sdk.android.Fabric;
-import io.github.hazyair.BuildConfig;
 import io.github.hazyair.R;
 import io.github.hazyair.data.StationsContract;
 import io.github.hazyair.data.StationsLoader;
 import io.github.hazyair.service.NotificationService;
 import io.github.hazyair.source.Station;
 import android.support.v4.app.DatabaseService;
-
-import java.util.concurrent.TimeUnit;
 
 import io.github.hazyair.service.DatabaseSyncService;
 import io.github.hazyair.util.License;
@@ -75,7 +71,7 @@ public class MainActivity extends AppCompatActivity implements
     // Final definitions
     public static final String PARAM_STATION = "io.github.hazyair.PARAM_STATION";
     public static final String PARAM_EXIT = "io.github.hazyair.PARAM_EXIT";
-    public static final String PARAM_REFRESHING = "io.github.hazyair.PARAM_REFRESHING";
+    private static final String PARAM_REFRESHING = "io.github.hazyair.PARAM_REFRESHING";
     private static final int ACTION_REMOVE_STATION = 0xDEADBEEF;
 
     // Nested classes definitions
@@ -140,35 +136,37 @@ public class MainActivity extends AppCompatActivity implements
                 }
             }
             mFragments.clear();
+            //clear();
             return state;
         }
 
         @Override
         public void restoreState(Parcelable state, ClassLoader loader) {
-            super.restoreState(state, loader);
-            if (state == null) return;
-            Bundle bundle = (Bundle)state;
-            Iterable<String> keys = bundle.keySet();
-            if (keys == null) return;
-            for (String key: keys) {
-                if (key.startsWith(StationFragment.class.getName())) {
-                    int index = Integer.parseInt(key.substring(
-                            StationFragment.class.getName().length()));
-                    Fragment fragment = mFragmentManager.getFragment(bundle, key);
-                    if (fragment != null) {
-                        fragment.setMenuVisibility(false);
-                        mFragments.put(index, fragment);
+            synchronized (mFragments) {
+                super.restoreState(state, loader);
+                if (state == null) return;
+                Bundle bundle = (Bundle) state;
+                Iterable<String> keys = bundle.keySet();
+                if (keys == null) return;
+                for (String key : keys) {
+                    if (key.startsWith(StationFragment.class.getName())) {
+                        int index = Integer.parseInt(key.substring(
+                                StationFragment.class.getName().length()));
+                        Fragment fragment = mFragmentManager.getFragment(bundle, key);
+                        if (fragment != null) {
+                            fragment.setMenuVisibility(false);
+                            mFragments.put(index, fragment);
+                        }
                     }
                 }
             }
         }
 
-        void clear() {
-            for (int i = 0; i < mFragments.size(); i ++) {
-                ((StationFragment)mFragments.get(i)).clear();
-            }
+        /*synchronized void clear() {
+            for (int i = 0; i < mFragments.size(); i++)
+                ((StationFragment) mFragments.get(i)).clear();
             mFragments.clear();
-        }
+        }*/
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
@@ -372,11 +370,11 @@ public class MainActivity extends AppCompatActivity implements
             switch (action) {
                 case DatabaseService.ACTION_UPDATING:
                     mRefreshing = true;
-                    mSwipeRefreshLayout.setRefreshing(mRefreshing);
+                    mSwipeRefreshLayout.setRefreshing(true);
                     break;
                 case DatabaseService.ACTION_UPDATED:
                     mRefreshing = false;
-                    mSwipeRefreshLayout.setRefreshing(mRefreshing);
+                    mSwipeRefreshLayout.setRefreshing(false);
                     break;
                 case DatabaseService.ACTION_SELECTED:
                     Preference.putInfo(MainActivity.this,
@@ -456,10 +454,6 @@ public class MainActivity extends AppCompatActivity implements
         }
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-
-        if (BuildConfig.DEBUG) {
-            Stetho.initializeWithDefaults(this);
-        }
 
         if (!Preference.getLicense(this)) {
             License.showLicense(this);
@@ -581,7 +575,7 @@ public class MainActivity extends AppCompatActivity implements
         if (mTwoPane) {
             mStationListAdapter = null;
         } else {
-            mStationPagerAdapter.clear();
+            //mStationPagerAdapter.clear();
             if (mViewPager != null) mViewPager.setAdapter(null);
             mStationPagerAdapter = null;
             mViewPager = null;
@@ -715,18 +709,15 @@ public class MainActivity extends AppCompatActivity implements
             startActivity(new Intent(MainActivity.this, StationsActivity.class));
         });
         mSwipeRefreshLayout.setOnRefreshListener(() -> {
-            if (System.currentTimeMillis() - Preference.getUpdate(MainActivity.this) >
-                    TimeUnit.MINUTES.toMillis(30)) {
-                if (Network.isAvailable(MainActivity.this))
-                    DatabaseService.update(this);
-                else {
+            if (Network.isAvailable(MainActivity.this)) {
+                if (!DatabaseService.update(this)) {
                     mRefreshing = false;
-                    mSwipeRefreshLayout.setRefreshing(mRefreshing);
-                    Network.showWarning(MainActivity.this);
+                    mSwipeRefreshLayout.setRefreshing(false);
                 }
             } else {
                 mRefreshing = false;
-                mSwipeRefreshLayout.setRefreshing(mRefreshing);
+                mSwipeRefreshLayout.setRefreshing(false);
+                Network.showWarning(MainActivity.this);
             }
         });
         DatabaseSyncService.schedule(this);
@@ -752,7 +743,7 @@ public class MainActivity extends AppCompatActivity implements
         }
         outState.putBoolean(PARAM_REFRESHING, mRefreshing);
         mRefreshing = false;
-        mSwipeRefreshLayout.setRefreshing(mRefreshing);
+        mSwipeRefreshLayout.setRefreshing(false);
     }
 
     private void requestUpdates() {
