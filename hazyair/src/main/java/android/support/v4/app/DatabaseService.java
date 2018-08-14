@@ -91,11 +91,13 @@ public class DatabaseService extends JobIntentService {
                 } else {
                     ArrayList<ContentProviderOperation> cpo = new ArrayList<>();
                     Cursor cursor = HazyairProvider.Stations.select(this);
-                    if (cursor.getCount() >= 8) {
+                    if (cursor == null) break;
+                    int stations = cursor.getCount();
+                    cursor.close();
+                    if (stations >= 8) {
                         sendConfirmation(position, getString(R.string.message_maximum));
                         break;
                     }
-                    cursor.close();
                     HazyairProvider.Stations.bulkInsertAdd(station, cpo);
                     Source.with(DatabaseService.this).load(Source.Type.GIOS).from(station)
                             .into(new SensorsCallback() {
@@ -228,8 +230,12 @@ public class DatabaseService extends JobIntentService {
                 handlerThread.start();
                 Handler handler = new Handler(handlerThread.getLooper());
                 Cursor cursor = HazyairProvider.Sensors.select(this);
+                if (cursor == null) break;
                 count = cursor.getCount();
-                if (cursor.getCount() <= 0) break;
+                if (count <= 0) {
+                    cursor.close();
+                    break;
+                }
                 sendConfirmation();
                 for (int i = 0; !cursor.isClosed() && i < cursor.getCount() && count > 0; i++) {
                     final int index = i;
@@ -337,8 +343,12 @@ public class DatabaseService extends JobIntentService {
                 Station station = intent.getParcelableExtra(PARAM_STATION);
                 ArrayList<ContentProviderOperation> cpo = new ArrayList<>();
                 Cursor cursor = HazyairProvider.Sensors.select(this, station._id);
+                if (cursor == null) break;
                 count = cursor.getCount();
-                if (cursor.getCount() <= 0) break;
+                if (count <= 0) {
+                    cursor.close();
+                    break;
+                }
                 sendConfirmation();
                 for (int i = 0; !cursor.isClosed() && i < cursor.getCount() && count > 0; i++) {
                     cursor.moveToPosition(i);
@@ -403,6 +413,7 @@ public class DatabaseService extends JobIntentService {
         Cursor cursor = HazyairProvider.Sensors.select(this, _id);
         if (cursor == null) return;
         if (cursor.getCount() <= 0) {
+            stationCursor.close();
             cursor.close();
             return;
         }

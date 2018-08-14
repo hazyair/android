@@ -1,6 +1,7 @@
 package io.github.hazyair.gui;
 
 import android.app.Application;
+import android.os.StrictMode;
 
 import com.squareup.leakcanary.LeakCanary;
 
@@ -20,6 +21,12 @@ public class HazyairApplication extends Application {
                 return;
             }
             LeakCanary.install(this);
+            StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+                    .detectLeakedSqlLiteObjects()
+                    .detectLeakedClosableObjects()
+                    .penaltyLog()
+                    .penaltyDeath()
+                    .build());
         }
         JodaTimeAndroid.init(this);
     }

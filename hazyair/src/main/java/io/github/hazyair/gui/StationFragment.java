@@ -17,6 +17,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v7.widget.CardView;
+import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.RecyclerView;
 import android.util.LongSparseArray;
 import android.util.SparseArray;
@@ -202,7 +203,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                         mSelectedItem, StationFragment.this);
             }
             mCursor = cursor;
-            notifyDataSetChanged();
+            notifyItemRangeChanged(1, getItemCount()-1);
         }
 
         void setData(Cursor cursor) {
@@ -210,7 +211,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
             cursor.moveToFirst();
             Bundle bundle = Data.toBundleFromCursor(cursor);
             mData.put(bundle.getInt(DataContract.COLUMN__SENSOR_ID), bundle);
-            notifyDataSetChanged();
+            notifyItemRangeChanged(1, getItemCount()-1);
         }
 
         void setChart(Cursor cursor) {
@@ -224,17 +225,17 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                         bundle.getDouble(DataContract.COLUMN_VALUE));
             }
             if (bundle != null) mChart.put(bundle.getInt(DataContract.COLUMN__SENSOR_ID), data);
-            notifyDataSetChanged();
+            notifyItemRangeChanged(1, getItemCount()-1);
         }
 
         void setLocation(Location location) {
             mLocation = location;
-            notifyDataSetChanged();
+            notifyItemChanged(0);
         }
 
         void setDistance(boolean distance) {
             mDistance = distance;
-            notifyDataSetChanged();
+            notifyItemChanged(0);
         }
 
         @Override
@@ -303,11 +304,11 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                         sensorViewHolder.parameter.setText(
                                 sensor.getString(SensorsContract.COLUMN_PARAMETER));
                     Bundle data = mData.get(sensor.getInt(SensorsContract.COLUMN__ID));
-                    if (data == null) {
+                    if (data == null || data.size() == 0) {
                         if (sensorViewHolder.cardView != null)
                             sensorViewHolder.cardView
                                     .setCardBackgroundColor(context.getColor(R.color.textLight));
-                        mSelectedItem = null;
+                        if (Sensor.equals(sensor, mSelectedItem)) mSelectedItem = null;
                         collapse(context, sensorViewHolder);
                     } else {
                         if (sensorViewHolder.cardView != null)
@@ -468,7 +469,6 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
             return mCursor == null ? 1 : mCursor.getCount() + 1;
         }
 
-
     }
 
     private SensorsAdapter mSensorsAdapter;
@@ -493,7 +493,8 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                 case Intent.ACTION_TIME_CHANGED:
                 case Intent.ACTION_TIME_TICK:
                 case Intent.ACTION_TIMEZONE_CHANGED:
-                    mSensorsAdapter.notifyDataSetChanged();
+                    mSensorsAdapter.notifyItemRangeChanged(1,
+                            mSensorsAdapter.getItemCount()-1);
                     break;
             }
         }
@@ -555,6 +556,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         if (savedInstanceState != null) selected = savedInstanceState.getBundle(PARAM_SELECTED);
         mSensorsAdapter = new SensorsAdapter(station, selected,
                 io.github.hazyair.util.Location.checkPermission(getActivity(), false));
+        ((DefaultItemAnimator)mRecyclerView.getItemAnimator()).setSupportsChangeAnimations(false);
         mRecyclerView.setAdapter(mSensorsAdapter);
         mRecyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
             @Override
