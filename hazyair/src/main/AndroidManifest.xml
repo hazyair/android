@@ -112,7 +112,7 @@
         <!-- TODO Add Fabric API Key -->
         <meta-data
             android:name="io.fabric.ApiKey"
-            android:value=""
+            android:value="ad790c13f39d3b362bc98ba44e60c7fd7bb8c19c"
             />
     </application>
 

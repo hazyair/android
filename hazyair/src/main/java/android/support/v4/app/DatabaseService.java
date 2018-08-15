@@ -7,16 +7,11 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-//import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
-import android.util.Log;
-//import android.util.SparseArray;
-//import android.util.SparseIntArray;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import io.github.hazyair.R;
 import io.github.hazyair.data.HazyairProvider;
@@ -495,6 +490,7 @@ public class DatabaseService extends JobIntentService {
                         .putExtra(DatabaseService.PARAM_STATION, station));
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean update(Context context, long interval) {
         if (System.currentTimeMillis() - Preference.getUpdate(context) > interval) {
             DatabaseService.enqueueWork(context,

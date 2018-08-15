@@ -375,8 +375,11 @@ public class MainActivity extends AppCompatActivity implements
                     mSwipeRefreshLayout.setRefreshing(true);
                     break;
                 case DatabaseService.ACTION_UPDATED:
-                    Preference.setUpdate(MainActivity.this,
-                            System.currentTimeMillis());
+                    if (!intent.getBooleanExtra(DatabaseService.PARAM_RESCHEDULE,
+                            false)) {
+                        Preference.setUpdate(MainActivity.this,
+                                System.currentTimeMillis());
+                    }
                     mRefreshing = false;
                     mSwipeRefreshLayout.setRefreshing(false);
                     break;
