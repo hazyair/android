@@ -64,6 +64,7 @@ import io.github.hazyair.source.Base;
 import io.github.hazyair.source.Data;
 import io.github.hazyair.source.Sensor;
 import io.github.hazyair.source.Station;
+import io.github.hazyair.util.LocationCallbackReference;
 import io.github.hazyair.util.Quality;
 import io.github.hazyair.util.Text;
 import io.github.hazyair.util.Time;
@@ -164,7 +165,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         }
     }
 
-    class SensorsAdapter extends RecyclerView.Adapter {
+    public class SensorsAdapter extends RecyclerView.Adapter {
 
         static final int VIEW_TYPE_MAP = 0;
         static final int VIEW_TYPE_SENSOR = 1;
@@ -186,6 +187,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
             mDistance = distance;
         }
 
+        @SuppressWarnings("deprecation")
         void setCursor(Cursor cursor) {
             if (cursor == null) {
                 mCursor = null;
@@ -227,12 +229,12 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
             notifyItemRangeChanged(1, getItemCount()-1);
         }
 
-        void setLocation(Location location) {
+        public void setLocation(Location location) {
             mLocation = location;
             notifyItemChanged(0);
         }
 
-        void setDistance(boolean distance) {
+        public void setDistance(boolean distance) {
             mDistance = distance;
             notifyItemChanged(0);
         }
@@ -430,6 +432,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
 
         }
 
+        @SuppressWarnings("deprecation")
         private void OnClickListener(Context context, ViewHolder viewHolder, Bundle bundle) {
             boolean visibility = false;
             if (viewHolder instanceof MapViewHolder && viewHolder.frameLayout != null) {
@@ -521,7 +524,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         if (context != null) {
             mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(context);
 
-            mLocationCallback = new LocationCallback() {
+            mLocationCallback = new LocationCallbackReference(new LocationCallback() {
                 @Override
                 public void onLocationResult(LocationResult locationResult) {
                     super.onLocationResult(locationResult);
@@ -538,17 +541,24 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                     super.onLocationAvailability(locationAvailability);
                     mSensorsAdapter.setDistance(locationAvailability.isLocationAvailable());
                 }
-            };
+            });
             mLocationRequest = io.github.hazyair.util.Location.createLocationRequest();
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void onDestroy() {
-        clean();
+        //io.github.hazyair.util.Loader.clean(getContext(), getLoaderManager());
+        mRecyclerView = null;
+        mLocationCallback = null;
+        mLocationRequest = null;
+        mSensorsAdapter = null;
+        mFusedLocationProviderClient = null;
         super.onDestroy();
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -563,8 +573,9 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         mRecyclerView.setAdapter(mSensorsAdapter);
         mRecyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
             @Override
-            public void getItemOffsets(Rect outRect, View view, RecyclerView parent,
-                                       RecyclerView.State state) {
+            public void getItemOffsets(@NonNull Rect outRect, @NonNull View view,
+                                       @NonNull RecyclerView parent,
+                                       @NonNull RecyclerView.State state) {
                 super.getItemOffsets(outRect, view, parent, state);
                 int itemCount = state.getItemCount();
 
@@ -580,7 +591,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                     fab = activity.findViewById(R.id.fab_add_station).getMeasuredHeight();
 
                 Resources resources = getResources();
-                if (itemCount > 0 && itemPosition == itemCount - 1) {
+                if (itemCount > 1 && itemPosition == itemCount - 1) {
                     outRect.set(0, 0, 0,
                             resources.getDimensionPixelSize(R.dimen.edge) +
                                     resources.getDimensionPixelSize(R.dimen.fab_margin) + fab);
@@ -598,7 +609,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                 mLocationRequest,mLocationCallback);
     }
 
-    private void removeUpdates() {
+    public void removeUpdates() {
         io.github.hazyair.util.Location.removeUpdates(getContext(), mFusedLocationProviderClient,
                 mLocationCallback);
     }
@@ -673,19 +684,6 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
     @Override
     public void onLoaderReset(@NonNull Loader<Cursor> loader) {
         mSensorsAdapter.setCursor(null);
-    }
-
-    public void clear() {
-        removeUpdates();
-        clean();
-    }
-
-    private void clean() {
-        mRecyclerView = null;
-        mLocationCallback = null;
-        mLocationRequest = null;
-        mSensorsAdapter = null;
-        mFusedLocationProviderClient = null;
     }
 
 }

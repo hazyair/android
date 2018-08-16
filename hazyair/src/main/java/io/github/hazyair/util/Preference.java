@@ -23,6 +23,7 @@ public final class Preference {
     }
 
     public static void putInfo(Context context, Info info) {
+        if (context == null) return;
         if (info == null) {
             PreferenceManager.getDefaultSharedPreferences(context).edit().remove(PREF_INFO).apply();
         } else {
@@ -32,6 +33,7 @@ public final class Preference {
     }
 
     public static Info getInfo(Context context) {
+        if (context == null) return null;
         String info = PreferenceManager.getDefaultSharedPreferences(context)
                 .getString(PREF_INFO, "");
         if (info.isEmpty()) return null;
@@ -39,48 +41,53 @@ public final class Preference {
     }
 
     public static boolean isCrashlyticsEnabled(Context context) {
-        return PreferenceManager.getDefaultSharedPreferences(context)
+        return context != null && PreferenceManager.getDefaultSharedPreferences(context)
                 .getBoolean(context.getString(R.string.pref_key_crashlytics), false);
     }
 
     public static boolean startSync(Context context) {
-        return PreferenceManager.getDefaultSharedPreferences(context)
+        return context == null || PreferenceManager.getDefaultSharedPreferences(context)
                 .getBoolean(context.getString(R.string.pref_key_sync_on_boot), true);
     }
 
     public static int getSyncFrequency(Context context) {
+        if (context == null) return Integer.valueOf(SYNC_INTERVAL);
         return Integer.valueOf(PreferenceManager.getDefaultSharedPreferences(context)
                 .getString(context.getString(R.string.pref_key_sync_frequency), SYNC_INTERVAL));
     }
 
     public static boolean startNotifications(Context context) {
-        return PreferenceManager.getDefaultSharedPreferences(context)
-                .getBoolean(context.getString(R.string.pref_key_notifications_on_boot),
-                        true);
+        return context == null ||
+                PreferenceManager.getDefaultSharedPreferences(context).getBoolean(
+                        context.getString(R.string.pref_key_notifications_on_boot), true);
     }
 
     public static int getNotificationsFrequency(Context context) {
+        if (context == null) return Integer.valueOf(NOTIFICATIONS_INTERVAL);
         return Integer.valueOf(PreferenceManager.getDefaultSharedPreferences(context)
                 .getString(context.getString(R.string.pref_key_notifications_frequency),
                         NOTIFICATIONS_INTERVAL));
     }
 
     public static boolean getLicense(Context context) {
-        return PreferenceManager.getDefaultSharedPreferences(context)
+        return context != null && PreferenceManager.getDefaultSharedPreferences(context)
                 .getBoolean(PREF_LICENSE, false);
     }
 
     public static void setLicense(Context context, boolean license) {
+        if (context == null) return;
         PreferenceManager.getDefaultSharedPreferences(context).edit().putBoolean(PREF_LICENSE,
                 license).apply();
     }
 
     public static long getUpdate(Context context) {
+        if (context == null) return 0;
         return PreferenceManager.getDefaultSharedPreferences(context)
                 .getLong(PREF_UPDATE, 0);
     }
 
     public static void setUpdate(Context context, long timestamp) {
+        if (context == null) return;
         PreferenceManager.getDefaultSharedPreferences(context).edit().putLong(PREF_UPDATE,
                 timestamp).apply();
     }

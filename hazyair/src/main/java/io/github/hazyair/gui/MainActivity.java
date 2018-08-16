@@ -60,6 +60,7 @@ import java.util.concurrent.TimeUnit;
 
 import io.github.hazyair.service.DatabaseSyncService;
 import io.github.hazyair.util.License;
+import io.github.hazyair.util.LocationCallbackReference;
 import io.github.hazyair.util.Network;
 import io.github.hazyair.util.Preference;
 import io.github.hazyair.widget.AppWidget;
@@ -73,7 +74,6 @@ public class MainActivity extends AppCompatActivity implements
     // Final definitions
     public static final String PARAM_STATION = "io.github.hazyair.PARAM_STATION";
     public static final String PARAM_EXIT = "io.github.hazyair.PARAM_EXIT";
-    private static final String PARAM_REFRESHING = "io.github.hazyair.PARAM_REFRESHING";
     private static final int ACTION_REMOVE_STATION = 0xDEADBEEF;
 
     // Nested classes definitions
@@ -100,7 +100,7 @@ public class MainActivity extends AppCompatActivity implements
         void removePage(int position) {
             Fragment fragment = mFragments.get(position);
             if (fragment == null) return;
-            destroyItem(null, position, fragment);
+            if (mContainer != null) destroyItem(mContainer, position, fragment);
             mFragments.remove(position);
         }
 
@@ -109,7 +109,7 @@ public class MainActivity extends AppCompatActivity implements
             mCursor.moveToPosition(position);
             Fragment newFragment = StationFragment.newInstance(mCursor);
             StationFragment oldFragment = (StationFragment) mFragments.get(position);
-            if (oldFragment != null) oldFragment.clear();
+            if (oldFragment != null) oldFragment.removeUpdates();
             mFragments.put(position, newFragment);
             return newFragment;
         }
@@ -349,7 +349,7 @@ public class MainActivity extends AppCompatActivity implements
             holder.itemView.setOnClickListener((v) -> {
                 if (layoutPosition == mCurrentItem) return;
                 deselectCurrentStation();
-                if (mStationFragment != null) mStationFragment.clear();
+                if (mStationFragment != null) mStationFragment.removeUpdates();
                 mStationFragment = null;
                 selectStation(holder, layoutPosition);
                 mCurrentViewHolder = holder;
@@ -371,7 +371,6 @@ public class MainActivity extends AppCompatActivity implements
             if (action == null) return;
             switch (action) {
                 case DatabaseService.ACTION_UPDATING:
-                    mRefreshing = true;
                     mSwipeRefreshLayout.setRefreshing(true);
                     break;
                 case DatabaseService.ACTION_UPDATED:
@@ -380,7 +379,6 @@ public class MainActivity extends AppCompatActivity implements
                         Preference.setUpdate(MainActivity.this,
                                 System.currentTimeMillis());
                     }
-                    mRefreshing = false;
                     mSwipeRefreshLayout.setRefreshing(false);
                     break;
                 case DatabaseService.ACTION_SELECTED:
@@ -409,8 +407,6 @@ public class MainActivity extends AppCompatActivity implements
     private LocationRequest mLocationRequest;
 
     private FusedLocationProviderClient mFusedLocationProviderClient;
-
-    private boolean mRefreshing;
 
     // ButterKnife
     @SuppressWarnings("WeakerAccess")
@@ -451,6 +447,7 @@ public class MainActivity extends AppCompatActivity implements
 
 
     // Activity lifecycle
+    @SuppressWarnings("deprecation")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -482,8 +479,6 @@ public class MainActivity extends AppCompatActivity implements
             mStationFragment =
                     (StationFragment) getSupportFragmentManager().getFragment(savedInstanceState,
                     StationFragment.class.getName());
-            mRefreshing = savedInstanceState.getBoolean(PARAM_REFRESHING);
-            mSwipeRefreshLayout.setRefreshing(mRefreshing);
         }
 
         getSupportLoaderManager().initLoader(0, mSelectedStation, this);
@@ -496,8 +491,9 @@ public class MainActivity extends AppCompatActivity implements
                 mRecyclerView.setAdapter(mStationListAdapter);
                 mRecyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
                     @Override
-                    public void getItemOffsets(Rect outRect, View view, RecyclerView parent,
-                                               RecyclerView.State state) {
+                    public void getItemOffsets(@NonNull Rect outRect, @NonNull View view,
+                                               @NonNull RecyclerView parent,
+                                               @NonNull RecyclerView.State state) {
                         super.getItemOffsets(outRect, view, parent, state);
                         int itemCount = state.getItemCount();
 
@@ -523,7 +519,7 @@ public class MainActivity extends AppCompatActivity implements
                 mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(
                                 this);
 
-                mLocationCallback = new LocationCallback() {
+                mLocationCallback = new LocationCallbackReference(new LocationCallback() {
                     @Override
                     public void onLocationResult(LocationResult locationResult) {
                         super.onLocationResult(locationResult);
@@ -540,7 +536,7 @@ public class MainActivity extends AppCompatActivity implements
                         super.onLocationAvailability(locationAvailability);
                         mStationListAdapter.setDistance(locationAvailability.isLocationAvailable());
                     }
-                };
+                });
                 mLocationRequest = io.github.hazyair.util.Location.createLocationRequest();
             }
         } else {
@@ -577,7 +573,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     protected void onDestroy() {
-        if (mStationFragment != null) mStationFragment.clear();
+        if (mStationFragment != null) mStationFragment.removeUpdates();
         mStationFragment = null;
         if (mTwoPane) {
             mStationListAdapter = null;
@@ -662,7 +658,7 @@ public class MainActivity extends AppCompatActivity implements
                     } else {
                         mSelectedStation = null;
                     }
-                    if (mStationFragment != null) mStationFragment.clear();
+                    if (mStationFragment != null) mStationFragment.removeUpdates();
                     mStationFragment = null;
                 } else {
                     if (mViewPager == null || mStationPagerAdapter == null) return true;
@@ -718,11 +714,9 @@ public class MainActivity extends AppCompatActivity implements
         mSwipeRefreshLayout.setOnRefreshListener(() -> {
             if (Network.isAvailable(MainActivity.this)) {
                 if (!DatabaseService.update(this, TimeUnit.MINUTES.toMillis(30))) {
-                    mRefreshing = false;
                     mSwipeRefreshLayout.setRefreshing(false);
                 }
             } else {
-                mRefreshing = false;
                 mSwipeRefreshLayout.setRefreshing(false);
                 Network.showWarning(MainActivity.this);
             }
@@ -748,9 +742,6 @@ public class MainActivity extends AppCompatActivity implements
             getSupportFragmentManager().putFragment(outState, StationFragment.class.getName(),
                     mStationFragment);
         }
-        outState.putBoolean(PARAM_REFRESHING, mRefreshing);
-        mRefreshing = false;
-        mSwipeRefreshLayout.setRefreshing(false);
     }
 
     private void requestUpdates() {
@@ -782,6 +773,7 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     protected void onNewIntent(Intent intent) {
         if (intent.getBooleanExtra(PARAM_EXIT, false)) {

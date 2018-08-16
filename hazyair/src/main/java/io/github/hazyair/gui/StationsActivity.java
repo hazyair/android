@@ -60,6 +60,7 @@ import io.github.hazyair.source.Station;
 import android.support.v4.app.DatabaseService;
 
 import io.github.hazyair.util.License;
+import io.github.hazyair.util.LocationCallbackReference;
 import io.github.hazyair.util.Network;
 import io.github.hazyair.util.Preference;
 import io.github.hazyair.util.Text;
@@ -315,18 +316,20 @@ public class StationsActivity extends AppCompatActivity implements SearchView.On
     class SwipeController extends ItemTouchHelper.Callback {
 
         @Override
-        public int getMovementFlags(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
+        public int getMovementFlags(@NonNull RecyclerView recyclerView,
+                                    @NonNull RecyclerView.ViewHolder viewHolder) {
             return makeMovementFlags(0, LEFT | RIGHT);
         }
 
         @Override
-        public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder,
-                              RecyclerView.ViewHolder target) {
+        public boolean onMove(@NonNull RecyclerView recyclerView,
+                              @NonNull RecyclerView.ViewHolder viewHolder,
+                              @NonNull RecyclerView.ViewHolder target) {
             return false;
         }
 
         @Override
-        public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+        public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
             ViewHolder holder = (ViewHolder) viewHolder;
             Bundle station = DatabaseService.selectedStation(StationsActivity.this);
             if (station != null && station.getInt(StationsContract.COLUMN__ID) == holder._id)
@@ -347,9 +350,9 @@ public class StationsActivity extends AppCompatActivity implements SearchView.On
 
         @SuppressLint("ClickableViewAccessibility")
         @Override
-        public void onChildDraw(Canvas c,
-                                RecyclerView recyclerView,
-                                RecyclerView.ViewHolder viewHolder,
+        public void onChildDraw(@NonNull Canvas c,
+                                @NonNull RecyclerView recyclerView,
+                                @NonNull RecyclerView.ViewHolder viewHolder,
                                 float dX, float dY,
                                 int actionState, boolean isCurrentlyActive) {
             if (actionState == ACTION_STATE_SWIPE) {
@@ -373,8 +376,9 @@ public class StationsActivity extends AppCompatActivity implements SearchView.On
 
     private class StationListItemDecoration extends RecyclerView.ItemDecoration {
         @Override
-        public void getItemOffsets(Rect outRect, View view, RecyclerView parent,
-                                   RecyclerView.State state) {
+        public void getItemOffsets(@NonNull Rect outRect, @NonNull View view,
+                                   @NonNull RecyclerView parent,
+                                   @NonNull RecyclerView.State state) {
             super.getItemOffsets(outRect, view, parent, state);
             int itemCount = state.getItemCount();
 
@@ -403,8 +407,9 @@ public class StationsActivity extends AppCompatActivity implements SearchView.On
 
     private class AllStationsItemDecoration extends RecyclerView.ItemDecoration {
         @Override
-        public void getItemOffsets(Rect outRect, View view, RecyclerView parent,
-                                   RecyclerView.State state) {
+        public void getItemOffsets(@NonNull Rect outRect, @NonNull View view,
+                                   @NonNull RecyclerView parent,
+                                   @NonNull RecyclerView.State state) {
             super.getItemOffsets(outRect, view, parent, state);
             int itemCount = state.getItemCount();
 
@@ -415,8 +420,9 @@ public class StationsActivity extends AppCompatActivity implements SearchView.On
             }
             if (itemCount > 0) {
                 int padding = getResources().getDimensionPixelSize(R.dimen.edge);
-                if (mAdapter.getStations() != null) {
-                    int spanCount = ((GridLayoutManager) parent.getLayoutManager()).getSpanCount();
+                GridLayoutManager gridLayoutManager = ((GridLayoutManager) parent.getLayoutManager());
+                if (mAdapter.getStations() != null && gridLayoutManager != null) {
+                    int spanCount = gridLayoutManager.getSpanCount();
                     if (mAdapter.getStations() != null && (itemPosition + 1) % spanCount == 0) {
                         outRect.set(0, 0, padding, 0);
                     }
@@ -547,6 +553,11 @@ public class StationsActivity extends AppCompatActivity implements SearchView.On
         setEnabled(false);
         Source.with(StationsActivity.this).load(Source.Type.GIOS).into(new StationsCallback() {
             @Override
+            public boolean isAlive() {
+                return true;
+            }
+
+            @Override
             public void onSuccess(List<Station> stations) {
                 if (mTwoPane) {
                     mAdapter.setStations(stations);
@@ -588,6 +599,7 @@ public class StationsActivity extends AppCompatActivity implements SearchView.On
         });
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -598,7 +610,7 @@ public class StationsActivity extends AppCompatActivity implements SearchView.On
 
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
 
-        mLocationCallback = new LocationCallback() {
+        mLocationCallback = new LocationCallbackReference(new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 super.onLocationResult(locationResult);
@@ -621,7 +633,7 @@ public class StationsActivity extends AppCompatActivity implements SearchView.On
                 }
                 mStationListAdapter.setDistance(locationAvailability.isLocationAvailable());
             }
-        };
+        });
         mLocationRequest = io.github.hazyair.util.Location.createLocationRequest();
 
         ActionBar actionBar = getSupportActionBar();
@@ -647,7 +659,10 @@ public class StationsActivity extends AppCompatActivity implements SearchView.On
             if (mAllStations != null) {
                 mAllStations.setAdapter(mAdapter);
                 mAllStations.addItemDecoration(new AllStationsItemDecoration());
-                ((GridLayoutManager) mAllStations.getLayoutManager())
+                GridLayoutManager gridLayoutManager =
+                        ((GridLayoutManager) mAllStations.getLayoutManager());
+                if (gridLayoutManager != null)
+                gridLayoutManager
                         .setSpanCount((int) ((float) getResources().getDisplayMetrics().widthPixels /
                                 getResources().getDimensionPixelSize(R.dimen.panel) - 1));
             }

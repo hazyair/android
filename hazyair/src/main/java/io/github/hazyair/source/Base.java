@@ -25,9 +25,7 @@ public class Base {
             field.setAccessible(true);
             try {
                 field.set(this, bundle.get(name));
-            } catch (IllegalAccessException e) {
-                Crashlytics.logException(e);
-            }
+            } catch (IllegalAccessException ignore) { }
         }
     }
 
@@ -51,9 +49,7 @@ public class Base {
                                     cursor.getString(this.index(name)));
                 }
                 field.set(this, value);
-            } catch (IllegalAccessException e) {
-                Crashlytics.logException(e);
-            }
+            } catch (IllegalAccessException ignore) { }
         }
     }
 
