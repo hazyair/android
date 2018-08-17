@@ -309,7 +309,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                     Bundle data = mData.get(sensor.getInt(SensorsContract.COLUMN__ID));
                     if (data == null || data.size() == 0) {
                         if (mSelectedItem != null) mSelectedItemCache = mSelectedItem;
-                        mSelectedItem = null;
+                        if (Sensor.equals(sensor, mSelectedItem)) mSelectedItem = null;
                         if (sensorViewHolder.cardView != null)
                             sensorViewHolder.cardView
                                     .setCardBackgroundColor(context.getColor(R.color.textLight));
