@@ -281,8 +281,8 @@ public class DatabaseService extends JobIntentService {
                         }
                     }
                 }
-                HazyairProvider.bulkExecute(DatabaseService.this, cpo);
                 if (!mError) {
+                    HazyairProvider.bulkExecute(DatabaseService.this, cpo);
                     Info info = Preference.getInfo(DatabaseService.this);
                     if (info != null) select(info.station._id);
                 }

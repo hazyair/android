@@ -61,3 +61,5 @@ fastlane/readme.md
 # Gradle
 .gradle/
 fabric.properties
+release.properties
+google-services.properties

@@ -14,24 +14,31 @@ repositories {
     maven { url 'https://maven.fabric.io/public' }
 }
 
-
 android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "io.github.hazyair"
         minSdkVersion 23
         targetSdkVersion 28
-        versionCode 34
-        versionName "1.0.0+34"
+        versionCode 35
+        versionName "1.0.0+35"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-        resValue "string", "google_maps_api_key", (project.findProperty("GOOGLE_MAPS_API_KEY") ?: "")
+        def googleServicesProperties = new Properties()
+        if (file('google-services.properties').exists()) {
+            googleServicesProperties.load(new FileInputStream(file('google-services.properties')))
+        }
+        resValue "string", "google_maps_api_key", (googleServicesProperties.google_maps_api_key ?: "")
     }
     signingConfigs {
-        release {
-            keyAlias HAZYAIR_RELEASE_KEY_ALIAS
-            keyPassword HAZYAIR_RELEASE_KEY_PASSWORD
-            storeFile file(HAZYAIR_RELEASE_STORE_FILE)
-            storePassword HAZYAIR_RELEASE_STORE_PASSWORD
+        if (file('release.properties').exists()) {
+            def releaseProperties = new Properties()
+            releaseProperties.load(new FileInputStream(file('release.properties')))
+            release {
+                keyAlias releaseProperties.keyAlias
+                keyPassword releaseProperties.storePassword
+                storeFile file(releaseProperties.storeFile)
+                storePassword releaseProperties.keyPassword
+            }
         }
     }
     buildTypes {
@@ -41,7 +48,9 @@ android {
             shrinkResources false
             debuggable false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
+            if (file('release.properties').exists()) {
+                signingConfig signingConfigs.release
+            }
         }
     }
     compileOptions {

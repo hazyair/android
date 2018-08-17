@@ -109,11 +109,6 @@
                 <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
-        <!-- TODO Add Fabric API Key -->
-        <meta-data
-            android:name="io.fabric.ApiKey"
-            android:value=""
-            />
     </application>
 
 </manifest>
