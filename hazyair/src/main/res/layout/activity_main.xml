@@ -58,6 +58,7 @@
         android:layout_width="wrap_content"
         android:layout_height="48dp"
         app:tabBackground="@drawable/tab_selector"
+        app:tabRippleColor="@android:color/transparent"
         app:tabGravity="center"
         app:tabIndicatorHeight="0dp"
         android:visibility="gone"/>
