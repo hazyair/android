@@ -107,8 +107,8 @@ public class MainActivity extends AppCompatActivity implements
         @Override
         public Fragment getItem(int position) {
             mCursor.moveToPosition(position);
-            Fragment newFragment = StationFragment.newInstance(mCursor);
             StationFragment oldFragment = (StationFragment) mFragments.get(position);
+            Fragment newFragment = StationFragment.newInstance(mCursor, oldFragment);
             if (oldFragment != null) oldFragment.removeUpdates();
             mFragments.put(position, newFragment);
             return newFragment;
@@ -137,38 +137,29 @@ public class MainActivity extends AppCompatActivity implements
                     mFragmentManager.putFragment(state, key, fragment);
                 }
             }
-            mFragments.clear();
-            //clear();
             return state;
         }
 
         @Override
         public void restoreState(Parcelable state, ClassLoader loader) {
-            synchronized (mFragments) {
-                super.restoreState(state, loader);
-                if (state == null) return;
-                Bundle bundle = (Bundle) state;
-                Iterable<String> keys = bundle.keySet();
-                if (keys == null) return;
-                for (String key : keys) {
-                    if (key.startsWith(StationFragment.class.getName())) {
-                        int index = Integer.parseInt(key.substring(
-                                StationFragment.class.getName().length()));
-                        Fragment fragment = mFragmentManager.getFragment(bundle, key);
-                        if (fragment != null) {
-                            fragment.setMenuVisibility(false);
-                            mFragments.put(index, fragment);
-                        }
+            super.restoreState(state, loader);
+            if (state == null) return;
+            Bundle bundle = (Bundle) state;
+            Iterable<String> keys = bundle.keySet();
+            if (keys == null) return;
+            mFragments.clear();
+            for (String key : keys) {
+                if (key.startsWith(StationFragment.class.getName())) {
+                    int index = Integer.parseInt(key.substring(
+                            StationFragment.class.getName().length()));
+                    Fragment fragment = mFragmentManager.getFragment(bundle, key);
+                    if (fragment != null) {
+                        fragment.setMenuVisibility(false);
+                        mFragments.put(index, fragment);
                     }
                 }
             }
         }
-
-        /*synchronized void clear() {
-            for (int i = 0; i < mFragments.size(); i++)
-                ((StationFragment) mFragments.get(i)).clear();
-            mFragments.clear();
-        }*/
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
@@ -578,7 +569,6 @@ public class MainActivity extends AppCompatActivity implements
         if (mTwoPane) {
             mStationListAdapter = null;
         } else {
-            //mStationPagerAdapter.clear();
             if (mViewPager != null) mViewPager.setAdapter(null);
             mStationPagerAdapter = null;
             mViewPager = null;
@@ -783,10 +773,7 @@ public class MainActivity extends AppCompatActivity implements
         if (mSelectedStation == null)
             mSelectedStation = DatabaseService.selectedStation(this);
         else DatabaseService.selectStation(this, mSelectedStation);
-        getSupportLoaderManager().destroyLoader(0);
-        if (mTwoPane) mStationListAdapter.notifyDataSetChanged();
-        else mStationPagerAdapter.notifyDataSetChanged();
-        getSupportLoaderManager().initLoader(0, mSelectedStation, this);
+        getSupportLoaderManager().restartLoader(0, mSelectedStation, this);
         super.onNewIntent(intent);
     }
 

@@ -72,7 +72,8 @@ import io.github.hazyair.util.Time;
 public class StationFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
     // Final definitions
-    private static final String PARAM_SELECTED = "io.github.hazyair.PARAM_SELECTED";
+    private static final String PARAM_SENSOR_SELECTED = "io.github.hazyair.PARAM_SENSOR_SELECTED";
+    private static final String PARAM_STATION_SELECTED = "io.github.hazyair.PARAM_STATION_SELECTED";
 
     // Nested class definitions
     class ViewHolder extends RecyclerView.ViewHolder {
@@ -165,7 +166,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         }
     }
 
-    public class SensorsAdapter extends RecyclerView.Adapter {
+    class SensorsAdapter extends RecyclerView.Adapter {
 
         static final int VIEW_TYPE_MAP = 0;
         static final int VIEW_TYPE_SENSOR = 1;
@@ -179,6 +180,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         private final Bundle mStation;
 
         private Bundle mSelectedItem;
+        private Bundle mSelectedItemCache;
 
         SensorsAdapter(Bundle station, Bundle selectedItem, boolean distance) {
             super();
@@ -229,12 +231,12 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
             notifyItemRangeChanged(1, getItemCount()-1);
         }
 
-        public void setLocation(Location location) {
+        void setLocation(Location location) {
             mLocation = location;
             notifyItemChanged(0);
         }
 
-        public void setDistance(boolean distance) {
+        void setDistance(boolean distance) {
             mDistance = distance;
             notifyItemChanged(0);
         }
@@ -306,12 +308,17 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                                 sensor.getString(SensorsContract.COLUMN_PARAMETER));
                     Bundle data = mData.get(sensor.getInt(SensorsContract.COLUMN__ID));
                     if (data == null || data.size() == 0) {
+                        if (mSelectedItem != null) mSelectedItemCache = mSelectedItem;
+                        mSelectedItem = null;
                         if (sensorViewHolder.cardView != null)
                             sensorViewHolder.cardView
                                     .setCardBackgroundColor(context.getColor(R.color.textLight));
-                        if (Sensor.equals(sensor, mSelectedItem)) mSelectedItem = null;
                         collapse(context, sensorViewHolder);
                     } else {
+                        if (mSelectedItem == null) {
+                            mSelectedItem = mSelectedItemCache;
+                        }
+                        mSelectedItemCache = null;
                         if (sensorViewHolder.cardView != null)
                             sensorViewHolder.cardView
                                     .setCardBackgroundColor(context.getColor(android.R.color.white));
@@ -511,9 +518,18 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
     }
 
     public static StationFragment newInstance(Cursor cursor) {
-        StationFragment fragment = new StationFragment();
-        fragment.setArguments(Station.toBundleFromCursor(cursor));
-        return fragment;
+        return newInstance(cursor, null);
+    }
+
+    public static StationFragment newInstance(Cursor cursor, StationFragment oldFragment) {
+        StationFragment newFragment = new StationFragment();
+        Bundle bundle = new Bundle();
+        if (cursor != null)
+            bundle.putBundle(PARAM_STATION_SELECTED, Station.toBundleFromCursor(cursor));
+        if (oldFragment != null && oldFragment.mSensorsAdapter != null)
+            bundle.putBundle(PARAM_SENSOR_SELECTED, oldFragment.mSensorsAdapter.getSelectedItem());
+        newFragment.setArguments(bundle);
+        return newFragment;
     }
 
     // Fragment lifecycle
@@ -546,14 +562,11 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public void onDestroy() {
-        //io.github.hazyair.util.Loader.clean(getContext(), getLoaderManager());
         mRecyclerView = null;
         mLocationCallback = null;
         mLocationRequest = null;
-        mSensorsAdapter = null;
         mFusedLocationProviderClient = null;
         super.onDestroy();
     }
@@ -564,10 +577,15 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
         ButterKnife.bind(this, rootView);
-        Bundle station = getArguments();
-        Bundle selected = null;
-        if (savedInstanceState != null) selected = savedInstanceState.getBundle(PARAM_SELECTED);
-        mSensorsAdapter = new SensorsAdapter(station, selected,
+        Bundle bundle = getArguments();
+        Bundle station = null;
+        Bundle sensor = null;
+        if (bundle != null) {
+            station = bundle.getBundle(PARAM_STATION_SELECTED);
+            sensor = bundle.getBundle(PARAM_SENSOR_SELECTED);
+        }
+        if (savedInstanceState != null) sensor = savedInstanceState.getBundle(PARAM_SENSOR_SELECTED);
+        mSensorsAdapter = new SensorsAdapter(station, sensor,
                 io.github.hazyair.util.Location.checkPermission(getActivity(), false));
         mRecyclerView.setItemAnimator(null);
         mRecyclerView.setAdapter(mSensorsAdapter);
@@ -650,7 +668,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         if (mSensorsAdapter != null)
-            outState.putBundle(PARAM_SELECTED, mSensorsAdapter.getSelectedItem());
+            outState.putBundle(PARAM_SENSOR_SELECTED, mSensorsAdapter.getSelectedItem());
     }
 
     // Loader handlers
