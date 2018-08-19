@@ -20,8 +20,8 @@ android {
         applicationId "io.github.hazyair"
         minSdkVersion 23
         targetSdkVersion 28
-        versionCode 39
-        versionName "1.0.0+39"
+        versionCode 40
+        versionName "1.0.0+40"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         def googleServicesProperties = new Properties()
         if (file('google-services.properties').exists()) {

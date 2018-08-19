@@ -728,6 +728,7 @@ public class StationsActivity extends AppCompatActivity implements SearchView.On
     }
 
     private void query(StationListAdapter stationListAdapter, String newText) {
+        if (stationListAdapter == null) return;
         if (mStations == null) mStations = stationListAdapter.getStations();
         if (mStations == null || mStations.size() == 0) return;
         stationListAdapter.setStations(Stream.of(mStations)
