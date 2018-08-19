@@ -35,7 +35,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
-import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import com.crashlytics.android.Crashlytics;
@@ -100,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements
         void removePage(int position) {
             Fragment fragment = mFragments.get(position);
             if (fragment == null) return;
-            if (mContainer != null) destroyItem(mContainer, position, fragment);
+            if (mViewPager != null) destroyItem(mViewPager, position, fragment);
             mFragments.remove(position);
         }
 
@@ -226,10 +225,6 @@ public class MainActivity extends AppCompatActivity implements
             notifyDataSetChanged();
         }
 
-        int getCurrentItem() {
-            return mCurrentItem;
-        }
-
         private void selectStation(ViewHolder holder, int position) {
             if (holder.card == null) return;
             holder.card.setCardBackgroundColor(getColor(R.color.primaryLight));
@@ -241,37 +236,32 @@ public class MainActivity extends AppCompatActivity implements
             holder.station.setTextColor(getColor(R.color.textLight));
             if (holder.distance == null) return;
             holder.distance.setTextColor(getColor(R.color.textLight));
-            if (mContainer == null) return;
             ConstraintLayout.LayoutParams layoutParams =
-                    (ConstraintLayout.LayoutParams) mContainer.getLayoutParams();
-            int width = mContainer.getMeasuredWidth();
+                    (ConstraintLayout.LayoutParams) mViewPager.getLayoutParams();
+            int width = mViewPager.getMeasuredWidth();
             if (width > 0) {
                 layoutParams.width = width;
-                mContainer.setLayoutParams(layoutParams);
+                mViewPager.setLayoutParams(layoutParams);
                 mCursor.moveToPosition(position);
-                if (mStationFragment == null)
-                    mStationFragment = StationFragment.newInstance(mCursor);
-                getSupportFragmentManager().beginTransaction().replace(R.id.container,
-                        mStationFragment).commit();
+                mViewPager.setCurrentItem(position, false);
+                mSelectedStation = Station.toBundleFromCursor(mCursor);
                 DatabaseService.selectStation(holder.itemView.getContext(),
-                        Station.toBundleFromCursor(mCursor));
+                        mSelectedStation);
             } else {
-                ViewTreeObserver vto = mContainer.getViewTreeObserver();
+                ViewTreeObserver vto = mViewPager.getViewTreeObserver();
                 vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                     @Override
                     public void onGlobalLayout() {
-                        mContainer.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                        mViewPager.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                         ConstraintLayout.LayoutParams layoutParams =
-                                (ConstraintLayout.LayoutParams) mContainer.getLayoutParams();
-                        layoutParams.width = mContainer.getMeasuredWidth();
-                        mContainer.setLayoutParams(layoutParams);
+                                (ConstraintLayout.LayoutParams) mViewPager.getLayoutParams();
+                        layoutParams.width = mViewPager.getMeasuredWidth();
+                        mViewPager.setLayoutParams(layoutParams);
                         mCursor.moveToPosition(position);
-                        if (mStationFragment == null)
-                            mStationFragment = StationFragment.newInstance(mCursor);
-                        getSupportFragmentManager().beginTransaction().replace(R.id.container,
-                                mStationFragment).commit();
+                        mViewPager.setCurrentItem(position, false);
+                        mSelectedStation = Station.toBundleFromCursor(mCursor);
                         DatabaseService.selectStation(holder.itemView.getContext(),
-                                Station.toBundleFromCursor(mCursor));
+                                mSelectedStation);
                     }
                 });
             }
@@ -340,8 +330,6 @@ public class MainActivity extends AppCompatActivity implements
             holder.itemView.setOnClickListener((v) -> {
                 if (layoutPosition == mCurrentItem) return;
                 deselectCurrentStation();
-                if (mStationFragment != null) mStationFragment.removeUpdates();
-                mStationFragment = null;
                 selectStation(holder, layoutPosition);
                 mCurrentViewHolder = holder;
                 mCurrentItem = layoutPosition;
@@ -391,8 +379,6 @@ public class MainActivity extends AppCompatActivity implements
 
     private Bundle mSelectedStation;
 
-    private StationFragment mStationFragment;
-
     private LocationCallback mLocationCallback;
 
     private LocationRequest mLocationRequest;
@@ -405,7 +391,6 @@ public class MainActivity extends AppCompatActivity implements
     Toolbar mToolbar;
 
     @SuppressWarnings("WeakerAccess")
-    @Nullable
     @BindView(R.id.view_pager)
     ViewPager mViewPager;
 
@@ -417,11 +402,6 @@ public class MainActivity extends AppCompatActivity implements
     @Nullable
     @BindView(R.id.stations)
     RecyclerView mRecyclerView;
-
-    @SuppressWarnings("WeakerAccess")
-    @Nullable
-    @BindView(R.id.container)
-    FrameLayout mContainer;
 
     @SuppressWarnings("WeakerAccess")
     @Nullable
@@ -465,17 +445,10 @@ public class MainActivity extends AppCompatActivity implements
             mSelectedStation = DatabaseService.selectedStation(this);
         else DatabaseService.selectStation(this, mSelectedStation);
 
-
-        if (savedInstanceState != null) {
-            mStationFragment =
-                    (StationFragment) getSupportFragmentManager().getFragment(savedInstanceState,
-                    StationFragment.class.getName());
-        }
-
         getSupportLoaderManager().initLoader(0, mSelectedStation, this);
-
         mTwoPane = getResources().getBoolean(R.bool.two_pane);
         if (mTwoPane) {
+            getSupportLoaderManager().initLoader(1, mSelectedStation, this);
             if (mRecyclerView != null) {
                 mStationListAdapter = new StationListAdapter(
                         io.github.hazyair.util.Location.checkPermission(this));
@@ -508,7 +481,7 @@ public class MainActivity extends AppCompatActivity implements
                     }
                 });
                 mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(
-                                this);
+                        this);
 
                 mLocationCallback = new LocationCallbackReference(new LocationCallback() {
                     @Override
@@ -530,11 +503,12 @@ public class MainActivity extends AppCompatActivity implements
                 });
                 mLocationRequest = io.github.hazyair.util.Location.createLocationRequest();
             }
-        } else {
-            if (mViewPager != null) {
+        }
+        if (mViewPager != null) {
 
-                mStationPagerAdapter = new StationPagerAdapter(getSupportFragmentManager());
-                mViewPager.setAdapter(mStationPagerAdapter);
+            mStationPagerAdapter = new StationPagerAdapter(getSupportFragmentManager());
+            mViewPager.setAdapter(mStationPagerAdapter);
+            if (!mTwoPane) {
                 mViewPager.setOffscreenPageLimit(8);
                 mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
                     @Override
@@ -560,19 +534,17 @@ public class MainActivity extends AppCompatActivity implements
                 mTabLayout.setVisibility(View.VISIBLE);
             }
         }
+
     }
 
     @Override
     protected void onDestroy() {
-        if (mStationFragment != null) mStationFragment.removeUpdates();
-        mStationFragment = null;
         if (mTwoPane) {
             mStationListAdapter = null;
-        } else {
-            if (mViewPager != null) mViewPager.setAdapter(null);
-            mStationPagerAdapter = null;
-            mViewPager = null;
         }
+        if (mViewPager != null) mViewPager.setAdapter(null);
+        mStationPagerAdapter = null;
+        mViewPager = null;
         mSelectedStation = null;
         mTabLayout = null;
         mSwipeRefreshLayout = null;
@@ -580,7 +552,6 @@ public class MainActivity extends AppCompatActivity implements
         mDivider = null;
         mMenu = null;
         mToolbar = null;
-        mContainer = null;
         mFloatingActionButton = null;
         mLocationCallback = null;
         mLocationRequest = null;
@@ -636,38 +607,23 @@ public class MainActivity extends AppCompatActivity implements
                     if (cursor == null || cursor.getCount() == 0) return true;
                     removeRemoveStationButton();
                     mStationListAdapter.deselectCurrentStation();
-                    position = mStationListAdapter.getCurrentItem();
-                    int count = mStationListAdapter.getItemCount();
-                    if (count > 0) {
-                        if (position + 1 < count) {
-                            cursor.moveToPosition(position + 1);
-                        } else if (position > 0) {
-                            cursor.moveToPosition(position - 1);
-                        } else cursor.moveToFirst();
-                        mSelectedStation = Station.toBundleFromCursor(cursor);
-                    } else {
-                        mSelectedStation = null;
-                    }
-                    if (mStationFragment != null) mStationFragment.removeUpdates();
-                    mStationFragment = null;
-                } else {
-                    if (mViewPager == null || mStationPagerAdapter == null) return true;
-                    cursor = mStationPagerAdapter.getCursor();
-                    if (cursor == null || cursor.getCount() == 0) return true;
-                    position = mViewPager.getCurrentItem();
-                    int count = mStationPagerAdapter.getCount();
-                    if (count > 0) {
-                        if (position + 1 < count) {
-                            cursor.moveToPosition(position + 1);
-                        } else if (position > 0) {
-                            cursor.moveToPosition(position - 1);
-                        } else cursor.moveToFirst();
-                        mSelectedStation = Station.toBundleFromCursor(cursor);
-                    } else {
-                        mSelectedStation = null;
-                    }
-                    mStationPagerAdapter.removePage(position);
                 }
+                if (mViewPager == null || mStationPagerAdapter == null) return true;
+                cursor = mStationPagerAdapter.getCursor();
+                if (cursor == null || cursor.getCount() == 0) return true;
+                position = mViewPager.getCurrentItem();
+                int count = mStationPagerAdapter.getCount();
+                if (count > 0) {
+                    if (position + 1 < count) {
+                        cursor.moveToPosition(position + 1);
+                    } else if (position > 0) {
+                        cursor.moveToPosition(position - 1);
+                    } else cursor.moveToFirst();
+                    mSelectedStation = Station.toBundleFromCursor(cursor);
+                } else {
+                    mSelectedStation = null;
+                }
+                mStationPagerAdapter.removePage(position);
                 DatabaseService.selectStation(MainActivity.this, mSelectedStation);
                 cursor.moveToPosition(position);
                 DatabaseService.delete(this, Station.toBundleFromCursor(cursor)
@@ -725,15 +681,6 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        if (mTwoPane && mStationFragment != null && mStationFragment.isAdded()) {
-            getSupportFragmentManager().putFragment(outState, StationFragment.class.getName(),
-                    mStationFragment);
-        }
-    }
-
     private void requestUpdates() {
         io.github.hazyair.util.Location.requestUpdates(this,
                 mFusedLocationProviderClient, mLocationRequest, mLocationCallback);
@@ -788,52 +735,55 @@ public class MainActivity extends AppCompatActivity implements
         if (mTwoPane) {
             if (mStationListAdapter != null) mStationListAdapter.setCurrentItem(position);
             if (mRecyclerView != null) mRecyclerView.scrollToPosition(position);
-        } else {
-            if (mViewPager != null) mViewPager.setCurrentItem(position, false);
         }
+        if (mViewPager != null) mViewPager.setCurrentItem(position, false);
     }
 
     @Override
     public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
         if (data == null) return;
         int count = data.getCount();
-        if (mTwoPane) {
-            if (count == 0) {
-                getSupportFragmentManager().beginTransaction().replace(R.id.container,
-                        new Fragment()).commit();
-                if (mDivider != null) mDivider.setVisibility(View.GONE);
-            } else {
-                if (mDivider != null) mDivider.setVisibility(View.VISIBLE);
-            }
-            mStationListAdapter.setCursor(data);
-        } else {
-            mStationPagerAdapter.setCursor(data);
-        }
-        if (!mTwoPane && count > 0)
-            io.github.hazyair.util.Location.checkPermission(this);
-        if (count == 0) {
-            removeRemoveStationButton();
-            DatabaseService.selectStation(this, null);
-        } else {
-            addRemoveStationButton();
-            if (mSelectedStation != null) {
-                int i;
-                for (i = 0; i < count; i++) {
-                    data.moveToPosition(i);
-                    if (Station.equals(Station.toBundleFromCursor(data), mSelectedStation)) {
-                        selectStation(i);
-                        break;
+        switch (loader.getId()) {
+            case 0: {
+                mStationPagerAdapter.setCursor(data);
+                if (!mTwoPane && count > 0)
+                    io.github.hazyair.util.Location.checkPermission(this);
+                if (count == 0) {
+                    removeRemoveStationButton();
+                    DatabaseService.selectStation(this, null);
+                } else {
+                    addRemoveStationButton();
+                    if (mSelectedStation != null) {
+                        int i;
+                        for (i = 0; i < count; i++) {
+                            data.moveToPosition(i);
+                            if (Station.equals(Station.toBundleFromCursor(data), mSelectedStation)) {
+                                selectStation(i);
+                                break;
+                            }
+                        }
+                        if (i == count) mSelectedStation = null;
+                    }
+                    if (mSelectedStation == null) {
+                        data.moveToFirst();
+                        DatabaseService.selectStation(this, Station.toBundleFromCursor(data));
+                        selectStation(0);
                     }
                 }
-                if (i == count) mSelectedStation = null;
+                break;
             }
-            if (mSelectedStation == null) {
-                data.moveToFirst();
-                DatabaseService.selectStation(this, Station.toBundleFromCursor(data));
-                selectStation(0);
+            case 1: {
+                if (mTwoPane) {
+                    if (count == 0) {
+                        if (mDivider != null) mDivider.setVisibility(View.GONE);
+                    } else {
+                        if (mDivider != null) mDivider.setVisibility(View.VISIBLE);
+                    }
+                    mStationListAdapter.setCursor(data);
+                }
+                break;
             }
         }
-
     }
 
     @Override

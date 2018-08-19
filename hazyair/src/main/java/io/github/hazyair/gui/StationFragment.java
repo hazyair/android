@@ -517,10 +517,6 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
     public StationFragment() {
     }
 
-    public static StationFragment newInstance(Cursor cursor) {
-        return newInstance(cursor, null);
-    }
-
     public static StationFragment newInstance(Cursor cursor, StationFragment oldFragment) {
         StationFragment newFragment = new StationFragment();
         Bundle bundle = new Bundle();

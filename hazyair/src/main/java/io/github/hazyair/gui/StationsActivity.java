@@ -560,7 +560,7 @@ public class StationsActivity extends AppCompatActivity implements SearchView.On
             @Override
             public void onSuccess(List<Station> stations) {
                 if (mTwoPane) {
-                    mAdapter.setStations(stations);
+                    if (mAdapter != null) mAdapter.setStations(stations);
                     if (scroll && mAllStations != null) {
                         RecyclerView.LayoutManager layoutManager
                                 = mAllStations.getLayoutManager();
