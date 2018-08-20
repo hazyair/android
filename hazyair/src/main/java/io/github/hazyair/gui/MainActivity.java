@@ -197,10 +197,6 @@ public class MainActivity extends AppCompatActivity implements
         private Location mLocation;
         private boolean mDistance;
 
-        StationListAdapter(boolean distance) {
-            mDistance = distance;
-        }
-
         void setCursor(Cursor cursor) {
             mCursor = cursor;
             if (mCursor != null) notifyDataSetChanged();
@@ -450,8 +446,7 @@ public class MainActivity extends AppCompatActivity implements
         if (mTwoPane) {
             getSupportLoaderManager().initLoader(1, mSelectedStation, this);
             if (mRecyclerView != null) {
-                mStationListAdapter = new StationListAdapter(
-                        io.github.hazyair.util.Location.checkPermission(this));
+                mStationListAdapter = new StationListAdapter();
                 mRecyclerView.setAdapter(mStationListAdapter);
                 mRecyclerView.addItemDecoration(new RecyclerView.ItemDecoration() {
                     @Override
@@ -746,7 +741,7 @@ public class MainActivity extends AppCompatActivity implements
         switch (loader.getId()) {
             case 0: {
                 mStationPagerAdapter.setCursor(data);
-                if (!mTwoPane && count > 0)
+                if (count > 0)
                     io.github.hazyair.util.Location.checkPermission(this);
                 if (count == 0) {
                     removeRemoveStationButton();
@@ -757,7 +752,8 @@ public class MainActivity extends AppCompatActivity implements
                         int i;
                         for (i = 0; i < count; i++) {
                             data.moveToPosition(i);
-                            if (Station.equals(Station.toBundleFromCursor(data), mSelectedStation)) {
+                            if (Station.equals(Station.toBundleFromCursor(data),
+                                    mSelectedStation)) {
                                 selectStation(i);
                                 break;
                             }
@@ -766,7 +762,8 @@ public class MainActivity extends AppCompatActivity implements
                     }
                     if (mSelectedStation == null) {
                         data.moveToFirst();
-                        DatabaseService.selectStation(this, Station.toBundleFromCursor(data));
+                        DatabaseService.selectStation(this,
+                                Station.toBundleFromCursor(data));
                         selectStation(0);
                     }
                 }
