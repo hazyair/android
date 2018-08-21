@@ -291,15 +291,18 @@ public class DatabaseService extends JobIntentService {
                         }
                     }
                 }
-                if (!mError && cpo.size() > count) {
-                    HazyairProvider.bulkExecute(DatabaseService.this, cpo);
+                if (!mError) {
+                    if (cpo.size() > count) {
+                        HazyairProvider.bulkExecute(DatabaseService.this, cpo);
+                        Info info = Preference.getInfo(DatabaseService.this);
+                        if (info != null) select(info.station._id);
+                    }
                     HazyairProvider.Config.set(DatabaseService.this,
                             HazyairProvider.Config.PARAM_UPDATE,
                             String.valueOf(new DateTime(DateTime.now(),
                                     DateTimeZone.getDefault()).withZone(DateTimeZone.UTC)
                                     .getMillis()));
-                    Info info = Preference.getInfo(DatabaseService.this);
-                    if (info != null) select(info.station._id);
+
                 }
                 sendConfirmation(mError);
                 break;
