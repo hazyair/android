@@ -126,10 +126,13 @@ public class StationsActivity extends AppCompatActivity implements SearchView.On
 
         private boolean mDistance;
         private Location mLocation;
-        private final boolean mDivider;
+        private boolean mDivider;
 
+        StationListAdapter() {
+        }
+
+        @SuppressWarnings("SameParameterValue")
         StationListAdapter(boolean distance, boolean divider) {
-            super();
             mDistance = distance;
             mDivider = divider;
         }
@@ -449,13 +452,7 @@ public class StationsActivity extends AppCompatActivity implements SearchView.On
                 case DatabaseService.ACTION_UPDATED:
                     int position = intent.getIntExtra(DatabaseService.PARAM_POSITION,
                             -1);
-                    if (position == -1) {
-                        if (mTwoPane) {
-                            mAdapter.notifyDataSetChanged();
-                        } else {
-                            mStationListAdapter.notifyDataSetChanged();
-                        }
-                    } else {
+                    if (position != -1) {
                         List<Station> stations;
                         if (mTwoPane) {
                             stations = mAdapter.getStations();
@@ -654,8 +651,7 @@ public class StationsActivity extends AppCompatActivity implements SearchView.On
         }
 
         if (mTwoPane) {
-            mAdapter = new StationListAdapter(
-                    io.github.hazyair.util.Location.checkPermission(this), false);
+            mAdapter = new StationListAdapter();
             if (mAllStations != null) {
                 mAllStations.setAdapter(mAdapter);
                 mAllStations.addItemDecoration(new AllStationsItemDecoration());

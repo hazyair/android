@@ -10,8 +10,12 @@ import android.support.v7.app.AlertDialog;
 
 import com.crashlytics.android.Crashlytics;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import io.github.hazyair.R;
 import io.github.hazyair.data.HazyairProvider;
@@ -51,6 +55,8 @@ public class DatabaseService extends JobIntentService {
     public final static String PARAM_RESCHEDULE = "io.github.hazyair.PARAM_RESCHEDULE";
     public final static String PARAM_MESSAGE = "io.github.hazyair.PARAM_MESSAGE";
     public final static String PARAM_INFO = "io.github.hazyair.PARAM_INFO";
+
+    private final static int LIMIT = 25;
 
     private static boolean mError;
 
@@ -104,7 +110,6 @@ public class DatabaseService extends JobIntentService {
 
                         @Override
                         public void onSuccess(List<Sensor> sensors) {
-                            //count = sensors.size();
                             HazyairProvider.Sensors.bulkInsertAdd(0, sensors,
                                     cpo);
                             int index = 1;
@@ -121,7 +126,7 @@ public class DatabaseService extends JobIntentService {
                                     @Override
                                     public void onSuccess(List<Data> data) {
                                         int size = data.size();
-                                        data = data.subList(0, (size > 25 ? 25 : size));
+                                        data = data.subList(0, (size > LIMIT ? LIMIT : size));
                                         HazyairProvider.Data.bulkInsertAdd(0,
                                                 sensor._id, data, cpo);
                                         synchronized (this) {
@@ -217,13 +222,18 @@ public class DatabaseService extends JobIntentService {
                 ArrayList<Worker> workers = new ArrayList<>();
                 mError = false;
                 ArrayList<ContentProviderOperation> cpo = new ArrayList<>();
+                long timestamp = new DateTime(DateTime.now().getMillis() -
+                        TimeUnit.HOURS.toMillis(LIMIT),
+                        DateTimeZone.getDefault()).withZone(DateTimeZone.forID("UTC"))
+                        .getMillis();
                 for (int i = 0; i < count; i++) {
                     Bundle sensor = sensors.get(i);
                     int _sensor_id = sensor.getInt(SensorsContract.COLUMN__ID);
                     int _station_id = sensor.getInt(
                             SensorsContract.COLUMN__STATION_ID);
                     HazyairProvider.Data.bulkDeleteAdd(
-                            sensor.getInt(SensorsContract.COLUMN__ID), cpo);
+                            sensor.getInt(SensorsContract.COLUMN__ID),
+                            timestamp, cpo);
                     DataCallback dataCallback = new DataCallback() {
                         boolean mIsAlive = true;
 
@@ -235,12 +245,12 @@ public class DatabaseService extends JobIntentService {
                         @Override
                         public void onSuccess(List<Data> data) {
                             int size = data.size();
-                            data = data.subList(0, (size > 25 ? 25 : size));
+                            data = data.subList(0, (size > LIMIT ? LIMIT : size));
                             for (Data entry : data) {
                                 entry._sensor_id = _sensor_id;
                                 entry._station_id = _station_id;
                             }
-                            HazyairProvider.Data.bulkInsertAdd(data, cpo);
+                            HazyairProvider.Data.bulkInsertAdd(data, timestamp, cpo);
                             synchronized (this) {
                                 mIsAlive = false;
                                 this.notifyAll();
@@ -281,8 +291,13 @@ public class DatabaseService extends JobIntentService {
                         }
                     }
                 }
-                if (!mError) {
+                if (!mError && cpo.size() > count) {
                     HazyairProvider.bulkExecute(DatabaseService.this, cpo);
+                    HazyairProvider.Config.set(DatabaseService.this,
+                            HazyairProvider.Config.PARAM_UPDATE,
+                            String.valueOf(new DateTime(DateTime.now(),
+                                    DateTimeZone.getDefault()).withZone(DateTimeZone.UTC)
+                                    .getMillis()));
                     Info info = Preference.getInfo(DatabaseService.this);
                     if (info != null) select(info.station._id);
                 }
@@ -394,7 +409,8 @@ public class DatabaseService extends JobIntentService {
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean update(Context context, long interval) {
-        if (System.currentTimeMillis() - Preference.getUpdate(context) > interval) {
+        if (System.currentTimeMillis() - HazyairProvider.Config.get(context,
+                HazyairProvider.Config.PARAM_UPDATE) > interval) {
             DatabaseService.enqueueWork(context,
                     new Intent(context, DatabaseService.class)
                             .setAction(DatabaseService.ACTION_UPDATE));

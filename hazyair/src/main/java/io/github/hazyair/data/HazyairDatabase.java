@@ -12,7 +12,7 @@ import net.simonvt.schematic.annotation.Table;
 public class HazyairDatabase {
 
     @SuppressWarnings("WeakerAccess")
-    static final int VERSION = 1;
+    static final int VERSION = 2;
 
     @Table(StationsContract.class)
     public static final String STATIONS = "stations";
@@ -22,6 +22,9 @@ public class HazyairDatabase {
 
     @Table(DataContract.class)
     public static final String DATA = "data";
+
+    @Table(ConfigContract.class)
+    public static final String CONFIG = "config";
 
     @SuppressWarnings("unused")
     @OnUpgrade
@@ -34,7 +37,10 @@ public class HazyairDatabase {
         db.execSQL(io.github.hazyair.data.generated.HazyairDatabase.SENSORS);
         db.execSQL("DROP TABLE IF EXISTS " + DATA);
         db.execSQL("DELETE FROM SQLITE_SEQUENCE WHERE NAME = '" + DATA + "'");
-        db.execSQL(io.github.hazyair.data.generated.HazyairDatabase.DATA);    }
-
+        db.execSQL(io.github.hazyair.data.generated.HazyairDatabase.DATA);
+        db.execSQL("DROP TABLE IF EXISTS " + CONFIG);
+        db.execSQL("DELETE FROM SQLITE_SEQUENCE WHERE NAME = '" + CONFIG + "'");
+        db.execSQL(io.github.hazyair.data.generated.HazyairDatabase.CONFIG);
+    }
 }
 
