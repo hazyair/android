@@ -32,8 +32,7 @@
         </activity>
         <activity
             android:name=".gui.SettingsActivity"
-            android:label="@string/title_settings"
-            android:launchMode="singleTask">
+            android:label="@string/title_settings">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".gui.MainActivity" />
