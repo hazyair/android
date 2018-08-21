@@ -452,7 +452,13 @@ public class StationsActivity extends AppCompatActivity implements SearchView.On
                 case DatabaseService.ACTION_UPDATED:
                     int position = intent.getIntExtra(DatabaseService.PARAM_POSITION,
                             -1);
-                    if (position != -1) {
+                    if (position == -1) {
+                        if (mTwoPane) {
+                            mAdapter.notifyDataSetChanged();
+                        } else {
+                            mStationListAdapter.notifyDataSetChanged();
+                        }
+                    } else {
                         List<Station> stations;
                         if (mTwoPane) {
                             stations = mAdapter.getStations();
