@@ -352,9 +352,9 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                                         context.getColor(R.color.accent));
                             } else {
                                 sensorViewHolder.parameter.setTextColor(
-                                        context.getColor(R.color.textDark));
+                                        context.getColor(R.color.textDarker));
                                 sensorViewHolder.result.setTextColor(
-                                        context.getColor(R.color.textDark));
+                                        context.getColor(R.color.textDarker));
                             }
                         }
                     }
