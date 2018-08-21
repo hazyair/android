@@ -711,6 +711,7 @@ public class MainActivity extends AppCompatActivity implements
             mSelectedStation = DatabaseService.selectedStation(this);
         else DatabaseService.selectStation(this, mSelectedStation);
         getSupportLoaderManager().restartLoader(0, mSelectedStation, this);
+        getSupportLoaderManager().restartLoader(1, mSelectedStation, this);
         super.onNewIntent(intent);
     }
 
