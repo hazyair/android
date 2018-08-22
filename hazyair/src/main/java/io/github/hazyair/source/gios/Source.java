@@ -84,6 +84,8 @@ public class Source implements io.github.hazyair.source.iface.Source {
             return result;
         }
         for(Station station : stations) {
+            if (station.gegrLat == null || station.gegrLon == null || station.city == null)
+                continue;
             result.add(new io.github.hazyair.source.Station(String.valueOf(station.id),
                     station.stationName, Double.valueOf(station.gegrLat),
                     Double.valueOf(station.gegrLon), R.string.data_poland, station.city.name,

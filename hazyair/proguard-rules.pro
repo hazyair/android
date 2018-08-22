@@ -19,3 +19,14 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+-keepclassmembers class io.github.hazyair.source.Station { *; }
+-keepclassmembers class io.github.hazyair.source.Sensor { *; }
+-keepclassmembers class io.github.hazyair.source.Data { *; }
+-keepclassmembers class io.github.hazyair.source.gios.City { *; }
+-keepclassmembers class io.github.hazyair.source.gios.Commune { *; }
+-keepclassmembers class io.github.hazyair.source.gios.Data { *; }
+-keepclassmembers class io.github.hazyair.source.gios.Param { *; }
+-keepclassmembers class io.github.hazyair.source.gios.Station { *; }
+-keepclassmembers class io.github.hazyair.source.gios.Value { *; }
+-keepclassmembers class io.github.hazyair.source.gios.Sensor { *; }
