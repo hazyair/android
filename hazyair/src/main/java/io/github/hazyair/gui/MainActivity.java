@@ -669,6 +669,7 @@ public class MainActivity extends AppCompatActivity implements
             io.github.hazyair.util.Location.removeUpdates(this,
                     mFusedLocationProviderClient, mLocationCallback);
         }
+        mSwipeRefreshLayout.setRefreshing(false);
     }
 
     private void requestUpdates() {
