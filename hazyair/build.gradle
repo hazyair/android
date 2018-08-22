@@ -43,7 +43,6 @@ android {
     }
     buildTypes {
         release {
-            // TODO Enable proguard
             minifyEnabled true
             shrinkResources true
             debuggable false
@@ -61,7 +60,7 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    debugImplementation 'com.facebook.stetho:stetho:1.5.0'
+    implementation 'com.facebook.stetho:stetho:1.5.0'
     implementation 'com.google.firebase:firebase-core:16.0.1'
     implementation 'com.crashlytics.sdk.android:crashlytics:2.9.4'
     implementation "com.android.support:appcompat-v7:$androidSupportVersion"
