@@ -499,7 +499,7 @@ public class MainActivity extends AppCompatActivity implements
             mStationPagerAdapter = new StationPagerAdapter(getSupportFragmentManager());
             mViewPager.setAdapter(mStationPagerAdapter);
             if (!mTwoPane) {
-                mViewPager.setOffscreenPageLimit(8);
+                //mViewPager.setOffscreenPageLimit(8);
                 mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
                     @Override
                     public void onPageScrolled(int position, float positionOffset,

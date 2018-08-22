@@ -119,11 +119,11 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
 
         }
 
-        void getMap() {
+        void open() {
             if (mSupportMapFragment == null)
                 mSupportMapFragment = StationMapFragment.newInstance();
             getChildFragmentManager().beginTransaction()
-                    .replace(R.id.map, mSupportMapFragment).commitAllowingStateLoss();
+                    .replace(R.id.map, mSupportMapFragment).commit();//.commitAllowingStateLoss();
             mSupportMapFragment.getMapAsync(this);
         }
 
@@ -137,6 +137,13 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                             getString(mStation.getInt(StationsContract.COLUMN_SOURCE)))));
             googleMap.moveCamera(CameraUpdateFactory.zoomTo(10));
             googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        }
+
+        void close() {
+            if (mSupportMapFragment == null) return;
+            getChildFragmentManager().beginTransaction()
+                    .replace(R.id.map, new Fragment()).commit();
+            mSupportMapFragment = null;
         }
     }
 
@@ -405,6 +412,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         private void collapse(Context context, ViewHolder vh) {
             if (vh instanceof MapViewHolder && vh.frameLayout != null) {
                 vh.frameLayout.setVisibility(View.GONE);
+                ((MapViewHolder) vh).close();
             }
             if (vh instanceof SensorViewHolder) {
                 SensorViewHolder svh = (SensorViewHolder) vh;
@@ -422,7 +430,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                 viewHolder.expandCollapse.setBackground(
                         context.getDrawable(R.drawable.ic_keyboard_arrow_up_black_24dp));
             if (viewHolder instanceof MapViewHolder && viewHolder.frameLayout != null) {
-                ((MapViewHolder) viewHolder).getMap();
+                ((MapViewHolder) viewHolder).open();
                 viewHolder.frameLayout.setVisibility(View.VISIBLE);
                 mSelectedItem = bundle;
             }
