@@ -163,13 +163,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
-               if (!isXLargeTablet(this)) {
-                   onBackPressed();
-                   return true;
-               }
+                onBackPressed();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
-
     }
 }
