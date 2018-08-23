@@ -45,7 +45,7 @@ public final class HazyairProvider {
             if (context == null || key == null || value == null) return;
             ContentValues contentValues = new ContentValues();
             contentValues.put(ConfigContract.COLUMN_KEY, key);
-            contentValues.put(ConfigContract.COLUMN_KEY, value);
+            contentValues.put(ConfigContract.COLUMN_VALUE, value);
             context.getContentResolver().insert(CONTENT_URI, contentValues);
         }
 

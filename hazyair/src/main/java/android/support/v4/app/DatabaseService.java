@@ -205,14 +205,15 @@ public class DatabaseService extends JobIntentService {
                 break;
             }
             case ACTION_UPDATE: {
+                sendConfirmation();
                 Cursor cursor = HazyairProvider.Sensors.select(this);
                 if (cursor == null) break;
                 int count = cursor.getCount();
                 if (count <= 0) {
                     cursor.close();
+                    sendConfirmation(false);
                     break;
                 }
-                sendConfirmation();
                 ArrayList<Bundle> sensors = new ArrayList<>();
                 for (int i=0; i < count; i ++) {
                     cursor.moveToPosition(i);
@@ -412,7 +413,9 @@ public class DatabaseService extends JobIntentService {
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public static boolean update(Context context, long interval) {
-        if (System.currentTimeMillis() - HazyairProvider.Config.get(context,
+        if (new DateTime(System.currentTimeMillis(),
+                DateTimeZone.getDefault()).withZone(DateTimeZone.UTC).getMillis() -
+                HazyairProvider.Config.get(context,
                 HazyairProvider.Config.PARAM_UPDATE) > interval) {
             DatabaseService.enqueueWork(context,
                     new Intent(context, DatabaseService.class)
