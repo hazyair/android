@@ -58,6 +58,7 @@ import android.support.v4.app.DatabaseService;
 import java.util.concurrent.TimeUnit;
 
 import io.github.hazyair.service.DatabaseSyncService;
+import io.github.hazyair.util.HazyairViewPager;
 import io.github.hazyair.util.License;
 import io.github.hazyair.util.LocationCallbackReference;
 import io.github.hazyair.util.Network;
@@ -383,7 +384,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @SuppressWarnings("WeakerAccess")
     @BindView(R.id.view_pager)
-    ViewPager mViewPager;
+    HazyairViewPager mViewPager;
 
     @SuppressWarnings("WeakerAccess")
     @BindView(R.id.fab_add_station)
@@ -498,7 +499,9 @@ public class MainActivity extends AppCompatActivity implements
 
             mStationPagerAdapter = new StationPagerAdapter(getSupportFragmentManager());
             mViewPager.setAdapter(mStationPagerAdapter);
-            if (!mTwoPane) {
+            if (mTwoPane) {
+                mViewPager.setSwipeEnable(false);
+            } else {
                 mViewPager.setOffscreenPageLimit(8);
                 mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
                     @Override
@@ -517,7 +520,6 @@ public class MainActivity extends AppCompatActivity implements
 
                     @Override
                     public void onPageScrollStateChanged(int state) {
-
                     }
                 });
                 mTabLayout.setupWithViewPager(mViewPager, true);

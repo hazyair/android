@@ -39,10 +39,11 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.GoogleMapOptions;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -104,7 +105,8 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         FrameLayout frameLayout;
 
         private final Bundle mStation;
-        private SupportMapFragment mSupportMapFragment;
+
+        private LatLng mLatLng;
 
         MapViewHolder(View itemView, Bundle station) {
             super(itemView);
@@ -120,23 +122,21 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         }
 
         void open() {
+            mLatLng = new LatLng(mStation.getDouble(StationsContract.COLUMN_LATITUDE),
+                    mStation.getDouble(StationsContract.COLUMN_LONGITUDE));
             if (mSupportMapFragment == null)
-                mSupportMapFragment = StationMapFragment.newInstance();
+                mSupportMapFragment = StationMapFragment.newInstance(new GoogleMapOptions()
+                        .compassEnabled(false).camera(CameraPosition.fromLatLngZoom(mLatLng, 10))
+                        .minZoomPreference(10));
             getChildFragmentManager().beginTransaction()
-                    .replace(R.id.map, mSupportMapFragment).commit();//.commitAllowingStateLoss();
+                    .replace(R.id.map, mSupportMapFragment).commit();
             mSupportMapFragment.getMapAsync(this);
         }
 
         @Override
         public void onMapReady(GoogleMap googleMap) {
-            LatLng latLng = new LatLng(mStation.getDouble(StationsContract.COLUMN_LATITUDE),
-                    mStation.getDouble(StationsContract.COLUMN_LONGITUDE));
-            googleMap.addMarker(new MarkerOptions().position(latLng)
-                    .title(String.format("%s %s",
-                            getString(R.string.text_station_by),
-                            getString(mStation.getInt(StationsContract.COLUMN_SOURCE)))));
-            googleMap.moveCamera(CameraUpdateFactory.zoomTo(10));
-            googleMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+            googleMap.addMarker(new MarkerOptions().position(mLatLng).title(String.format("%s %s",
+                    getString(R.string.text_station_by), getString(mStation.getInt(StationsContract.COLUMN_SOURCE)))));
         }
 
         void close() {
@@ -462,8 +462,10 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                 if (viewHolder.expandCollapse != null)
                     viewHolder.expandCollapse.setBackground(
                             context.getDrawable(R.drawable.ic_keyboard_arrow_down_black_24dp));
-                if (viewHolder instanceof MapViewHolder)
+                if (viewHolder instanceof MapViewHolder) {
                     viewHolder.frameLayout.setVisibility(View.GONE);
+                    ((MapViewHolder) viewHolder).close();
+                }
                 if (viewHolder instanceof SensorViewHolder) {
                     SensorViewHolder sensorViewHolder = (SensorViewHolder) viewHolder;
                     if (sensorViewHolder.chart != null)
@@ -475,6 +477,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                     collapse(context,
                             (ViewHolder) mRecyclerView.findViewHolderForLayoutPosition(i));
                 }
+                mChart.clear();
                 if (viewHolder instanceof SensorViewHolder)
                     getLoaderManager().initLoader(-bundle.getInt(SensorsContract.COLUMN__ID),
                             bundle, StationFragment.this);
@@ -499,6 +502,8 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
     private LocationRequest mLocationRequest;
 
     private FusedLocationProviderClient mFusedLocationProviderClient;
+
+    private SupportMapFragment mSupportMapFragment;
 
     // ButterKnife
     @SuppressWarnings("WeakerAccess")
@@ -706,6 +711,12 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
     @Override
     public void onLoaderReset(@NonNull Loader<Cursor> loader) {
         mSensorsAdapter.setCursor(null);
+    }
+
+    @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+        if (mSupportMapFragment != null) mSupportMapFragment.onLowMemory();
     }
 
 }

@@ -844,8 +844,8 @@ public class StationsActivity extends AppCompatActivity implements SearchView.On
                             .findFirstCompletelyVisibleItemPosition());
 
         }
-        outState.putString(PARAM_QUERY_STRING, mQueryString);
-        outState.putBoolean(PARAM_ICONIFIED, mSearchView.isIconified());
+        if (mQueryString != null) outState.putString(PARAM_QUERY_STRING, mQueryString);
+        if (mSearchView != null) outState.putBoolean(PARAM_ICONIFIED, mSearchView.isIconified());
     }
 
     @Override

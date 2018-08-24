@@ -18,7 +18,7 @@
         xmlns:android="http://schemas.android.com/apk/res/android"
         app:layout_constraintStart_toEndOf="@id/stations"
         tools:ignore="InconsistentLayout" />
-    <io.github.hazyair.util.NonSwipeableViewPager xmlns:tools="http://schemas.android.com/tools"
+    <io.github.hazyair.util.HazyairViewPager xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/view_pager"
         android:layout_width="@dimen/follow_constraint"
         android:layout_height="wrap_content"
