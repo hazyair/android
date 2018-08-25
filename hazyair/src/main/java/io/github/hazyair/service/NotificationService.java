@@ -20,6 +20,7 @@ import io.github.hazyair.R;
 import io.github.hazyair.gui.MainActivity;
 import io.github.hazyair.source.Data;
 import io.github.hazyair.source.Info;
+import io.github.hazyair.util.Config;
 import io.github.hazyair.util.Preference;
 import io.github.hazyair.util.Quality;
 import io.github.hazyair.util.Time;
@@ -69,7 +70,7 @@ public class NotificationService extends JobService {
 
     @Override
     public boolean onStartJob(JobParameters params) {
-        Info info = Preference.getInfo(this);
+        Info info = Config.getInfo(this);
         if (info == null) return false;
         StringBuilder stringBuilder = new StringBuilder();
         boolean notify = false;

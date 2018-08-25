@@ -4,6 +4,7 @@ import net.simonvt.schematic.annotation.ConflictResolutionType;
 import net.simonvt.schematic.annotation.DataType;
 import net.simonvt.schematic.annotation.PrimaryKey;
 
+@SuppressWarnings("WeakerAccess")
 public class ConfigContract {
 
     @DataType(DataType.Type.TEXT)

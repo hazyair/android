@@ -8,11 +8,14 @@ import android.text.style.StyleSpan;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
+import com.crashlytics.android.Crashlytics;
+
 import io.github.hazyair.R;
 import io.github.hazyair.gui.MainActivity;
 import io.github.hazyair.source.Data;
 import io.github.hazyair.source.Info;
 import io.github.hazyair.source.Sensor;
+import io.github.hazyair.util.Config;
 import io.github.hazyair.util.Preference;
 import io.github.hazyair.util.Quality;
 
@@ -32,7 +35,19 @@ public class AppWidgetService extends RemoteViewsService {
 
             @Override
             public void onDataSetChanged() {
-                mInfo = Preference.getInfo(getApplicationContext());
+                Thread thread = new Thread() {
+                    public void run() {
+                        mInfo = Config.getInfo(getApplicationContext());
+                    }
+                };
+                thread.start();
+                try {
+                    thread.join();
+                } catch (InterruptedException e) {
+                    if (Preference.isCrashlyticsEnabled(getApplicationContext())) {
+                        Crashlytics.logException(e);
+                    }
+                }
             }
 
             @Override

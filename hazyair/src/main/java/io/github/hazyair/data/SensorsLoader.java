@@ -2,7 +2,6 @@ package io.github.hazyair.data;
 
 import android.content.Context;
 import android.support.v4.content.CursorLoader;
-import android.net.Uri;
 
 import io.github.hazyair.source.Sensor;
 

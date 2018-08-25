@@ -2,41 +2,17 @@ package io.github.hazyair.util;
 
 import android.content.Context;
 import android.preference.PreferenceManager;
-
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
 import io.github.hazyair.R;
-import io.github.hazyair.source.Info;
 
 public final class Preference {
     private static final String SYNC_INTERVAL = "15";
     private static final String NOTIFICATIONS_INTERVAL = "30";
-    private final static String PREF_INFO = "io.github.hazyair.PREF_INFO";
     private final static String PREF_LICENSE = "io.github.hazyair.PREF_LICENSE";
 
     public static void initialize(Context context) {
         PreferenceManager.setDefaultValues(context, R.xml.pref_general, false);
         PreferenceManager.setDefaultValues(context, R.xml.pref_notification, false);
         PreferenceManager.setDefaultValues(context, R.xml.pref_data_sync, false);
-    }
-
-    public static void putInfo(Context context, Info info) {
-        if (context == null) return;
-        if (info == null) {
-            PreferenceManager.getDefaultSharedPreferences(context).edit().remove(PREF_INFO).apply();
-        } else {
-            PreferenceManager.getDefaultSharedPreferences(context).edit()
-                    .putString(PREF_INFO, new Gson().toJson(info)).apply();
-        }
-    }
-
-    public static Info getInfo(Context context) {
-        if (context == null) return null;
-        String info = PreferenceManager.getDefaultSharedPreferences(context)
-                .getString(PREF_INFO, "");
-        if (info.isEmpty()) return null;
-        return new Gson().fromJson(info, new TypeToken<Info>() {}.getType());
     }
 
     public static boolean isCrashlyticsEnabled(Context context) {

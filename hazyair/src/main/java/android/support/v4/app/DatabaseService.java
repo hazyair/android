@@ -29,6 +29,7 @@ import io.github.hazyair.source.Station;
 import io.github.hazyair.source.iface.DataCallback;
 import io.github.hazyair.source.iface.SensorsCallback;
 import io.github.hazyair.source.iface.Worker;
+import io.github.hazyair.util.Config;
 import io.github.hazyair.util.Preference;
 import io.github.hazyair.widget.AppWidget;
 
@@ -45,16 +46,12 @@ public class DatabaseService extends JobIntentService {
             "io.github.hazyair.ACTION_UPDATING";
     public final static String ACTION_UPDATED =
             "io.github.hazyair.ACTION_UPDATED";
-    public final static String ACTION_SELECTED =
-            "io.github.hazyair.ACTION_SELECTED";
-
 
     private final static String PARAM__ID = "io.github.hazyair.PARAM__ID";
     private final static String PARAM_STATION = "io.github.hazyair.PARAM_STATION";
     public final static String PARAM_POSITION = "io.github.hazyair.PARAM_POSITION";
     public final static String PARAM_RESCHEDULE = "io.github.hazyair.PARAM_RESCHEDULE";
     public final static String PARAM_MESSAGE = "io.github.hazyair.PARAM_MESSAGE";
-    public final static String PARAM_INFO = "io.github.hazyair.PARAM_INFO";
 
     private final static int LIMIT = 25;
 
@@ -82,9 +79,9 @@ public class DatabaseService extends JobIntentService {
                 int position = intent.getIntExtra(PARAM_POSITION, -1);
                 if (HazyairProvider.Stations.selected(this, station)) {
                     HazyairProvider.delete(this, station._id);
-                    Info info = Preference.getInfo(this);
+                    Info info = Config.getInfo(this);
                     if (info != null && info.station._id == station._id) {
-                        Preference.putInfo(this, null);
+                        Config.setInfo(this, null);
                         AppWidget.update(this);
                     }
                     sendConfirmation(position);
@@ -295,15 +292,10 @@ public class DatabaseService extends JobIntentService {
                 if (!mError) {
                     if (cpo.size() > count) {
                         HazyairProvider.bulkExecute(DatabaseService.this, cpo);
-                        Info info = Preference.getInfo(DatabaseService.this);
+                        Info info = Config.getInfo(DatabaseService.this);
                         if (info != null) select(info.station._id);
                     }
-                    HazyairProvider.Config.set(DatabaseService.this,
-                            HazyairProvider.Config.PARAM_UPDATE,
-                            String.valueOf(new DateTime(DateTime.now(),
-                                    DateTimeZone.getDefault()).withZone(DateTimeZone.UTC)
-                                    .getMillis()));
-
+                    Config.setUpdate(DatabaseService.this);
                 }
                 sendConfirmation(mError);
                 break;
@@ -348,7 +340,8 @@ public class DatabaseService extends JobIntentService {
         }
         Info info = new Info(new Station(stationCursor), sensorList, data);
         stationCursor.close();
-        sendBroadcast(new Intent(ACTION_SELECTED).putExtra(PARAM_INFO, info));
+        Config.setInfo(this, info);
+        AppWidget.update(this);
     }
 
     private void sendConfirmation(int position) {
@@ -379,7 +372,7 @@ public class DatabaseService extends JobIntentService {
 
     public static void selectStation(Context context, Bundle station) {
         if (station == null) {
-            Preference.putInfo(context, null);
+            Config.setInfo(context, null);
             AppWidget.update(context);
         } else {
             DatabaseService.enqueueWork(context,
@@ -391,7 +384,7 @@ public class DatabaseService extends JobIntentService {
     }
 
     public static Bundle selectedStation(Context context) {
-        Info info = Preference.getInfo(context);
+        Info info = Config.getInfo(context);
         if (info != null) return info.station.toBundle();
         return null;
     }
@@ -415,8 +408,7 @@ public class DatabaseService extends JobIntentService {
     public static boolean update(Context context, long interval) {
         if (new DateTime(System.currentTimeMillis(),
                 DateTimeZone.getDefault()).withZone(DateTimeZone.UTC).getMillis() -
-                HazyairProvider.Config.get(context,
-                HazyairProvider.Config.PARAM_UPDATE) > interval) {
+                Config.getUpdate(context) > interval) {
             DatabaseService.enqueueWork(context,
                     new Intent(context, DatabaseService.class)
                             .setAction(DatabaseService.ACTION_UPDATE));

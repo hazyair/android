@@ -33,7 +33,6 @@ public final class HazyairProvider {
 
     @TableEndpoint(table = HazyairDatabase.CONFIG)
     public static class Config {
-        public final static String PARAM_UPDATE = "io.github.hazyair.PARAM_UPDATE";
 
         @ContentUri(
                 path = "config",
@@ -49,15 +48,15 @@ public final class HazyairProvider {
             context.getContentResolver().insert(CONTENT_URI, contentValues);
         }
 
-        public static long get(Context context, String key) {
-            if (context == null || key == null) return 0;
-            long result = 0;
+        public static String get(Context context, String key) {
+            if (context == null || key == null) return "";
+            String result = "";
             Cursor cursor = context.getContentResolver().query(CONTENT_URI,
                     new String[]{ConfigContract.COLUMN_VALUE},
                     ConfigContract.COLUMN_KEY + "=?", new String[]{key},
                     null);
             if (cursor != null) {
-                if (cursor.moveToFirst()) result = cursor.getLong(0);
+                if (cursor.moveToFirst()) result = cursor.getString(0);
                 cursor.close();
             }
             return result;

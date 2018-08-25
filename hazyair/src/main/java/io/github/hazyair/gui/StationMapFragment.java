@@ -37,10 +37,6 @@ public class StationMapFragment extends SupportMapFragment {
         }
     }
 
-    public static StationMapFragment newInstance() {
-        return new StationMapFragment();
-    }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {
         mOriginalView = super.onCreateView(inflater, parent, savedInstanceState);

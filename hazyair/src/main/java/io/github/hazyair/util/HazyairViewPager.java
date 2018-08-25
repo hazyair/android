@@ -5,13 +5,13 @@ import android.content.Context;
 import android.support.v4.view.ViewPager;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
-import android.view.animation.Interpolator;
-import android.widget.Scroller;
+//import android.view.animation.Interpolator;
+//import android.widget.Scroller;
 
-import java.lang.reflect.Field;
+//import java.lang.reflect.Field;
 
 public class HazyairViewPager extends ViewPager {
-
+/*
     public class HazyairScroller extends Scroller {
 
         private double mScrollFactor = 1;
@@ -39,10 +39,10 @@ public class HazyairViewPager extends ViewPager {
         }
 
     }
-
+*/
     private boolean mSwipeEnable = true;
 
-    private HazyairScroller mScroller = null;
+//    private HazyairScroller mScroller = null;
 
     public HazyairViewPager(Context context) {
         super(context);
