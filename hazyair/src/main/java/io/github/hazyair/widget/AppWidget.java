@@ -23,20 +23,21 @@ public class AppWidget extends AppWidgetProvider {
         Bundle station = DatabaseService.selectedStation(context);
         RemoteViews remoteViews = new RemoteViews(context.getPackageName(),
                 R.layout.appwidget);
+        Intent intent = new Intent(context, MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent pendingIntent;
         if (station == null) {
+            pendingIntent = PendingIntent.getActivity(context, 0,
+                    intent, PendingIntent.FLAG_UPDATE_CURRENT);
             remoteViews.setTextViewText(R.id.place,
                     context.getString(R.string.app_name));
             remoteViews.setTextViewText(R.id.address,
                     context.getString(R.string.text_no_station_selected));
+
         } else {
-            Intent intent = new Intent(context, MainActivity.class);
             intent.putExtra(MainActivity.PARAM_STATION, station);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            PendingIntent pendingIntent = PendingIntent.getActivity(context, 0,
+            pendingIntent = PendingIntent.getActivity(context, 0,
                     intent, PendingIntent.FLAG_UPDATE_CURRENT);
-            remoteViews.setOnClickPendingIntent(R.id.appwidget, pendingIntent);
-            remoteViews.setOnClickPendingIntent(R.id.place, pendingIntent);
-            remoteViews.setOnClickPendingIntent(R.id.address, pendingIntent);
             remoteViews.setPendingIntentTemplate(R.id.sensors, pendingIntent);
             remoteViews.setTextViewText(R.id.place, Text.truncateSting(String.format("%s %s",
                     context.getString(station.getInt(StationsContract.COLUMN_COUNTRY)),
@@ -47,6 +48,9 @@ public class AppWidget extends AppWidgetProvider {
             remoteViews.setRemoteAdapter(R.id.sensors,
                     new Intent(context, AppWidgetService.class));
         }
+        remoteViews.setOnClickPendingIntent(R.id.appwidget, pendingIntent);
+        remoteViews.setOnClickPendingIntent(R.id.place, pendingIntent);
+        remoteViews.setOnClickPendingIntent(R.id.address, pendingIntent);
         appWidgetManager.updateAppWidget(appWidgetId, remoteViews);
         appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetId, R.id.sensors);
     }

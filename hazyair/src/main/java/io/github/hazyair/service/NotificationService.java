@@ -79,7 +79,7 @@ public class NotificationService extends JobService {
             String parameter = info.sensors.get(i).parameter;
             Data data = info.data.get(i);
             int percent = Quality.normalize(parameter, data.value);
-            if (timestamp - Time.getTimestamp(data.timestamp) < TimeUnit.HOURS.toMillis(1)
+            if (timestamp - Time.getTimestamp(data.timestamp) < TimeUnit.HOURS.toMillis(2)
                     && percent > 100) {
                 stringBuilder.append(parameter).append(": ").append(percent).append("%")
                         .append(", ");

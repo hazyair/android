@@ -10,6 +10,8 @@ import android.widget.RemoteViewsService;
 
 import com.crashlytics.android.Crashlytics;
 
+import java.util.concurrent.TimeUnit;
+
 import io.github.hazyair.R;
 import io.github.hazyair.gui.MainActivity;
 import io.github.hazyair.source.Data;
@@ -18,6 +20,7 @@ import io.github.hazyair.source.Sensor;
 import io.github.hazyair.util.Config;
 import io.github.hazyair.util.Preference;
 import io.github.hazyair.util.Quality;
+import io.github.hazyair.util.Time;
 
 import static android.graphics.Typeface.BOLD;
 
@@ -72,9 +75,20 @@ public class AppWidgetService extends RemoteViewsService {
                     return remoteViews;
                 Sensor sensor = mInfo.sensors.get(position);
                 Data data = mInfo.data.get(position);
+                long timestamp = Time
+                        .getTimestamp(data.timestamp);
+                long hours = (System.currentTimeMillis() - timestamp) /
+                        TimeUnit.HOURS.toMillis(1);
+                long minutes = (System.currentTimeMillis() -
+                        timestamp) %
+                        TimeUnit.HOURS.toMillis(1) /
+                        TimeUnit.MINUTES.toMillis(1);
                 int percent = Quality.normalize(sensor.parameter, data.value);
-                SpannableString text = new SpannableString(String.format("%s: %s %s (%s%%)",
-                        sensor.parameter, data.value, sensor.unit, String.valueOf(percent)));
+                SpannableString text = new SpannableString(String.format("%s: %s %s (%s%%) %s %s h",
+                        sensor.parameter, data.value, sensor.unit, String.valueOf(percent),
+                        (hours < 1 ? "<" : (minutes > 0 ? (minutes > 30 ? "<" : ">")
+                                : "")), (hours < 1 ? "1" : (minutes > 30 ?
+                                String.valueOf(hours+1) : String.valueOf(hours)))));
                 text.setSpan(new StyleSpan(BOLD), 0, sensor.parameter.length(),
                         Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                 if (percent > 100) {

@@ -13,5 +13,5 @@
     <dimen name="text_size">16sp</dimen>
     <dimen name="text_size_widget">12dp</dimen>
     <dimen name="widget_height">240dp</dimen>
-    <dimen name="widget_width">200dp</dimen>
+    <dimen name="widget_width">220dp</dimen>
 </resources>
