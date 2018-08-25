@@ -60,7 +60,7 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             android:background="@drawable/ic_keyboard_arrow_down_black_24dp"
-            android:contentDescription="@string/contentDescription_expand_collapse" />
+            android:importantForAccessibility="no" />
 
         <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/chart"

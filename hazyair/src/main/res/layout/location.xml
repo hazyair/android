@@ -58,7 +58,7 @@
             app:layout_constraintTop_toBottomOf="@id/expand_collapse"
             android:layout_marginTop="@dimen/edge"
             android:visibility="gone"
-            android:contentDescription="@string/contentDescription_expand_collapse" />
+            android:importantForAccessibility="no" />
 
     </android.support.constraint.ConstraintLayout>
 

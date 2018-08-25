@@ -31,6 +31,6 @@
         xmlns:android="http://schemas.android.com/apk/res/android"
         app:layout_constraintStart_toEndOf="@id/divider"
         app:layout_constraintEnd_toEndOf="parent"
-        />
+        android:importantForAccessibility="no" />
 
 </android.support.constraint.ConstraintLayout>
