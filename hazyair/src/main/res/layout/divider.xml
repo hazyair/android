@@ -7,5 +7,4 @@
     android:background="@android:color/darker_gray"
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:visibility="gone"
-    tools:ignore="Overdraw"
-    android:importantForAccessibility="no" />
+    tools:ignore="Overdraw" />

@@ -12,7 +12,6 @@ import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
@@ -101,9 +100,6 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         @Nullable @BindView(R.id.distance)
         TextView distance;
 
-        @Nullable @BindView(R.id.map)
-        FrameLayout frameLayout;
-
         private final Bundle mStation;
 
         private LatLng mLatLng;
@@ -148,9 +144,6 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
     }
 
     class SensorViewHolder extends ViewHolder {
-
-        @Nullable @BindView(R.id.placeholder)
-        ConstraintLayout constraintLayout;
 
         @Nullable @BindView(R.id.parameter)
         TextView parameter;

@@ -59,8 +59,7 @@
             android:layout_height="@dimen/button_size"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            android:background="@drawable/ic_keyboard_arrow_down_black_24dp"
-            android:importantForAccessibility="no" />
+            android:background="@drawable/ic_keyboard_arrow_down_black_24dp" />
 
         <com.github.mikephil.charting.charts.LineChart
             android:id="@+id/chart"

@@ -64,7 +64,6 @@
         app:tabRippleColor="@android:color/transparent"
         app:tabGravity="center"
         app:tabIndicatorHeight="0dp"
-        android:visibility="gone"
-        android:importantForAccessibility="no" />
+        android:visibility="gone" />
 
 </android.support.design.widget.CoordinatorLayout>
