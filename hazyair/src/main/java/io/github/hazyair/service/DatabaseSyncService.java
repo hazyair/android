@@ -9,7 +9,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Build;
 import android.support.v4.app.DatabaseService;
 
 import java.util.concurrent.TimeUnit;
@@ -28,16 +27,6 @@ public class DatabaseSyncService extends JobService {
         if (interval != mInterval && jobScheduler != null) {
             if (interval == 0) {
                 jobScheduler.cancel(JOB_ID);
-            } else if (Build.VERSION.SDK_INT >= 28) {
-                if (jobScheduler.schedule(new JobInfo.Builder(JOB_ID,
-                    new ComponentName(context, DatabaseSyncService.class))
-                            .setPeriodic(TimeUnit.MINUTES.toMillis(interval))
-                            .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                            .setPersisted(true)
-                            .setImportantWhileForeground(true)
-                            .build()) == RESULT_SUCCESS) {
-                    mInterval = interval;
-                }
             } else {
                 if (jobScheduler.schedule(new JobInfo.Builder(JOB_ID,
                         new ComponentName(context, DatabaseSyncService.class))
