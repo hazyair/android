@@ -20,8 +20,8 @@ android {
         applicationId "io.github.hazyair"
         minSdkVersion 23
         targetSdkVersion 28
-        versionCode 56
-        versionName "1.0.0+56"
+        versionCode 57
+        versionName "1.0.0+57"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         def googleServicesProperties = new Properties()
         if (file('google-services.properties').exists()) {
@@ -35,9 +35,9 @@ android {
             releaseProperties.load(new FileInputStream(file('release.properties')))
             release {
                 keyAlias releaseProperties.keyAlias
-                keyPassword releaseProperties.storePassword
+                keyPassword releaseProperties.keyPassword
                 storeFile file(releaseProperties.storeFile)
-                storePassword releaseProperties.keyPassword
+                storePassword releaseProperties.storePassword
             }
         }
     }

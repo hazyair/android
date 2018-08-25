@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<android.support.design.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main_content"
@@ -47,12 +49,13 @@
         android:layout_height="wrap_content"
         android:layout_gravity="end|bottom"
         android:layout_margin="@dimen/fab_margin"
-        android:src="@drawable/ic_add_white_48dp" />
+        android:src="@drawable/ic_add_white_48dp"
+        android:contentDescription="@string/title_add_station"/>
 
     <android.support.design.widget.TabLayout
         android:id="@+id/tabDots"
-        android:layout_marginStart="80dp"
-        android:layout_marginEnd="80dp"
+        android:layout_marginStart="@dimen/tab_margin"
+        android:layout_marginEnd="@dimen/tab_margin"
         android:layout_marginBottom="@dimen/fab_margin"
         android:layout_gravity="bottom|center"
         android:layout_width="wrap_content"
@@ -61,6 +64,7 @@
         app:tabRippleColor="@android:color/transparent"
         app:tabGravity="center"
         app:tabIndicatorHeight="0dp"
-        android:visibility="gone"/>
+        android:visibility="gone"
+        android:contentDescription="@string/contentDescription_tab"/>
 
 </android.support.design.widget.CoordinatorLayout>

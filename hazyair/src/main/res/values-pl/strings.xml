@@ -7,6 +7,9 @@
     <string name="contentDescription_address">Adres</string>
     <string name="contentDescription_place">Miejsce</string>
     <string name="contentDescription_sensor_data">Dane z czujnika</string>
+    <string name="contentDescription_divider">Separator</string>
+    <string name="contentDescription_tab">Zakładka</string>
+    <string name="contentDescription_expand_collapse">Rozwiń lub zwiń</string>
     <string name="data_poland">Polska</string>
     <string name="data_source_gios">GIOŚ</string>
     <string name="message_crashlytics">Aby zmiany przyniosły efekt, uruchom ponownie aplikację.</string>

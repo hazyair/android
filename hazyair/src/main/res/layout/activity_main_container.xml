@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<io.github.hazyair.util.HazyairViewPager xmlns:tools="http://schemas.android.com/tools"
+
+<io.github.hazyair.util.HazyairViewPager
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/view_pager"
     android:layout_width="match_parent"
     android:layout_height="match_parent"

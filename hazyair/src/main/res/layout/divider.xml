@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <View xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/divider"
     android:layout_width="match_parent"
@@ -6,4 +7,5 @@
     android:background="@android:color/darker_gray"
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:visibility="gone"
-    tools:ignore="Overdraw" />
+    tools:ignore="Overdraw"
+    android:contentDescription="@string/contentDescription_divider"/>

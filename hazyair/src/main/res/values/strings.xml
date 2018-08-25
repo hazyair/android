@@ -9,6 +9,9 @@
     <string name="contentDescription_address">Address</string>
     <string name="contentDescription_place">Place</string>
     <string name="contentDescription_sensor_data">Sensor data</string>
+    <string name="contentDescription_divider">Divider</string>
+    <string name="contentDescription_tab">Tab</string>
+    <string name="contentDescription_expand_collapse">Expand or collapse</string>
     <string name="data_poland">Poland</string>
     <!--<string name="data_source_airly" translatable="false">AIRLY</string>-->
     <string name="data_source_gios">CIEP</string>
