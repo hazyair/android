@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <dimen name="panel">240dp</dimen>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <dimen name="panel" tools:ignore="MissingDefaultResource">240dp</dimen>
 </resources>

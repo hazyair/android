@@ -57,6 +57,7 @@ public final class Quality {
                 put("SO₂", 75.0);
             }});
 
+    @SuppressWarnings("ConstantConditions")
     public static int normalize(String parameter, double value) {
         return (int)Math.round(100 * value / limits.get(parameter));
     }

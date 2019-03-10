@@ -60,7 +60,7 @@ public class AppWidgetService extends RemoteViewsService {
 
             @Override
             public int getCount() {
-                if (mInfo == null) return 0;
+                if (mInfo == null || mInfo.sensors == null) return 0;
                 return mInfo.sensors.size();
             }
 
@@ -68,7 +68,8 @@ public class AppWidgetService extends RemoteViewsService {
             public RemoteViews getViewAt(int position) {
                 RemoteViews remoteViews = new RemoteViews(getPackageName(),
                         R.layout.appwidget_sensor);
-                if (mInfo == null) return remoteViews;
+                if (mInfo == null || mInfo.sensors == null || mInfo.data == null ||
+                        mInfo.station == null) return remoteViews;
                 int sensorSize = mInfo.sensors.size();
                 int dataSize = mInfo.data.size();
                 if (position >= sensorSize || position >= dataSize || sensorSize != dataSize)

@@ -80,7 +80,7 @@ public class DatabaseService extends JobIntentService {
                 if (HazyairProvider.Stations.selected(this, station)) {
                     HazyairProvider.delete(this, station._id);
                     Info info = Config.getInfo(this);
-                    if (info != null && info.station._id == station._id) {
+                    if (info != null && info.station != null && info.station._id == station._id) {
                         Config.setInfo(this, null);
                         AppWidget.update(this);
                     }
@@ -293,7 +293,7 @@ public class DatabaseService extends JobIntentService {
                     if (cpo.size() > count) {
                         HazyairProvider.bulkExecute(DatabaseService.this, cpo);
                         Info info = Config.getInfo(DatabaseService.this);
-                        if (info != null) select(info.station._id);
+                        if (info != null && info.station != null) select(info.station._id);
                     }
                     Config.setUpdate(DatabaseService.this);
                 }

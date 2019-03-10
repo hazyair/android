@@ -71,10 +71,11 @@ public class NotificationService extends JobService {
     @Override
     public boolean onStartJob(JobParameters params) {
         Info info = Config.getInfo(this);
-        if (info == null) return false;
+        if (info == null || info.sensors == null || info.data == null ||
+                info.station == null) return false;
         StringBuilder stringBuilder = new StringBuilder();
         boolean notify = false;
-        Long timestamp = System.currentTimeMillis();
+        long timestamp = System.currentTimeMillis();
         for (int i = 0; i < info.sensors.size(); i ++) {
             String parameter = info.sensors.get(i).parameter;
             Data data = info.data.get(i);

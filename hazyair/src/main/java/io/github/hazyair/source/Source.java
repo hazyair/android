@@ -50,6 +50,7 @@ public class Source {
     public void into(StationsCallback callback) {
         if (callback == null) return;
         io.github.hazyair.source.iface.Source source = mSources.get(mType);
+        if (source == null) return;
         mRequestQueue.add(new StringRequest(Request.Method.GET, source.stationsUrl(),
                 (response) -> callback.onSuccess(source.stations(response)),
                 (error -> callback.onError())));
@@ -67,6 +68,10 @@ public class Source {
             return;
         }
         io.github.hazyair.source.iface.Source source = mSources.get(mType);
+        if (source == null) {
+            callback.onError();
+            return;
+        }
         mRequestQueue.add(new StringRequest(Request.Method.GET, source.sensorsUrl(mStation.id),
                 (response) -> {
                     List<Sensor> sensors = source.sensors(response);
@@ -89,6 +94,10 @@ public class Source {
             return;
         }
         io.github.hazyair.source.iface.Source source = mSources.get(mType);
+        if (source == null) {
+            callback.onError();
+            return;
+        }
         mRequestQueue.add(new StringRequest(Request.Method.GET, source.dataUrl(mSensor.id),
                 (response) -> {
                     List<Data> data = source.data(response);

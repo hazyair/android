@@ -402,7 +402,6 @@ public class MainActivity extends AppCompatActivity implements
     @BindView(R.id.tabDots)
     TabLayout mTabLayout;
 
-
     // Activity lifecycle
     @SuppressWarnings("deprecation")
     @Override
