@@ -9,6 +9,7 @@ import android.database.Cursor;
 import android.graphics.Rect;
 import android.location.Location;
 import android.location.LocationListener;
+import android.net.Uri;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -582,6 +583,10 @@ public class MainActivity extends AppCompatActivity implements
                 return true;
             case R.id.action_license:
                 License.showLicense(this);
+                return true;
+            case R.id.action_privacy:
+                startActivity(new Intent(Intent.ACTION_VIEW)
+                        .setData(Uri.parse(getString(R.string.link_privacy))));
                 return true;
             case ACTION_REMOVE_STATION:
                 int position;

@@ -11,4 +11,8 @@
         android:id="@+id/action_license"
         android:orderInCategory="4"
         android:title="@string/title_license" />
+    <item
+        android:id="@+id/action_privacy"
+        android:orderInCategory="5"
+        android:title="@string/title_privacy" />
 </menu>
