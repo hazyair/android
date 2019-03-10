@@ -1,7 +1,6 @@
 package io.github.hazyair.util;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -27,7 +26,6 @@ public class Config {
     public static long getUpdate(Context context) {
         String result = HazyairProvider.Config.get(context, PARAM_UPDATE);
         if (result == null || result.isEmpty()) result = "0";
-        Log.e("!!!", ""+result.isEmpty()+" ["+result+"]");
         return Long.valueOf(result);
     }
 
