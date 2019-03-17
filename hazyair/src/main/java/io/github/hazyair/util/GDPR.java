@@ -53,6 +53,10 @@ public class GDPR {
     }
 
     public static void consent(AppCompatActivity activity) {
+        consent(activity, false);
+    }
+
+    public static void consent(AppCompatActivity activity, boolean checkIfNeedsToBeShown) {
         com.michaelflisar.gdprdialog.GDPR.getInstance().init(activity);
         GDPRSetup setup = io.github.hazyair.util.GDPR.init(activity);
         com.michaelflisar.gdprdialog.GDPR.getInstance().checkIfNeedsToBeShown(activity, setup,
@@ -77,8 +81,20 @@ public class GDPR {
                                     break;
                             }
                         } else {
-                            com.michaelflisar.gdprdialog.GDPR.getInstance().showDialog(activity,
-                                    setup, consentState.getLocation());
+                            if (checkIfNeedsToBeShown) {
+                                switch (consentState.getConsent()) {
+                                    case NO_CONSENT:
+                                    case NON_PERSONAL_CONSENT_ONLY:
+                                        com.michaelflisar.gdprdialog.GDPR.getInstance().showDialog(
+                                                activity, setup, consentState.getLocation());
+                                        break;
+                                    default:
+                                        break;
+                                }
+                            } else {
+                                com.michaelflisar.gdprdialog.GDPR.getInstance().showDialog(activity,
+                                        setup, consentState.getLocation());
+                            }
 
                         }
 

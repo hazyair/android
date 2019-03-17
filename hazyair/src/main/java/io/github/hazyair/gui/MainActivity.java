@@ -409,14 +409,14 @@ public class MainActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        GDPR.consent(this);
+        GDPR.consent(this, true);
         Preference.initialize(this);
         if (Preference.isCrashlyticsEnabled(this)) {
             Fabric.with(this, new Crashlytics());
         }
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-        
+
         if (!Preference.getLicense(this)) {
             License.showLicense(this);
         }
