@@ -2,6 +2,7 @@ package io.github.hazyair.util;
 
 import android.content.Context;
 import android.content.Intent;
+import android.support.v4.app.DatabaseService;
 import android.support.v7.app.AppCompatActivity;
 
 import com.michaelflisar.gdprdialog.GDPRConsentState;
@@ -41,6 +42,7 @@ public class GDPR {
     }
 
     private static void withdraw(AppCompatActivity activity) {
+        DatabaseService.selectStation(activity, null);
         if (activity instanceof MainActivity) {
             activity.finish();
         } else {
@@ -53,7 +55,8 @@ public class GDPR {
     }
 
     public static void consent(AppCompatActivity activity) {
-        consent(activity, false);
+        consent(activity,
+                false);
     }
 
     public static void consent(AppCompatActivity activity, boolean checkIfNeedsToBeShown) {
