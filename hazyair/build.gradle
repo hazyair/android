@@ -20,8 +20,8 @@ android {
         applicationId "io.github.hazyair"
         minSdkVersion 23
         targetSdkVersion 28
-        versionCode 64
-        versionName "1.0.0+64"
+        versionCode 65
+        versionName "1.0.0+65"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         def googleServicesProperties = new Properties()
         if (file('google-services.properties').exists()) {
@@ -67,7 +67,7 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.facebook.stetho:stetho:1.5.0'
-    implementation 'com.google.firebase:firebase-core:16.0.7'
+    implementation 'com.google.firebase:firebase-core:16.0.8'
     implementation 'com.crashlytics.sdk.android:crashlytics:2.9.9'
     implementation "com.android.support:appcompat-v7:$androidSupportVersion"
     implementation "com.android.support:design:$androidSupportVersion"
@@ -83,6 +83,7 @@ dependencies {
     implementation "com.google.android.gms:play-services-maps:16.1.0"
     implementation "com.google.android.gms:play-services-location:$playServicesVersion"
     implementation 'net.danlew:android.joda:2.9.9.4'
+    implementation 'com.github.ayoubfletcher:GDPRDialog:1.2.9.1'
     debugImplementation "com.squareup.leakcanary:leakcanary-android:$leakCanaryVersion"
     releaseImplementation "com.squareup.leakcanary:leakcanary-android-no-op:$leakCanaryVersion"
     debugImplementation "com.squareup.leakcanary:leakcanary-support-fragment:$leakCanaryVersion"

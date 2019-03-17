@@ -9,7 +9,6 @@ import android.database.Cursor;
 import android.graphics.Rect;
 import android.location.Location;
 import android.location.LocationListener;
-import android.net.Uri;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -59,6 +58,7 @@ import android.support.v4.app.DatabaseService;
 import java.util.concurrent.TimeUnit;
 
 import io.github.hazyair.service.DatabaseSyncService;
+import io.github.hazyair.util.GDPR;
 import io.github.hazyair.util.HazyairViewPager;
 import io.github.hazyair.util.License;
 import io.github.hazyair.util.LocationCallbackReference;
@@ -409,13 +409,14 @@ public class MainActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        GDPR.consent(this);
         Preference.initialize(this);
         if (Preference.isCrashlyticsEnabled(this)) {
             Fabric.with(this, new Crashlytics());
         }
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
-
+        
         if (!Preference.getLicense(this)) {
             License.showLicense(this);
         }
@@ -585,8 +586,7 @@ public class MainActivity extends AppCompatActivity implements
                 License.showLicense(this);
                 return true;
             case R.id.action_privacy:
-                startActivity(new Intent(Intent.ACTION_VIEW)
-                        .setData(Uri.parse(getString(R.string.link_privacy))));
+                GDPR.consent(this);
                 return true;
             case ACTION_REMOVE_STATION:
                 int position;

@@ -8,7 +8,6 @@ import android.content.pm.PackageManager;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.location.Location;
-import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
 import android.content.Context;
@@ -60,6 +59,7 @@ import io.github.hazyair.source.Station;
 
 import android.support.v4.app.DatabaseService;
 
+import io.github.hazyair.util.GDPR;
 import io.github.hazyair.util.License;
 import io.github.hazyair.util.LocationCallbackReference;
 import io.github.hazyair.util.Network;
@@ -777,8 +777,7 @@ public class StationsActivity extends AppCompatActivity implements SearchView.On
                 License.showLicense(this);
                 return true;
             case R.id.action_privacy:
-                startActivity(new Intent(Intent.ACTION_VIEW)
-                        .setData(Uri.parse(getString(R.string.link_privacy))));
+                GDPR.consent(this);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
