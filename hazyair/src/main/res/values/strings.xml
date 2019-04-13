@@ -83,7 +83,7 @@
         <item>360</item>
     </string-array>
 
-    <string name="privacy_link" translatable="false">http://hazyair.github.io</string>
+    <string name="privacy_link" translatable="false">https://hazyair.github.io/android</string>
     <string name="privacy_play_name" translatable="false">Google Play Services</string>
     <string name="privacy_play_link" translatable="false">https://policies.google.com/privacy</string>
     <string name="privacy_analytics_name" translatable="false">Firebase Analytics</string>
