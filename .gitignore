@@ -63,3 +63,6 @@ fastlane/readme.md
 fabric.properties
 release.properties
 google-services.properties
+
+# Build files
+debug/
