@@ -5,8 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v7.app.AlertDialog;
 
 import com.crashlytics.android.Crashlytics;
 
@@ -17,6 +15,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.app.JobIntentService;
 import io.github.hazyair.R;
 import io.github.hazyair.data.HazyairProvider;
 import io.github.hazyair.data.SensorsContract;
@@ -361,14 +362,14 @@ public class DatabaseService extends JobIntentService {
                 .putExtra(PARAM_MESSAGE, message));
     }
 
-    @Override
+    /*@Override
     GenericWorkItem dequeueWork() {
         try {
             return super.dequeueWork();
         } catch (SecurityException ignored) { }
 
         return null;
-    }
+    }*/
 
     public static void selectStation(Context context, Bundle station) {
         if (station == null) {

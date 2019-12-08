@@ -3,8 +3,8 @@ package io.github.hazyair.util;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.support.v7.app.AlertDialog;
 
+import androidx.appcompat.app.AlertDialog;
 import io.github.hazyair.R;
 
 public final class Network {

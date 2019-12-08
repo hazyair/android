@@ -8,16 +8,16 @@ import android.os.Build;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
-import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
-import android.support.v7.app.AlertDialog;
 import android.view.MenuItem;
 
 import com.crashlytics.android.Crashlytics;
 
 import java.util.List;
 
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AlertDialog;
 import io.fabric.sdk.android.Fabric;
 import io.github.hazyair.R;
 import io.github.hazyair.service.NotificationService;
@@ -161,6 +161,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        //noinspection SwitchStatementWithTooFewBranches
         switch (item.getItemId()) {
             case android.R.id.home:
                 onBackPressed();

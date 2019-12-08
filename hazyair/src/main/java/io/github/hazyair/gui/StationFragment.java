@@ -10,13 +10,6 @@ import android.database.Cursor;
 import android.graphics.Rect;
 import android.location.Location;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.Loader;
-import android.support.v7.widget.CardView;
-import android.support.v7.widget.RecyclerView;
 import android.util.LongSparseArray;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
@@ -52,6 +45,13 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.cardview.widget.CardView;
+import androidx.fragment.app.Fragment;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.Loader;
+import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.github.hazyair.R;
@@ -69,6 +69,7 @@ import io.github.hazyair.util.Quality;
 import io.github.hazyair.util.Text;
 import io.github.hazyair.util.Time;
 
+@SuppressWarnings("WeakerAccess")
 public class StationFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor> {
 
     // Final definitions
@@ -78,7 +79,8 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
     // Nested class definitions
     class ViewHolder extends RecyclerView.ViewHolder {
 
-        @Nullable @BindView(R.id.cardview)
+        @Nullable
+        @BindView(R.id.cardview)
         CardView cardView;
 
         @Nullable @BindView(R.id.map)
@@ -274,12 +276,12 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                     if (Base.equals(mSelectedItem, mStation))
                         expand(context, mapViewHolder, mStation);
                     else collapse(context, mapViewHolder);
+                    View.OnClickListener listener = (v) ->
+                            OnClickListener(context, mapViewHolder, mStation);
                     if (mapViewHolder.cardView != null)
-                        mapViewHolder.cardView.setOnClickListener((v) ->
-                                OnClickListener(context, mapViewHolder, mStation));
+                        mapViewHolder.cardView.setOnClickListener(listener);
                     if (mapViewHolder.expandCollapse != null)
-                        mapViewHolder.expandCollapse.setOnClickListener((v) ->
-                                OnClickListener(context, mapViewHolder, mStation));
+                        mapViewHolder.expandCollapse.setOnClickListener(listener);
                     if (mapViewHolder.distance != null) {
                         mapViewHolder.distance.setVisibility(mDistance ? View.VISIBLE : View.GONE);
                         if (mDistance && mLocation != null) {
@@ -384,17 +386,17 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
                     if (Base.equals(mSelectedItem, sensor))
                         expand(context, sensorViewHolder, sensor);
                     else collapse(context, sensorViewHolder);
+                    View.OnClickListener listener = (v) ->
+                            OnClickListener(context, sensorViewHolder, sensor);
                     if (sensorViewHolder.expandCollapse != null) {
                         if (data != null)
-                            sensorViewHolder.expandCollapse.setOnClickListener((v) ->
-                                    OnClickListener(context, sensorViewHolder, sensor));
+                            sensorViewHolder.expandCollapse.setOnClickListener(listener);
                         else
                             sensorViewHolder.expandCollapse.setOnClickListener(null);
                     }
                     if (sensorViewHolder.cardView != null) {
                         if (data != null)
-                            sensorViewHolder.cardView.setOnClickListener((v) ->
-                                    OnClickListener(context, sensorViewHolder, sensor));
+                            sensorViewHolder.cardView.setOnClickListener(listener);
                         else
                             sensorViewHolder.cardView.setOnClickListener(null);
                     }
@@ -498,7 +500,6 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
     private SupportMapFragment mSupportMapFragment;
 
     // ButterKnife
-    @SuppressWarnings("WeakerAccess")
     @BindView(R.id.sensors)
     RecyclerView mRecyclerView;
 
@@ -522,7 +523,7 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
     public StationFragment() {
     }
 
-    public static StationFragment newInstance(Cursor cursor, StationFragment oldFragment) {
+    static StationFragment newInstance(Cursor cursor, StationFragment oldFragment) {
         StationFragment newFragment = new StationFragment();
         Bundle bundle = new Bundle();
         if (cursor != null)
@@ -623,12 +624,12 @@ public class StationFragment extends Fragment implements LoaderManager.LoaderCal
         return rootView;
     }
 
-    public void requestUpdates() {
+    void requestUpdates() {
         io.github.hazyair.util.Location.requestUpdates(getContext(), mFusedLocationProviderClient,
                 mLocationRequest,mLocationCallback);
     }
 
-    public void removeUpdates() {
+    void removeUpdates() {
         io.github.hazyair.util.Location.removeUpdates(getContext(), mFusedLocationProviderClient,
                 mLocationCallback);
     }

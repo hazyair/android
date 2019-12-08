@@ -3,8 +3,8 @@ package io.github.hazyair.util;
 import android.app.Activity;
 import android.content.Intent;
 import android.support.v4.app.DatabaseService;
-import android.support.v7.app.AlertDialog;
 
+import androidx.appcompat.app.AlertDialog;
 import io.github.hazyair.R;
 import io.github.hazyair.gui.MainActivity;
 

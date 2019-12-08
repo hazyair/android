@@ -2,7 +2,6 @@ package io.github.hazyair.gui;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -11,7 +10,9 @@ import android.widget.FrameLayout;
 
 import com.google.android.gms.maps.SupportMapFragment;
 
-public class StationMapFragment extends SupportMapFragment {
+import androidx.annotation.NonNull;
+
+class StationMapFragment extends SupportMapFragment {
 
     private View mOriginalView;
 

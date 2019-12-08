@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<android.support.constraint.ConstraintLayout
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <android.support.v7.widget.RecyclerView
+    <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/stations"
         android:layout_width="@dimen/panel"
         android:layout_height="wrap_content"
-        app:layoutManager="android.support.v7.widget.LinearLayoutManager"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         tools:ignore="InconsistentLayout"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
@@ -21,18 +21,15 @@
         android:layout_height="match_parent"
         android:layout_width="@dimen/divider_thickness"
         android:background="@android:color/darker_gray"
-        xmlns:android="http://schemas.android.com/apk/res/android"
         app:layout_constraintStart_toEndOf="@id/stations"
         tools:ignore="InconsistentLayout" />
 
     <io.github.hazyair.util.HazyairViewPager
-        xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/view_pager"
         android:layout_width="@dimen/follow_constraint"
         android:layout_height="wrap_content"
-        xmlns:android="http://schemas.android.com/apk/res/android"
         app:layout_constraintStart_toEndOf="@id/divider"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-</android.support.constraint.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

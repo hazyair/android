@@ -10,23 +10,6 @@ import android.graphics.Rect;
 import android.location.Location;
 import android.location.LocationListener;
 import android.os.Parcelable;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.constraint.ConstraintLayout;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.TabLayout;
-import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.Loader;
-import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.CardView;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
-
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.view.ViewPager;
 import android.os.Bundle;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
@@ -44,7 +27,23 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.tabs.TabLayout;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.cardview.widget.CardView;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentStatePagerAdapter;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.Loader;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import androidx.viewpager.widget.ViewPager;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.fabric.sdk.android.Fabric;
@@ -373,33 +372,26 @@ public class MainActivity extends AppCompatActivity implements
     private FusedLocationProviderClient mFusedLocationProviderClient;
 
     // ButterKnife
-    @SuppressWarnings("WeakerAccess")
     @BindView(R.id.toolbar)
     Toolbar mToolbar;
 
-    @SuppressWarnings("WeakerAccess")
     @BindView(R.id.view_pager)
     HazyairViewPager mViewPager;
 
-    @SuppressWarnings("WeakerAccess")
     @BindView(R.id.fab_add_station)
     FloatingActionButton mFloatingActionButton;
 
-    @SuppressWarnings("WeakerAccess")
     @Nullable
     @BindView(R.id.stations)
     RecyclerView mRecyclerView;
 
-    @SuppressWarnings("WeakerAccess")
     @Nullable
     @BindView(R.id.divider)
     View mDivider;
 
-    @SuppressWarnings("WeakerAccess")
     @BindView(R.id.swipe)
     SwipeRefreshLayout mSwipeRefreshLayout;
 
-    @SuppressWarnings("WeakerAccess")
     @BindView(R.id.tabDots)
     TabLayout mTabLayout;
 
@@ -680,6 +672,7 @@ public class MainActivity extends AppCompatActivity implements
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        //noinspection SwitchStatementWithTooFewBranches
         switch (requestCode) {
             case PERMISSION_REQUEST_FINE_LOCATION: {
                 // If request is cancelled, the result arrays are empty.

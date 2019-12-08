@@ -65,6 +65,7 @@ public class DatabaseSyncService extends JobService {
             boolean reschedule = intent.getBooleanExtra(DatabaseService.PARAM_RESCHEDULE,
                     false);
             if (action == null) return;
+            //noinspection SwitchStatementWithTooFewBranches
             switch (action) {
                 case DatabaseService.ACTION_UPDATED:
                     jobFinished(mJobParams, reschedule);

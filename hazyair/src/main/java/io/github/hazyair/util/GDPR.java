@@ -3,7 +3,6 @@ package io.github.hazyair.util;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.DatabaseService;
-import android.support.v7.app.AppCompatActivity;
 
 import com.michaelflisar.gdprdialog.GDPRConsentState;
 import com.michaelflisar.gdprdialog.GDPRLocationCheck;
@@ -11,6 +10,7 @@ import com.michaelflisar.gdprdialog.GDPRNetwork;
 import com.michaelflisar.gdprdialog.GDPRSetup;
 import com.michaelflisar.gdprdialog.helper.GDPRPreperationData;
 
+import androidx.appcompat.app.AppCompatActivity;
 import io.github.hazyair.R;
 import io.github.hazyair.gui.MainActivity;
 

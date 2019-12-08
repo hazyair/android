@@ -13,6 +13,7 @@ import io.github.hazyair.service.DatabaseSyncService;
 import io.github.hazyair.util.Preference;
 
 public class BootCompletedReceiver extends BroadcastReceiver {
+    @SuppressWarnings("SwitchStatementWithTooFewBranches")
     @Override
     public void onReceive(Context context, Intent intent) {
         String action = intent.getAction();

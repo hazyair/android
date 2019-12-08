@@ -8,23 +8,9 @@ import android.content.pm.PackageManager;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.location.Location;
-import android.support.annotation.Nullable;
-import android.support.v4.app.LoaderManager;
 import android.content.Context;
-import android.support.v4.content.Loader;
 import android.database.Cursor;
-import android.support.annotation.NonNull;
-import android.support.v4.app.NavUtils;
-import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.CardView;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.SearchView;
-import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -47,6 +33,20 @@ import com.google.android.gms.location.LocationServices;
 
 import java.util.List;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
+import androidx.cardview.widget.CardView;
+import androidx.core.app.NavUtils;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.Loader;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.ItemTouchHelper;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import io.github.hazyair.R;
@@ -65,9 +65,9 @@ import io.github.hazyair.util.LocationCallbackReference;
 import io.github.hazyair.util.Network;
 import io.github.hazyair.util.Text;
 
-import static android.support.v7.widget.helper.ItemTouchHelper.ACTION_STATE_SWIPE;
-import static android.support.v7.widget.helper.ItemTouchHelper.LEFT;
-import static android.support.v7.widget.helper.ItemTouchHelper.RIGHT;
+import static androidx.recyclerview.widget.ItemTouchHelper.ACTION_STATE_SWIPE;
+import static androidx.recyclerview.widget.ItemTouchHelper.LEFT;
+import static androidx.recyclerview.widget.ItemTouchHelper.RIGHT;
 import static io.github.hazyair.util.Location.PERMISSION_REQUEST_FINE_LOCATION;
 
 public class StationsActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
@@ -516,15 +516,12 @@ public class StationsActivity extends AppCompatActivity implements SearchView.On
     private List<Station> mStations;
 
     // ButterKnife
-    @SuppressWarnings("WeakerAccess")
     @BindView(R.id.swipe)
     SwipeRefreshLayout mSwipeRefreshLayout;
 
-    @SuppressWarnings("WeakerAccess")
     @BindView(R.id.stations)
     RecyclerView mStationList;
 
-    @SuppressWarnings("WeakerAccess")
     @Nullable
     @BindView(R.id.all_stations)
     RecyclerView mAllStations;
@@ -848,6 +845,7 @@ public class StationsActivity extends AppCompatActivity implements SearchView.On
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        //noinspection SwitchStatementWithTooFewBranches
         switch (requestCode) {
             case PERMISSION_REQUEST_FINE_LOCATION: {
                 // If request is cancelled, the result arrays are empty.

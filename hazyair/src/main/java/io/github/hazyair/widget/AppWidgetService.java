@@ -72,7 +72,7 @@ public class AppWidgetService extends RemoteViewsService {
                         mInfo.station == null) return remoteViews;
                 int sensorSize = mInfo.sensors.size();
                 int dataSize = mInfo.data.size();
-                if (position >= sensorSize || position >= dataSize || sensorSize != dataSize)
+                if (position >= dataSize || sensorSize != dataSize)
                     return remoteViews;
                 Sensor sensor = mInfo.sensors.get(position);
                 Data data = mInfo.data.get(position);

@@ -11,11 +11,11 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationManagerCompat;
 
 import java.util.concurrent.TimeUnit;
 
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import io.github.hazyair.R;
 import io.github.hazyair.gui.MainActivity;
 import io.github.hazyair.source.Data;

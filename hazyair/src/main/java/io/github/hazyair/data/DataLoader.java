@@ -1,8 +1,8 @@
 package io.github.hazyair.data;
 
 import android.content.Context;
-import android.support.v4.content.CursorLoader;
 
+import androidx.loader.content.CursorLoader;
 import io.github.hazyair.source.Data;
 
 public class DataLoader extends CursorLoader {
@@ -12,7 +12,7 @@ public class DataLoader extends CursorLoader {
         super(context, HazyairProvider.Data.CONTENT_URI, Data.keys(),
                 DataContract.COLUMN__SENSOR_ID + "=?",
                 new String[] { String.valueOf(_id) }, HazyairProvider.Data.DEFAULT_SORT +
-                        (limit == 0 ? "" : " LIMIT " + String.valueOf(limit)));
+                        (limit == 0 ? "" : " LIMIT " + limit));
     }
 
     public static DataLoader newInstanceForLastDataFromSensor(Context context, int _id) {
