@@ -21,7 +21,7 @@ android {
         minSdkVersion 23
         targetSdkVersion 28
         versionCode 68
-        versionName "1.0.0+68"
+        versionName "1.0.0+69"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         def googleServicesProperties = new Properties()
         if (file('google-services.properties').exists()) {
